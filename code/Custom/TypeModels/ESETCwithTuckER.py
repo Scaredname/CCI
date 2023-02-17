@@ -1,21 +1,32 @@
+'''
+Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
+Date: 2023-02-17 11:58:01
+LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
+LastEditTime: 2023-02-17 12:18:17
+FilePath: /undefined/home/ni/code/ESETC/code/Custom/TypeModels/ESETCwithTuckER.py
+Description: 
+
+Copyright (c) 2023 by ${git_name_email}, All Rights Reserved. 
+'''
 from typing import Any, ClassVar, Mapping, Optional, Type
 
-from class_resolver import OptionalKwargs
 import torch
-from pykeen.models.nbase import ERModel
-from pykeen.constants import DEFAULT_DROPOUT_HPO_RANGE, DEFAULT_EMBEDDING_HPO_EMBEDDING_DIM_RANGE
+from class_resolver import OptionalKwargs
+from pykeen.constants import (DEFAULT_DROPOUT_HPO_RANGE,
+                              DEFAULT_EMBEDDING_HPO_EMBEDDING_DIM_RANGE)
 from pykeen.losses import BCEAfterSigmoidLoss, Loss
+from pykeen.models.nbase import ERModel
 from pykeen.nn import TuckerInteraction
 from pykeen.nn.init import xavier_normal_
 from pykeen.typing import Hint, Initializer
 
-from .EETCRLFrameWork import TypeFramework
+from .ESETC import TypeFramework
 
 __all__ = [
     "TuckER",
 ]
 
-class EETCRLwithTuckER(TypeFramework):
+class ESETCwithTuckER(TypeFramework):
     #: The default strategy for optimizing the model's hyper-parameters
     hpo_default: ClassVar[Mapping[str, Any]] = dict(
         ent_dim=DEFAULT_EMBEDDING_HPO_EMBEDDING_DIM_RANGE,

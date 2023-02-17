@@ -1,18 +1,5 @@
 # The name of this new framework is "Relation Specific Entity and entity Type Combination" (RSETC).
 import logging
-from typing import Any, ClassVar, Mapping, Type,Optional
-
-import torch
-from torch.nn import functional
-from class_resolver import HintOrType, OptionalKwargs
-from pykeen.losses import Loss, NSSALoss
-from pykeen.nn.init import init_phases, xavier_uniform_, xavier_uniform_, xavier_uniform_norm_
-from pykeen.nn.modules import RotatEInteraction, TransEInteraction
-from pykeen.regularizers import Regularizer
-from pykeen.typing import Constrainer, Hint, Initializer
-from pykeen.utils import complex_normalize
-
-import logging
 from typing import (Any, ClassVar, Mapping, Optional, Sequence, Tuple, Type,
                     cast)
 
@@ -26,9 +13,10 @@ from pykeen.models import ERModel
 from pykeen.models.nbase import _prepare_representation_module_list
 from pykeen.nn import Representation
 from pykeen.nn.combination import Combination
-from pykeen.nn.init import init_phases, xavier_uniform_
+from pykeen.nn.init import init_phases, xavier_uniform_, xavier_uniform_norm_
 from pykeen.nn.modules import (Interaction, RotatEInteraction,
-                               interaction_resolver, parallel_unsqueeze)
+                               TransEInteraction, interaction_resolver,
+                               parallel_unsqueeze)
 from pykeen.nn.representation import Representation
 from pykeen.regularizers import Regularizer
 from pykeen.triples import KGInfo
@@ -37,10 +25,11 @@ from pykeen.typing import (Constrainer, HeadRepresentation, Hint,
                            TailRepresentation)
 from pykeen.utils import complex_normalize
 from torch import nn
+from torch.nn import functional
 
 from ..CustomTripleFactory import TriplesTypesFactory
+from .ESETC import TypeFramework, repeat_if_necessary
 
-from .EETCRLFrameWork import TypeFramework, repeat_if_necessary
 
 class RSETC(TypeFramework):
     """

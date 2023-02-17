@@ -115,16 +115,16 @@ else:
 
 
 import torch
+from Custom.TypeModels.ESETCwithRotate import ESETCwithRotate, ESETCwithTransE
+from Custom.TypeModels.ESETCwithTuckER import ESETCwithTuckER
 from Custom.TypeModels.RSETC import RSETCwithTransE
-from Custom.TypeModels.TypeRotate import EETCRLwithRotate, EETCRLwithTransE
-from Custom.TypeModels.TypeTuckER import EETCRLwithTuckER
 # Pick a model
 # from Custom.CustomModel import EETCRLwithRotate
 from pykeen.models import DistMult, DistMultLiteral, RotatE, TransE
 from pykeen.nn.modules import RotatEInteraction, TransEInteraction
 
 if args.model_index == 0:
-    model = EETCRLwithTransE(
+    model = ESETCwithTransE(
             triples_factory=training_data,
             dropout=args.dropout,
             bias = args.project_with_bias,
@@ -139,7 +139,7 @@ if args.model_index == 0:
             ),
             )
 elif args.model_index == 1:
-    model = EETCRLwithRotate(
+    model = ESETCwithRotate(
             triples_factory=training_data,
             dropout=args.dropout,
             bias = args.project_with_bias,
@@ -159,7 +159,7 @@ elif args.model_index == 1:
             )
 elif args.model_index == 2:
 
-    model = EETCRLwithTuckER(
+    model = ESETCwithTuckER(
             triples_factory=training_data,
             dropout=args.dropout,
             bias = args.project_with_bias,
@@ -170,9 +170,7 @@ elif args.model_index == 2:
             dropout_0 = 0.3,
     )
 
-
-
-elif args.model_index == 4:
+elif args.model_index == 11:
     model = TransE(
             triples_factory=training_data,
             embedding_dim=args.model_ent_dim,
@@ -185,9 +183,7 @@ elif args.model_index == 4:
             # loss = 'BCEAfterSigmoidLoss',
     )
 
-
-
-elif args.model_index == 6:
+elif args.model_index == 12:
     model = RotatE(
             triples_factory=training_data,
             embedding_dim=args.model_ent_dim,
@@ -202,21 +198,6 @@ elif args.model_index == 6:
             ),
     )
 
-if args.model_index == 11:
-    model = RSETCwithTransE(
-            triples_factory=training_data,
-            dropout=args.dropout,
-            bias = args.project_with_bias,
-            ent_dim=args.model_ent_dim,
-            rel_dim=args.model_rel_dim,
-            type_dim=args.model_type_dim,
-            loss='NSSALoss',
-            loss_kwargs=dict(
-                reduction='mean',
-                adversarial_temperature=args.adversarial_temperature,
-                margin=args.loss_margin,
-            ),
-            )
 
 if torch.cuda.is_available():
     model.to('cuda')
@@ -227,7 +208,6 @@ from torch.optim import Adam
 optimizer = Adam(params=model.get_grad_params())
 
 from pykeen.pipeline import pipeline
-from pykeen.training import LCWATrainingLoop, SLCWATrainingLoop
 
 if args.description is not None:
     model_name = args.description + '/' + type(model).__name__ 

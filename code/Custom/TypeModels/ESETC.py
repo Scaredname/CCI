@@ -2,9 +2,9 @@
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-28 16:19:48
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-02-09 15:46:02
-FilePath: /undefined/home/ni/Desktop/try/code/Custom/TypeModels/EETCRLFrameWork.py
-Description: 
+LastEditTime: 2023-02-17 12:08:05
+FilePath: /undefined/home/ni/code/ESETC/code/Custom/TypeModels/ESETC.py
+Description: "Entity Specific Entity and entity Type Combination" (ESETC)
 
 Copyright (c) 2022 by error: git config user.name && git config user.email & please set dead value or install git, All Rights Reserved. 
 '''

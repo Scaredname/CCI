@@ -1,9 +1,9 @@
 '''
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-28 14:23:33
-LastEditors: error: git config user.name && git config user.email & please set dead value or install git
-LastEditTime: 2022-12-28 17:13:59
-FilePath: /undefined/home/ni/Desktop/try/code/Custom/TypeModels/TypeRotate.py
+LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
+LastEditTime: 2023-02-17 12:07:03
+FilePath: /undefined/home/ni/code/ESETC/code/Custom/TypeModels/ESETCwithRotate.py
 Description: 
 
 Copyright (c) 2022 by error: git config user.name && git config user.email & please set dead value or install git, All Rights Reserved. 
@@ -14,16 +14,16 @@ import logging
 from typing import Any, ClassVar, Mapping, Type
 
 import torch
-from torch.nn import functional
 from class_resolver import HintOrType, OptionalKwargs
 from pykeen.losses import Loss, NSSALoss
-from pykeen.nn.init import init_phases, xavier_uniform_, xavier_uniform_, xavier_uniform_norm_
+from pykeen.nn.init import init_phases, xavier_uniform_, xavier_uniform_norm_
 from pykeen.nn.modules import RotatEInteraction, TransEInteraction
 from pykeen.regularizers import Regularizer
 from pykeen.typing import Constrainer, Hint, Initializer
 from pykeen.utils import complex_normalize
+from torch.nn import functional
 
-from .EETCRLFrameWork import TypeFramework
+from .ESETC import TypeFramework
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ name_to_index = {name: index for index, name in enumerate("hrt")}
     
 
 
-class EETCRLwithRotate(TypeFramework):
+class ESETCwithRotate(TypeFramework):
     loss_default: ClassVar[Type[Loss]] = NSSALoss
     hpo_default: ClassVar[Mapping[str, Any]] = dict(
     )
@@ -80,7 +80,7 @@ class EETCRLwithRotate(TypeFramework):
             **kwargs)
 
 
-class EETCRLwithTransE(TypeFramework):
+class ESETCwithTransE(TypeFramework):
     loss_default: ClassVar[Type[Loss]] = NSSALoss
     hpo_default: ClassVar[Mapping[str, Any]] = dict(
     )
