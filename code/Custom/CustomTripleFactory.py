@@ -102,8 +102,9 @@ class TriplesTypesFactory(TriplesFactory):
         self.assignments = self._get_assignment(ents_types)
 
         # Calculate the proportion of each type.
-        # self.ents_types = self._cal_propor(self.ents_types)
-        self.rels_types = self._cal_propor(self.rels_types)
+        self.ents_types = self._cal_propor(self.ents_types)
+        self.rels_types[0] = self._cal_propor(self.rels_types[0])
+        self.rels_types[1] = self._cal_propor(self.rels_types[1])
 
     @classmethod
     def from_labeled_triples(
