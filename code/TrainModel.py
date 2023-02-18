@@ -198,6 +198,22 @@ elif args.model_index == 12:
             ),
     )
 
+elif args.model_index == 21:
+    model = RSETCwithTransE(
+            triples_factory=training_data,
+            dropout=args.dropout,
+            bias = args.project_with_bias,
+            ent_dim=args.model_ent_dim,
+            rel_dim=args.model_rel_dim,
+            type_dim=args.model_type_dim,
+            loss='NSSALoss',
+            loss_kwargs=dict(
+                reduction='mean',
+                adversarial_temperature=args.adversarial_temperature,
+                margin=args.loss_margin,
+            ),
+            )
+
 
 if torch.cuda.is_available():
     model.to('cuda')
