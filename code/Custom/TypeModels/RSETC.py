@@ -65,6 +65,7 @@ class RSETC(TypeFramework):
         rels_types_t = self.rels_types[1]
         ents_types = torch.as_tensor(self.triples_factory.ents_types, dtype=self.data_type, device=self.device)
 
+        # 当测试批量不为1时，如果是1N打分方法的话会有问题。r的维度是（batch_size,type_num），但是待测试的实体维度是(num_eitities,type_num)，所以需要将r的维度扩展到(num_eitities,1)。
         head_type_emb_tensor = torch.matmul(ents_types[h]+rels_types_h[r_h], type_emb)
         tail_type_emb_tensor = torch.matmul(ents_types[t]+rels_types_t[r_t], type_emb)
         h_assignments = assignments[h]
@@ -129,7 +130,8 @@ class RSETC(TypeFramework):
         # 出现问题：当采用1N打分方法时，被打分的对象会送入所有的实体嵌入，如果批量不为1即关系数不为1时，这个时候生成的实体的类型部分嵌入因为boardcast会维度翻批量数倍，导致权重间无法concatenate,暂时用批量为1来解决
         head_type_emb, tail_type_emb, h_assig, t_assig = self._get_enttype_representations(h=hr_batch[..., 0], r_h=hr_batch[..., 1], r_t=hr_batch[..., 1], t=tails, mode=mode)
         
-        tail_type_emb = tail_type_emb.view(t.shape[0], -1)
+        #问题出在这里，这里为了能concate而对head_type_emb进行了view，但是这样会导致head_type_emb的shape变成了（ent_num,emb_dim*test_batch_size）, 无法使用线性层投影。
+        tail_type_emb = tail_type_emb.view(-1, self.type_dim)
         t_assig = t_assig.view(t.shape[0], -1)
         head_type_emb = head_type_emb.view(h.shape[0], h.shape[1], -1)
 
