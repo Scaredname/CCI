@@ -65,7 +65,6 @@ class RSETC(TypeFramework):
         rels_types_t = self.rels_types[1]
         ents_types = torch.as_tensor(self.triples_factory.ents_types, dtype=self.data_type, device=self.device)
 
-        # 当测试批量不为1时，如果是1N打分方法的话会有问题。r的维度是（batch_size,type_num），但是待测试的实体维度是(num_eitities,type_num)，所以需要将r的维度扩展到(num_eitities,1)。
         head_type_emb_tensor = torch.matmul(ents_types[h]+rels_types_h[r_h], type_emb)
         tail_type_emb_tensor = torch.matmul(ents_types[t]+rels_types_t[r_t], type_emb)
         h_assignments = assignments[h]
@@ -127,16 +126,16 @@ class RSETC(TypeFramework):
         # add broadcast dimension
         hr_batch = hr_batch.unsqueeze(dim=1)
         h, r, t = self._get_representations(h=hr_batch[..., 0], r=hr_batch[..., 1], t=tails, mode=mode)
-        # 出现问题：当采用1N打分方法时，被打分的对象会送入所有的实体嵌入，如果批量不为1即关系数不为1时，这个时候生成的实体的类型部分嵌入因为boardcast会维度翻批量数倍，导致权重间无法concatenate,暂时用批量为1来解决
+
         head_type_emb, tail_type_emb, h_assig, t_assig = self._get_enttype_representations(h=hr_batch[..., 0], r_h=hr_batch[..., 1], r_t=hr_batch[..., 1], t=tails, mode=mode)
         
-        #问题出在这里，这里为了能concate而对head_type_emb进行了view，但是这样会导致head_type_emb的shape变成了（ent_num,emb_dim*test_batch_size）, 无法使用线性层投影。
-        tail_type_emb = tail_type_emb.view(-1, self.type_dim)
+        
         t_assig = t_assig.view(t.shape[0], -1)
         head_type_emb = head_type_emb.view(h.shape[0], h.shape[1], -1)
 
         h_s_type_emb = self.projection(torch.cat([head_type_emb, h],dim=-1)).to(self.device)
-        # (122080x850 and 250x50)
+        # 确保t和t_type_emb的shape一致
+        t = t.unsqueeze(dim=0).repeat(h.shape[0], 1, 1)
         t_s_type_emb = self.projection(torch.cat([tail_type_emb, t],dim=-1)).to(self.device)
 
         if self.data_type == torch.cfloat:
@@ -144,12 +143,14 @@ class RSETC(TypeFramework):
             t_s_type_emb = self._complex_dropout(t_s_type_emb, p=self.dropout)
 
         h_emb_list = [h_s_type_emb, h]
+        # 当采用1N打分时，广播机制存在所以也可以实现嵌入的替换。
         h = self._replace_emb(h_emb_list, h_assig)    
         t_emb_list = [t_s_type_emb, t]
         t = self._replace_emb(t_emb_list, t_assig)
         # unsqueeze if necessary
         if tails is None or tails.ndimension() == 1:
-            t = parallel_unsqueeze(t, dim=0)
+            if not len(t.shape) > 2:
+                t = parallel_unsqueeze(t, dim=0)
 
         return repeat_if_necessary(
             scores=self.interaction.score(h=h, r=r, t=t, slice_size=slice_size, slice_dim=1),
@@ -172,11 +173,11 @@ class RSETC(TypeFramework):
         
         head_type_emb, tail_type_emb, h_assig, t_assig = self._get_enttype_representations(h=heads, r_h=rt_batch[..., 0], r_t=rt_batch[..., 0], t=rt_batch[..., 1], mode=mode)
 
-        head_type_emb = head_type_emb.view(h.shape[0], -1)
         h_assig = h_assig.view(h.shape[0], -1)
         tail_type_emb = tail_type_emb.view(t.shape[0], t.shape[1], -1)
         
-        
+        # 确保h和h_type_emb的shape一致
+        h = h.unsqueeze(dim=0).repeat(t.shape[0], 1, 1)
         h_s_type_emb = self.projection(torch.cat([head_type_emb, h],dim=-1)).to(self.device)    
         t_s_type_emb = self.projection(torch.cat([tail_type_emb, t],dim=-1)).to(self.device)
         if self.data_type == torch.cfloat:
