@@ -67,7 +67,7 @@ for file_name in os.listdir(result_path):
         results_dict['optimizer'].append(config['optimizer'])
         results_dict['learning-rate'].append(config['optimizer_kwargs'].split(',')[0].split(':')[1])
 
-        if 'EETCRL' not in config['model'] and 'RSETC' not in config['model']:
+        if 'ESETC' not in config['model'] and 'RSETC' not in config['model']:
             results_dict['ent-dim'].append(re.findall(pattern, config['model_kwargs'])[-5].split(',')[1])
             results_dict['rel-dim'].append(re.findall(pattern, config['model_kwargs'])[-2].split(',')[1])
             results_dict['type-dim'].append('-')
