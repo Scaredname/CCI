@@ -4,10 +4,11 @@ import datetime
 import json
 import os
 
-from Custom.CustomTripleFactory import TriplesTypesFactory
 from pykeen.datasets import YAGO310, FB15k237, Nations, get_dataset
 from pykeen.triples import TriplesFactory
 from pykeen.typing import LabeledTriples
+
+from Custom.CustomTripleFactory import TriplesTypesFactory
 from utilities import get_white_list_relation, readTypeData
 
 HEAD = 0
@@ -37,6 +38,7 @@ parser.add_argument('-drop', '--dropout', type=float, default=0.0)
 parser.add_argument('-de', '--description', type=str, default='noDescription')
 parser.add_argument('-reverse', '--CreateInverseTriples', action='store_true', default=False)
 parser.add_argument('-t', '--IfUseTypeLike', action='store_true', default=False)
+parser.add_argument('-pre', '--IfUsePreTrainTypeEmb', action='store_true', default=False)
 args = parser.parse_args()
 
 pipeline_config = dict(
@@ -115,13 +117,17 @@ else:
 
 
 import torch
-from Custom.TypeModels.ESETCwithRotate import ESETCwithRotate, ESETCwithTransE
-from Custom.TypeModels.ESETCwithTuckER import ESETCwithTuckER
-from Custom.TypeModels.RSETC import RSETCwithTransE
 # Pick a model
 # from Custom.CustomModel import EETCRLwithRotate
 from pykeen.models import DistMult, DistMultLiteral, RotatE, TransE
 from pykeen.nn.modules import RotatEInteraction, TransEInteraction
+
+from Custom.TypeModels.ESETCwithRotate import ESETCwithRotate, ESETCwithTransE
+from Custom.TypeModels.ESETCwithTuckER import ESETCwithTuckER
+from Custom.TypeModels.RSETC import RSETCwithTransE
+
+if args.IfUsePreTrainTypeEmb:
+    args.description='PreTrainTypeEmb'
 
 if args.model_index == 0:
     model = ESETCwithTransE(
@@ -137,6 +143,7 @@ if args.model_index == 0:
                 adversarial_temperature=args.adversarial_temperature,
                 margin=args.loss_margin,
             ),
+            usepretrained = args.IfUsePreTrainTypeEmb,
             )
 elif args.model_index == 1:
     model = ESETCwithRotate(
@@ -156,6 +163,7 @@ elif args.model_index == 1:
                 adversarial_temperature=args.adversarial_temperature,
                 margin=args.loss_margin,
             ),
+            usepretrained = args.IfUsePreTrainTypeEmb,
             )
 elif args.model_index == 2:
 
@@ -212,6 +220,7 @@ elif args.model_index == 21:
                 adversarial_temperature=args.adversarial_temperature,
                 margin=args.loss_margin,
             ),
+            usepretrained = args.IfUsePreTrainTypeEmb,
             )
 
 

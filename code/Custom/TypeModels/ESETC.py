@@ -2,8 +2,8 @@
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-28 16:19:48
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-02-17 12:08:05
-FilePath: /undefined/home/ni/code/ESETC/code/Custom/TypeModels/ESETC.py
+LastEditTime: 2023-02-22 13:51:57
+FilePath: /code/Custom/TypeModels/ESETC.py
 Description: "Entity Specific Entity and entity Type Combination" (ESETC)
 
 Copyright (c) 2022 by error: git config user.name && git config user.email & please set dead value or install git, All Rights Reserved. 
@@ -23,7 +23,7 @@ from pykeen.models import ERModel
 from pykeen.models.nbase import _prepare_representation_module_list
 from pykeen.nn import Representation
 from pykeen.nn.combination import Combination
-from pykeen.nn.init import init_phases, xavier_uniform_
+from pykeen.nn.init import LabelBasedInitializer, init_phases, xavier_uniform_
 from pykeen.nn.modules import (Interaction, RotatEInteraction,
                                interaction_resolver, parallel_unsqueeze)
 from pykeen.nn.representation import Representation
@@ -91,6 +91,7 @@ class TypeFramework(ERModel):
         shape: Sequence[str] = ('d',),
         activation: HintOrType[nn.Module] = nn.Identity,
         activation_kwargs: OptionalKwargs = None,
+        usepretrained = False,
         entity_initializer: Hint[Initializer] = xavier_uniform_,
         relation_initializer: Hint[Initializer] = xavier_uniform_,
         type_initializer: Hint[Initializer] = xavier_uniform_,
@@ -118,12 +119,21 @@ class TypeFramework(ERModel):
         if data_type == torch.cfloat:
             self.dropout = dropout
             dropout = 0.0
-        
+
+        # Using pre-trained embeddings for type representations
+        if usepretrained:
+            types = list(triples_factory.types_to_id.keys())
+            type_init = LabelBasedInitializer(labels=types, encoder='transformer')
+            type_representations_kwargs['initializer'] = type_init
+            type_representations_kwargs['shape'] = type_init.as_embedding().shape[0]
+            self.type_dim = type_init.as_embedding().shape[0]
+            type_representations_kwargs['trainable'] = False
+
         self.projection = torch.nn.Sequential(
-                torch.nn.Linear(type_dim+ent_dim, ent_dim, bias=bias, dtype=data_type),
+                torch.nn.Linear(self.type_dim+ent_dim, ent_dim, bias=bias, dtype=data_type),
                 torch.nn.Dropout(dropout),
                 activation_resolver.make(activation, activation_kwargs),)
-
+        
         self.type_representations = self._build_type_representations(
             triples_factory=triples_factory,
             shape=shape,
