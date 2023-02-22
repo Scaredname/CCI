@@ -146,9 +146,11 @@ if args.model_index == 0:
             usepretrained = args.IfUsePreTrainTypeEmb,
             )
 elif args.model_index == 1:
+    # 因为没有使用cfloat，实际维度是参数维度的一半
     model = ESETCwithRotate(
             triples_factory=training_data,
             dropout=args.dropout,
+            data_type=torch.float,
             bias = args.project_with_bias,
             ent_dim=args.model_ent_dim,
             rel_dim=args.model_rel_dim,

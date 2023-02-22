@@ -2,8 +2,8 @@
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-28 14:23:33
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-02-17 12:07:03
-FilePath: /undefined/home/ni/code/ESETC/code/Custom/TypeModels/ESETCwithRotate.py
+LastEditTime: 2023-02-22 15:58:01
+FilePath: /code/Custom/TypeModels/ESETCwithRotate.py
 Description: 
 
 Copyright (c) 2022 by error: git config user.name && git config user.email & please set dead value or install git, All Rights Reserved. 
@@ -49,6 +49,7 @@ class ESETCwithRotate(TypeFramework):
             regularizer: HintOrType[Regularizer] = None,
             regularizer_kwargs: OptionalKwargs = None,
             bias = False,
+            data_type = torch.cfloat,
             dropout = 0.3,
             **kwargs,) -> None:
         super().__init__(
@@ -57,25 +58,25 @@ class ESETCwithRotate(TypeFramework):
             ent_dim=ent_dim,
             rel_dim=rel_dim,
             type_dim=type_dim,
-            data_type=torch.cfloat,
+            data_type=data_type,
             interaction=RotatEInteraction,
             entity_representations_kwargs=dict(
                 shape=ent_dim,
                 initializer=entity_initializer,
                 regularizer=regularizer,
                 regularizer_kwargs=regularizer_kwargs,
-                dtype=torch.cfloat,
+                dtype=data_type,
             ),
             relation_representations_kwargs=dict(
                 shape=rel_dim,
                 initializer=relation_initializer,
                 constrainer=relation_constrainer,
-                dtype=torch.cfloat,
+                dtype=data_type,
             ),
             type_representations_kwargs=dict(
                 shape=type_dim,
                 initializer=type_initializer,
-                dtype=torch.cfloat,
+                dtype=data_type,
             ),
             **kwargs)
 
