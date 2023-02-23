@@ -20,7 +20,7 @@ pattern = r"\(([^)]+)\)"
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--dataset', choices=['YAGO3-10-TypeLike', 'YAGO3-10', 'CAKE-FB15K237', 'CAKE-FB15K', 'CAKE-NELL-995', 'CAKE-DBpedia-242'], default='YAGO3-10-TypeLike')
-parser.add_argument('-de', choices=['LearnableAdjacency', 'noDescription', 'previousResult_noDescription'], default='noDescription')
+parser.add_argument('-de', choices=['LearnableAdjacency', 'noDescription', 'previousResult_noDescription', 'PreTrainTypeEmb'], default='noDescription')
 args = parser.parse_args()
 
 
