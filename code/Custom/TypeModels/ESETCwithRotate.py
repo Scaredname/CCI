@@ -49,7 +49,7 @@ class ESETCwithRotate(TypeFramework):
             regularizer: HintOrType[Regularizer] = None,
             regularizer_kwargs: OptionalKwargs = None,
             bias = False,
-            data_type = torch.cfloat,
+            data_type = torch.float,
             dropout = 0.3,
             **kwargs,) -> None:
         super().__init__(

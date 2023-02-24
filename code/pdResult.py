@@ -94,12 +94,4 @@ r = pd.DataFrame(results_dict)
 
 r.to_csv(save_path, index=False)
 
-
-    
-
-# results_dict[dataset] = dict(sorted(results_dict[dataset].items(), key=lambda x: x[1][0]))
-
-# with open(save_path, 'w', encoding='utf8') as f:
-#     json.dump(results_dict, f)
-
         
