@@ -38,6 +38,8 @@ parser.add_argument('-de', '--description', type=str, default='noDescription')
 parser.add_argument('-reverse', '--CreateInverseTriples', action='store_true', default=False)
 parser.add_argument('-t', '--IfUseTypeLike', action='store_true', default=False)
 parser.add_argument('-pre', '--IfUsePreTrainTypeEmb', action='store_true', default=False)
+parser.add_argument('-rw', '--ReglurizerWeight', type=float, default=0.001)
+parser.add_argument('-rp', '--ReglurizerNorm', type=float, default=2.0)
 args = parser.parse_args()
 
 pipeline_config = dict(
@@ -195,6 +197,11 @@ elif args.model_index == 3:
                 adversarial_temperature=args.adversarial_temperature,
                 margin=args.loss_margin,
             ),
+            regularizer_kwargs = dict(
+                weight=args.ReglurizerWeight,
+                p=args.ReglurizerNorm, # 使用N3norm
+                normalize=True,
+            ),
             usepretrained = args.IfUsePreTrainTypeEmb,
             )
 elif args.model_index == 4:
@@ -210,6 +217,11 @@ elif args.model_index == 4:
                 reduction='mean',
                 adversarial_temperature=args.adversarial_temperature,
                 margin=args.loss_margin,
+            ),
+            regularizer_kwargs = dict(
+                weight=args.ReglurizerWeight,
+                p=args.ReglurizerNorm, # 使用N3norm
+                normalize=True,
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
             )
