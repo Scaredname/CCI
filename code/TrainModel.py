@@ -148,15 +148,15 @@ if args.model_index == 0:
             usepretrained = args.IfUsePreTrainTypeEmb,
             )
 elif args.model_index == 1:
-    # 因为没有使用cfloat，实际维度是参数维度的一半
+    # 因为没有使用cfloat，通过乘2来确保参数维度和实际维度相同
     model = ESETCwithRotate(
             triples_factory=training_data,
             dropout=args.dropout,
             data_type=torch.float,
             bias = args.project_with_bias,
-            ent_dim=args.model_ent_dim,
-            rel_dim=args.model_rel_dim,
-            type_dim=args.model_type_dim,
+            ent_dim=args.model_ent_dim*2,
+            rel_dim=args.model_rel_dim*2,
+            type_dim=args.model_type_dim*2,
             type_initializer='uniform',
             entity_initializer='uniform',
             relation_initializer='init_phases',
@@ -188,9 +188,9 @@ elif args.model_index == 3:
             triples_factory=training_data,
             dropout=args.dropout,
             bias = args.project_with_bias,
-            ent_dim=args.model_ent_dim,
-            rel_dim=args.model_rel_dim,
-            type_dim=args.model_type_dim,
+            ent_dim=args.model_ent_dim*2,
+            rel_dim=args.model_rel_dim*2,
+            type_dim=args.model_type_dim*2,
             loss='NSSALoss',
             loss_kwargs=dict(
                 reduction='mean',
