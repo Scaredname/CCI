@@ -39,7 +39,7 @@ parser.add_argument('-reverse', '--CreateInverseTriples', action='store_true', d
 parser.add_argument('-t', '--IfUseTypeLike', action='store_true', default=False)
 parser.add_argument('-pre', '--IfUsePreTrainTypeEmb', action='store_true', default=False)
 parser.add_argument('-rw', '--ReglurizerWeight', type=float, default=0.001)
-parser.add_argument('-rp', '--ReglurizerNorm', type=float, default=2.0)
+parser.add_argument('-rp', '--ReglurizerNorm', type=float, default=3.0)
 args = parser.parse_args()
 
 pipeline_config = dict(
@@ -125,7 +125,7 @@ from Custom.TypeModels.ESETCwithTuckER import ESETCwithTuckER
 from Custom.TypeModels.RSETC import RSETCwithTransE
 # Pick a model
 # from Custom.CustomModel import EETCRLwithRotate
-from pykeen.models import DistMult, DistMultLiteral, RotatE, TransE
+from pykeen.models import ComplEx, DistMult, DistMultLiteral, RotatE, TransE
 from pykeen.nn.modules import RotatEInteraction, TransEInteraction
 
 if args.IfUsePreTrainTypeEmb:
@@ -254,6 +254,40 @@ elif args.model_index == 12:
             ),
     )
 
+elif args.model_index == 13:
+    model = ComplEx(
+            triples_factory=training_data,
+            embedding_dim=args.model_ent_dim,
+            loss='NSSALoss',
+            loss_kwargs=dict(
+                reduction='mean',
+                adversarial_temperature=args.adversarial_temperature,
+                margin=args.loss_margin,
+            ),
+            regularizer_kwargs = dict(
+                weight=args.ReglurizerWeight,
+                p=args.ReglurizerNorm, # 使用N3norm
+                normalize=True,
+            ),
+            )
+
+elif args.model_index == 14:
+    model = DistMult(
+            triples_factory=training_data,
+            embedding_dim=args.model_ent_dim,
+            loss='NSSALoss',
+            loss_kwargs=dict(
+                reduction='mean',
+                adversarial_temperature=args.adversarial_temperature,
+                margin=args.loss_margin,
+            ),
+            regularizer_kwargs = dict(
+                weight=args.ReglurizerWeight,
+                p=args.ReglurizerNorm, # 使用N3norm
+                normalize=True,
+            ),
+            )
+
 elif args.model_index == 21:
     model = RSETCwithTransE(
             triples_factory=training_data,
@@ -291,35 +325,7 @@ pipeline_result = pipeline(
     training=training_data,
     validation=validation,
     testing=testing,
-    # model=TransE,
-    # model_kwargs=dict(
-    #     embedding_dim=500,
-    # ),
-    # loss='NSSALoss',
-    # loss_kwargs=dict(
-    #     reduction='mean',
-    #     adversarial_temperature=1.0,
-    #     margin=9,
-    # ),
     model=model,
-    # optimizer='adam',
-    # optimizer_kwargs=dict(
-    #     lr=0.0005
-    # ),
-    # training_loop='slcwa',
-    # negative_sampler='basic',
-    # negative_sampler_kwargs=dict(
-    #     num_negs_per_pos=256,
-    # ),
-    # training_loop='lcwa',
-    # training_kwargs=dict(
-    #     num_epochs=1000,
-    #     batch_size=1024,
-    # ),
-    # evaluator_kwargs=dict(
-    #     filtered=True,
-    #     batch_size=128,
-    # ),
     result_tracker='tensorboard',
     result_tracker_kwargs=dict(
         experiment_path='../result/tensorBoard_log/%s/%s/%s'%(dataset, model_name, datetime.datetime.now().strftime("%Y%m%d-%H%M%S")),
