@@ -119,13 +119,13 @@ else:
 
 import torch
 from Custom.TypeModels.ESETCwithComplEx import (ESETCwithComplEx,
-                                                ESETCwithDistMult)
+                                                ESETCwithDistMult, DistMult)
 from Custom.TypeModels.ESETCwithRotate import ESETCwithRotate, ESETCwithTransE
 from Custom.TypeModels.ESETCwithTuckER import ESETCwithTuckER
 from Custom.TypeModels.RSETC import RSETCwithTransE
 # Pick a model
 # from Custom.CustomModel import EETCRLwithRotate
-from pykeen.models import ComplEx, DistMult, DistMultLiteral, RotatE, TransE
+from pykeen.models import ComplEx, DistMultLiteral, RotatE, TransE
 from pykeen.nn.init import xavier_uniform_
 from pykeen.nn.modules import RotatEInteraction, TransEInteraction
 
@@ -283,8 +283,10 @@ elif args.model_index == 13:
 elif args.model_index == 14:
     model = DistMult(
             triples_factory=training_data,
-            entity_initializer=xavier_uniform_,
-            relation_initializer=xavier_uniform_,
+            # entity_initializer='uniform',
+            # relation_initializer='uniform',
+            # entity_initializer=xavier_uniform_,
+            # relation_initializer=xavier_uniform_,
             embedding_dim=args.model_ent_dim,
             loss='NSSALoss',
             loss_kwargs=dict(

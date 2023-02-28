@@ -11,11 +11,12 @@ Copyright (c) 2023 by ${git_name_email}, All Rights Reserved.
 from typing import Any, ClassVar, Mapping, Optional, Type
 
 import torch
-from class_resolver import OptionalKwargs
+from class_resolver import HintOrType, OptionalKwargs
 from class_resolver.api import HintOrType
 from pykeen.constants import (DEFAULT_DROPOUT_HPO_RANGE,
                               DEFAULT_EMBEDDING_HPO_EMBEDDING_DIM_RANGE)
 from pykeen.losses import Loss, SoftplusLoss
+from pykeen.models.nbase import ERModel
 from pykeen.nn import ComplExInteraction, DistMultInteraction
 from pykeen.nn.init import (init_phases, xavier_normal_, xavier_normal_norm_,
                             xavier_uniform_)
@@ -23,7 +24,7 @@ from pykeen.regularizers import LpRegularizer, Regularizer
 from pykeen.typing import Constrainer, Hint, Initializer
 from torch.nn import functional
 from torch.nn.init import normal_
-
+from pykeen.constants import DEFAULT_EMBEDDING_HPO_EMBEDDING_DIM_RANGE
 from .ESETC import TypeFramework
 
 __all__ = [
@@ -136,7 +137,9 @@ class ESETCwithDistMult(TypeFramework):
                 shape=ent_dim,
                 initializer=entity_initializer,
                 dtype=data_type,
-                constrainer=entity_constrainer,
+                # constrainer=entity_constrainer,
+                regularizer=regularizer,
+                regularizer_kwargs=regularizer_kwargs,
                 # note: DistMult only regularizes the relation embeddings;
                 #       entity embeddings are hard constrained insteadd
             ),
@@ -155,3 +158,50 @@ class ESETCwithDistMult(TypeFramework):
             ),
             **kwargs,
             )
+
+class DistMult(ERModel):
+    #: The default strategy for optimizing the model's hyper-parameters
+    hpo_default: ClassVar[Mapping[str, Any]] = dict(
+        embedding_dim=DEFAULT_EMBEDDING_HPO_EMBEDDING_DIM_RANGE,
+    )
+    #: The regularizer used by [yang2014]_ for DistMult
+    #: In the paper, they use weight of 0.0001, mini-batch-size of 10, and dimensionality of vector 100
+    #: Thus, when we use normalized regularization weight, the normalization factor is 10*sqrt(100) = 100, which is
+    #: why the weight has to be increased by a factor of 100 to have the same configuration as in the paper.
+    regularizer_default: ClassVar[Type[Regularizer]] = LpRegularizer
+    #: The LP settings used by [yang2014]_ for DistMult
+    regularizer_default_kwargs: ClassVar[Mapping[str, Any]] = dict(
+        weight=0.1,
+        p=2.0,
+        normalize=True,
+    )
+
+    def __init__(
+        self,
+        *,
+        embedding_dim: int = 50,
+        entity_initializer: Hint[Initializer] = xavier_uniform_,
+        entity_constrainer: Hint[Constrainer] = functional.normalize,
+        relation_initializer: Hint[Initializer] = xavier_normal_norm_,
+        regularizer: HintOrType[Regularizer] = LpRegularizer,
+        regularizer_kwargs: OptionalKwargs = None,
+        **kwargs,
+    ) -> None:
+        if regularizer is LpRegularizer and regularizer_kwargs is None:
+            regularizer_kwargs = DistMult.regularizer_default_kwargs
+        super().__init__(
+            interaction=DistMultInteraction,
+            entity_representations_kwargs=dict(
+                shape=embedding_dim,
+                initializer=entity_initializer,
+                regularizer=regularizer,
+                regularizer_kwargs=regularizer_kwargs,
+            ),
+            relation_representations_kwargs=dict(
+                shape=embedding_dim,
+                initializer=relation_initializer,
+                regularizer=regularizer,
+                regularizer_kwargs=regularizer_kwargs,
+            ),
+            **kwargs,
+        )
