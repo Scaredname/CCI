@@ -126,6 +126,7 @@ from Custom.TypeModels.RSETC import RSETCwithTransE
 # Pick a model
 # from Custom.CustomModel import EETCRLwithRotate
 from pykeen.models import ComplEx, DistMult, DistMultLiteral, RotatE, TransE
+from pykeen.nn.init import xavier_uniform_
 from pykeen.nn.modules import RotatEInteraction, TransEInteraction
 
 if args.IfUsePreTrainTypeEmb:
@@ -157,7 +158,7 @@ elif args.model_index == 1:
             ent_dim=args.model_ent_dim*2,
             rel_dim=args.model_rel_dim*2,
             type_dim=args.model_type_dim*2,
-            type_initializer='uniform',
+            type_initializer='xavier_uniform_',
             entity_initializer='uniform',
             relation_initializer='init_phases',
             relation_constrainer= 'complex_normalize',
@@ -191,6 +192,9 @@ elif args.model_index == 3:
             ent_dim=args.model_ent_dim*2,
             rel_dim=args.model_rel_dim*2,
             type_dim=args.model_type_dim*2,
+            entity_initializer=xavier_uniform_,
+            relation_initializer=xavier_uniform_,
+            type_initializer=xavier_uniform_,
             loss='NSSALoss',
             loss_kwargs=dict(
                 reduction='mean',
@@ -212,6 +216,9 @@ elif args.model_index == 4:
             ent_dim=args.model_ent_dim,
             rel_dim=args.model_rel_dim,
             type_dim=args.model_type_dim,
+            entity_initializer=xavier_uniform_,
+            relation_initializer=xavier_uniform_,
+            type_initializer=xavier_uniform_,
             loss='NSSALoss',
             loss_kwargs=dict(
                 reduction='mean',
@@ -257,6 +264,8 @@ elif args.model_index == 12:
 elif args.model_index == 13:
     model = ComplEx(
             triples_factory=training_data,
+            entity_initializer=xavier_uniform_,
+            relation_initializer=xavier_uniform_,
             embedding_dim=args.model_ent_dim,
             loss='NSSALoss',
             loss_kwargs=dict(
@@ -274,6 +283,8 @@ elif args.model_index == 13:
 elif args.model_index == 14:
     model = DistMult(
             triples_factory=training_data,
+            entity_initializer=xavier_uniform_,
+            relation_initializer=xavier_uniform_,
             embedding_dim=args.model_ent_dim,
             loss='NSSALoss',
             loss_kwargs=dict(
