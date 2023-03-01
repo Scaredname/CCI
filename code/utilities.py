@@ -2,14 +2,15 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2022-12-22 12:02:34
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-02-07 14:17:48
-FilePath: /undefined/home/ni/Desktop/try/code/utilities.py
+LastEditTime: 2023-03-01 15:32:15
+FilePath: /ESETC/code/utilities.py
 Description: 
 
 Copyright (c) 2023 by Ni Runyu ni-runyu@ed.tmu.ac.jp, All Rights Reserved. 
 '''
 import os
 from collections import defaultdict
+
 from Custom.CustomTripleFactory import TriplesTypesFactory
 from pykeen.triples import TriplesFactory, TriplesNumericLiteralsFactory
 
@@ -94,15 +95,17 @@ def get_white_list_relation(dataset, type_position = 0):
 
         return white_list_rel, rel_need              
 
-def readTypeData(data_name, data_pro_func, create_inverse_triples=False, type_position=0):
+def readTypeData(data_name, data_pro_func, create_inverse_triples=False, type_position=0, hasNoneType=False):
         """
         @Params: data_name, data_pro_func, create_inverse_triples, type_position
         @Return: Train, Test, Valid
         """
         if 'CAKE' in data_name:
                 data_name = 'data_concept/' + data_name.replace('CAKE-', '')
-        
+
         train_path = os.path.join('../data/%s/'%(data_name), 'train_type.txt')
+        if hasNoneType:
+                train_path = os.path.join('../data/%s/'%(data_name), 'train_type_a.txt')
         valid_path = os.path.join('../data/%s/'%(data_name), 'valid.txt') 
         test_path = os.path.join('../data/%s/'%(data_name), 'test.txt')
 

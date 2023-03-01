@@ -40,6 +40,7 @@ parser.add_argument('-t', '--IfUseTypeLike', action='store_true', default=False)
 parser.add_argument('-pre', '--IfUsePreTrainTypeEmb', action='store_true', default=False)
 parser.add_argument('-rw', '--ReglurizerWeight', type=float, default=0.001)
 parser.add_argument('-rp', '--ReglurizerNorm', type=float, default=3.0)
+parser.add_argument('-hnt', '--ifHasNoneType', action='store_true', default=False)
 args = parser.parse_args()
 
 pipeline_config = dict(
@@ -77,9 +78,9 @@ def splitTypeData(data:TriplesFactory, type_position = 0) -> "LabeledTriples, La
 
 dataset = args.dataset
 if dataset == 'fb15k-237-type':
-    training_data, validation, testing = readTypeData(dataset, data_pro_func=splitTypeData, type_position=HEAD, create_inverse_triples=args.CreateInverseTriples)
+    training_data, validation, testing = readTypeData(dataset, data_pro_func=splitTypeData, type_position=HEAD, create_inverse_triples=args.CreateInverseTriples, hasNoneType=args.ifHasNoneType)
 elif 'CAKE' in dataset:
-    training_data, validation, testing = readTypeData(dataset, data_pro_func=splitTypeData, type_position=TAIL, create_inverse_triples=args.CreateInverseTriples)
+    training_data, validation, testing = readTypeData(dataset, data_pro_func=splitTypeData, type_position=TAIL, create_inverse_triples=args.CreateInverseTriples, hasNoneType=args.ifHasNoneType)
 else:
     if dataset == 'FB15k237':
         data = FB15k237(create_inverse_triples = args.CreateInverseTriples)
@@ -118,8 +119,8 @@ else:
 
 
 import torch
-from Custom.TypeModels.ESETCwithComplEx import (ESETCwithComplEx,
-                                                ESETCwithDistMult, DistMult)
+from Custom.TypeModels.ESETCwithComplEx import (DistMult, ESETCwithComplEx,
+                                                ESETCwithDistMult)
 from Custom.TypeModels.ESETCwithRotate import ESETCwithRotate, ESETCwithTransE
 from Custom.TypeModels.ESETCwithTuckER import ESETCwithTuckER
 from Custom.TypeModels.RSETC import RSETCwithTransE
