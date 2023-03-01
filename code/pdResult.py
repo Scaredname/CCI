@@ -2,13 +2,14 @@
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-02 16:32:08
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-02-15 11:55:30
-FilePath: /undefined/home/ni/Desktop/try/code/pdResult.py
+LastEditTime: 2023-03-01 11:35:49
+FilePath: /ESETC/code/pdResult.py
 Description: 
 
 Copyright (c) 2023 by error: git config user.name && git config user.email & please set dead value or install git, All Rights Reserved. 
 '''
 import argparse
+import ast
 import json
 import os
 import re
@@ -17,6 +18,7 @@ from collections import defaultdict
 import pandas as pd
 
 pattern = r"\(([^)]+)\)"
+pattern1 = r"\(_embeddings\): Embedding\((.*)\)"
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--dataset', choices=['YAGO3-10-TypeLike', 'YAGO3-10', 'CAKE-FB15K237', 'CAKE-FB15K', 'CAKE-NELL-995', 'CAKE-DBpedia-242'], default='YAGO3-10-TypeLike')
@@ -67,14 +69,14 @@ for file_name in os.listdir(result_path):
         results_dict['optimizer'].append(config['optimizer'])
         results_dict['learning-rate'].append(config['optimizer_kwargs'].split(',')[0].split(':')[1])
 
-        if 'ESETC' not in config['model'] and 'RSETC' not in config['model']:
-            results_dict['ent-dim'].append(re.findall(pattern, config['model_kwargs'])[-5].split(',')[1])
-            results_dict['rel-dim'].append(re.findall(pattern, config['model_kwargs'])[-2].split(',')[1])
+        model_dims = re.findall(pattern1, config['model_kwargs'])
+        # model_dims = ['14505, 200', '237, 200']
+        results_dict['ent-dim'].append(int(model_dims[0].split(',')[1].strip()))
+        results_dict['rel-dim'].append(int(model_dims[1].split(',')[1].strip()))
+        try:
+            results_dict['type-dim'].append(int(model_dims[2].split(',')[1].strip()))
+        except:
             results_dict['type-dim'].append('-')
-        else:
-            results_dict['ent-dim'].append(re.findall(r'\d+', config['model_kwargs'])[3])
-            results_dict['rel-dim'].append(re.findall(r'\d+', config['model_kwargs'])[4])
-            results_dict['type-dim'].append(re.findall(r'\d+', config['model_kwargs'])[5])
 
         if 'SLCWATrainingLoop' == config['training_loop']:
             results_dict['negative_sampler'].append(config['negative_sampler'])
