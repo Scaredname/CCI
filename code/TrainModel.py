@@ -133,6 +133,9 @@ from pykeen.nn.modules import RotatEInteraction, TransEInteraction
 if args.IfUsePreTrainTypeEmb:
     args.description='PreTrainTypeEmb'
 
+if args.ifHasNoneType:
+    args.description+='HasNoneType'
+
 if args.model_index == 0:
     model = ESETCwithTransE(
             triples_factory=training_data,
