@@ -64,7 +64,7 @@ pipeline_config = dict(
     ),
     stopper='early',
     stopper_kwargs=dict(
-        frequency=5,
+        frequency=10,
         patience=4,
         relative_delta=0.0001,
         metric='mean_reciprocal_rank',
