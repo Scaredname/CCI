@@ -64,8 +64,8 @@ pipeline_config = dict(
     ),
     stopper='early',
     stopper_kwargs=dict(
-        frequency=10,
-        patience=4,
+        frequency=50,
+        patience=3,
         relative_delta=0.0001,
         metric='mean_reciprocal_rank',
         evaluation_batch_size=args.evaluator_batch_size,
