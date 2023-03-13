@@ -124,6 +124,7 @@ from Custom.TypeModels.ESETCwithComplEx import (DistMult, ESETCwithComplEx,
 from Custom.TypeModels.ESETCwithRotate import ESETCwithRotate, ESETCwithTransE
 from Custom.TypeModels.ESETCwithTuckER import ESETCwithTuckER
 from Custom.TypeModels.RSETC import RSETCwithTransE
+from Custom.TypeModels.CatESETC import CatESETCwithTransE
 # Pick a model
 # from Custom.CustomModel import EETCRLwithRotate
 from pykeen.models import ComplEx, DistMultLiteral, RotatE, TransE
@@ -310,6 +311,21 @@ elif args.model_index == 21:
             triples_factory=training_data,
             dropout=args.dropout,
             bias = args.project_with_bias,
+            ent_dim=args.model_ent_dim,
+            rel_dim=args.model_rel_dim,
+            type_dim=args.model_type_dim,
+            loss='NSSALoss',
+            loss_kwargs=dict(
+                reduction='mean',
+                adversarial_temperature=args.adversarial_temperature,
+                margin=args.loss_margin,
+            ),
+            usepretrained = args.IfUsePreTrainTypeEmb,
+            )
+
+elif args.model_index == 31:
+    model = CatESETCwithTransE(
+            triples_factory=training_data,
             ent_dim=args.model_ent_dim,
             rel_dim=args.model_rel_dim,
             type_dim=args.model_type_dim,
