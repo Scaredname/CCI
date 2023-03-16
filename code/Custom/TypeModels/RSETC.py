@@ -153,7 +153,8 @@ class RSETC(TypeFramework):
                 t = parallel_unsqueeze(t, dim=0)
 
         return repeat_if_necessary(
-            scores=self.interaction.score(h=h, r=r, t=t, slice_size=slice_size, slice_dim=1),
+            # score shape: (batch_size, num_entities)
+            scores=self.interaction.score(h=h, r=r, t=t, slice_size=slice_size, slice_dim=1).squeeze(),
             representations=self.entity_representations,
             num=self._get_entity_len(mode=mode) if tails is None else tails.shape[-1],
         )
@@ -194,7 +195,7 @@ class RSETC(TypeFramework):
 
 
         return repeat_if_necessary(
-            scores=self.interaction.score(h=h, r=r, t=t, slice_size=slice_size, slice_dim=1),
+            scores=self.interaction.score(h=h, r=r, t=t, slice_size=slice_size, slice_dim=1).squeeze(),
             representations=self.entity_representations,
             num=self._get_entity_len(mode=mode) if heads is None else heads.shape[-1],
         )
