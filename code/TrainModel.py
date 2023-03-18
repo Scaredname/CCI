@@ -354,6 +354,7 @@ if args.description is not None:
 else:
     model_name = type(model).__name__
 
+date_time = '/%s/%s/%s'%(dataset, model_name, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
 pipeline_result = pipeline(
     training=training_data,
     validation=validation,
@@ -361,12 +362,12 @@ pipeline_result = pipeline(
     model=model,
     result_tracker='tensorboard',
     result_tracker_kwargs=dict(
-        experiment_path='../result/tensorBoard_log/%s/%s/%s'%(dataset, model_name, datetime.datetime.now().strftime("%Y%m%d-%H%M%S")),
+        experiment_path='../result/tensorBoard_log' + date_time,
     ),
     **pipeline_config, 
 )
 
-modelpath = '../models/%s/%s/%s/'%(dataset, model_name, datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+modelpath = '../models' + date_time
 for config in pipeline_result.configuration:
     pipeline_result.configuration[config] = str(pipeline_result.configuration[config])
 
