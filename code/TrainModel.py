@@ -119,12 +119,12 @@ else:
 
 
 import torch
+from Custom.TypeModels.CatESETC import CatESETCwithRotate, CatESETCwithTransE
 from Custom.TypeModels.ESETCwithComplEx import (DistMult, ESETCwithComplEx,
                                                 ESETCwithDistMult)
 from Custom.TypeModels.ESETCwithRotate import ESETCwithRotate, ESETCwithTransE
 from Custom.TypeModels.ESETCwithTuckER import ESETCwithTuckER
 from Custom.TypeModels.RSETC import RSETCwithTransE
-from Custom.TypeModels.CatESETC import CatESETCwithTransE
 # Pick a model
 # from Custom.CustomModel import EETCRLwithRotate
 from pykeen.models import ComplEx, DistMultLiteral, RotatE, TransE
@@ -338,6 +338,27 @@ elif args.model_index == 31:
             usepretrained = args.IfUsePreTrainTypeEmb,
             )
 
+elif args.model_index == 32:
+    model = CatESETCwithRotate(
+            triples_factory=training_data,
+            dropout=args.dropout,
+            data_type=torch.float,
+            bias = args.project_with_bias,
+            ent_dim=args.model_ent_dim*2,
+            rel_dim=args.model_rel_dim*2,
+            type_dim=args.model_type_dim*2,
+            type_initializer='xavier_uniform_',
+            entity_initializer='uniform',
+            relation_initializer='init_phases',
+            relation_constrainer= 'complex_normalize',
+            loss='NSSALoss',
+            loss_kwargs=dict(
+                reduction='mean',
+                adversarial_temperature=args.adversarial_temperature,
+                margin=args.loss_margin,
+            ),
+            usepretrained = args.IfUsePreTrainTypeEmb,
+            )
 
 if torch.cuda.is_available():
     model.to('cuda')

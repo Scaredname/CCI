@@ -201,3 +201,51 @@ class CatESETCwithTransE(CatESETC):
                 initializer=type_initializer,
             ),
             **kwargs)
+        
+class CatESETCwithRotate(CatESETC):
+    loss_default: ClassVar[Type[Loss]] = NSSALoss
+    hpo_default: ClassVar[Mapping[str, Any]] = dict(
+    )
+    def __init__(
+            self,
+            *,
+            ent_dim: int = 50,
+            rel_dim: int = 50,
+            type_dim: int = 20,
+            entity_initializer: Hint[Initializer] = xavier_uniform_,
+            type_initializer: Hint[Initializer] = xavier_uniform_,
+            relation_initializer: Hint[Initializer] = init_phases,
+            relation_constrainer: Hint[Constrainer] = complex_normalize,
+            regularizer: HintOrType[Regularizer] = None,
+            regularizer_kwargs: OptionalKwargs = None,
+            bias = False,
+            data_type = torch.float,
+            dropout = 0.3,
+            **kwargs,) -> None:
+        super().__init__(
+            dropout=dropout,
+            bias=bias,
+            ent_dim=ent_dim,
+            rel_dim=rel_dim,
+            type_dim=type_dim,
+            data_type=data_type,
+            interaction=RotatEInteraction,
+            entity_representations_kwargs=dict(
+                shape=ent_dim,
+                initializer=entity_initializer,
+                regularizer=regularizer,
+                regularizer_kwargs=regularizer_kwargs,
+                dtype=data_type,
+            ),
+            relation_representations_kwargs=dict(
+                shape=rel_dim,
+                initializer=relation_initializer,
+                constrainer=relation_constrainer,
+                dtype=data_type,
+            ),
+            type_representations_kwargs=dict(
+                shape=type_dim,
+                initializer=type_initializer,
+                dtype=data_type,
+            ),
+            **kwargs)
