@@ -120,6 +120,7 @@ else:
 
 import torch
 from Custom.TypeModels.CatESETC import CatESETCwithRotate, CatESETCwithTransE
+from Custom.TypeModels.CatRSETC import CatRSETCwithTransE
 from Custom.TypeModels.ESETCwithComplEx import (DistMult, ESETCwithComplEx,
                                                 ESETCwithDistMult)
 from Custom.TypeModels.ESETCwithRotate import ESETCwithRotate, ESETCwithTransE
@@ -155,6 +156,7 @@ if args.model_index == 0:
             )
 elif args.model_index == 1:
     # 因为没有使用cfloat，通过乘2来确保参数维度和实际维度相同
+    # 现在发现使用cfloat会降低模型性能
     model = ESETCwithRotate(
             triples_factory=training_data,
             dropout=args.dropout,
@@ -351,6 +353,21 @@ elif args.model_index == 32:
             entity_initializer='uniform',
             relation_initializer='init_phases',
             relation_constrainer= 'complex_normalize',
+            loss='NSSALoss',
+            loss_kwargs=dict(
+                reduction='mean',
+                adversarial_temperature=args.adversarial_temperature,
+                margin=args.loss_margin,
+            ),
+            usepretrained = args.IfUsePreTrainTypeEmb,
+            )
+
+elif args.model_index == 41:
+    model = CatRSETCwithTransE(
+            triples_factory=training_data,
+            ent_dim=args.model_ent_dim,
+            rel_dim=args.model_rel_dim,
+            type_dim=args.model_type_dim,
             loss='NSSALoss',
             loss_kwargs=dict(
                 reduction='mean',
