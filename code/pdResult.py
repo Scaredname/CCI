@@ -2,8 +2,8 @@
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-02 16:32:08
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-03-02 10:56:18
-FilePath: /ESETC/code/pdResult.py
+LastEditTime: 2023-03-27 11:40:44
+FilePath: /undefined/home/ni/code/ESETC/code/pdResult.py
 Description: 
 
 Copyright (c) 2023 by error: git config user.name && git config user.email & please set dead value or install git, All Rights Reserved. 
@@ -84,6 +84,12 @@ for file_name in os.listdir(result_path):
                         results_dict['negative_sampler'].append('-')
                         results_dict['num_negs_per_pos'].append('-')
 
+                    
+                    if 'margin' in config['loss_kwargs']:
+                        margin = re.search(r"'margin':\s*([\d\.]+)", config['loss_kwargs']).group(1)
+                        results_dict['margin'].append(margin)
+                    else:
+                        results_dict['margin'].append('-')
                     if 'loss' in config:
                         results_dict['loss'].append(config['loss'])
                         results_dict['loss_kwargs'].append(config['loss_kwargs'])
