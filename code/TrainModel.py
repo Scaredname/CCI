@@ -41,8 +41,14 @@ parser.add_argument('-pre', '--IfUsePreTrainTypeEmb', action='store_true', defau
 parser.add_argument('-rw', '--ReglurizerWeight', type=float, default=0.001)
 parser.add_argument('-rp', '--ReglurizerNorm', type=float, default=3.0)
 parser.add_argument('-hnt', '--ifHasNoneType', action='store_true', default=False)
+parser.add_argument('-tes', '--ifTestEarlyStop', action='store_true', default=False)
 args = parser.parse_args()
 
+
+if args.ifTestEarlyStop:
+    frequency = 1
+else:
+    frequency = 50
 pipeline_config = dict(
     optimizer=args.optimizer,
     optimizer_kwargs=dict(
@@ -64,7 +70,7 @@ pipeline_config = dict(
     ),
     stopper='early',
     stopper_kwargs=dict(
-        frequency=50,
+        frequency=frequency,
         patience=3,
         relative_delta=0.0001,
         metric='mean_reciprocal_rank',
