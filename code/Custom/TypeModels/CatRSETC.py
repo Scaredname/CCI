@@ -98,6 +98,9 @@ class CatRSETC(RSETC):
         h_s_type_emb = torch.cat([head_type_emb, h],dim=-1).to(self.device)
         # 确保t和t_type_emb的shape一致
         t = t.unsqueeze(dim=0).repeat(h.shape[0], 1, 1)
+        # 会出现测试批度为1的特例，所以调整一下tail_type_emb的shape
+        tail_type_emb = tail_type_emb.view(t.shape[0], t.shape[1], -1)
+
         t_s_type_emb = torch.cat([tail_type_emb, t],dim=-1).to(self.device)
 
         if self.data_type == torch.cfloat:
@@ -113,7 +116,7 @@ class CatRSETC(RSETC):
 
         return repeat_if_necessary(
             # score shape: (batch_size, num_entities)
-            scores=self.interaction.score(h=h, r=r, t=t, slice_size=slice_size, slice_dim=1).squeeze(),
+            scores=self.interaction.score(h=h, r=r, t=t, slice_size=slice_size, slice_dim=1).view(-1, self.num_entities), # 会出现测试批度为1的特例，所以调整一下score的shape
             representations=self.entity_representations,
             num=self._get_entity_len(mode=mode) if tails is None else tails.shape[-1],
         )
@@ -138,6 +141,9 @@ class CatRSETC(RSETC):
         
         # 确保h和h_type_emb的shape一致
         h = h.unsqueeze(dim=0).repeat(t.shape[0], 1, 1)
+        # 会出现测试批度为1的特例，所以调整一下head_type_emb的shape
+        head_type_emb = head_type_emb.view(h.shape[0], h.shape[1], -1)
+
         h_s_type_emb = torch.cat([head_type_emb, h],dim=-1).to(self.device)    
         t_s_type_emb = torch.cat([tail_type_emb, t],dim=-1).to(self.device)
         if self.data_type == torch.cfloat:
@@ -152,7 +158,7 @@ class CatRSETC(RSETC):
 
 
         return repeat_if_necessary(
-            scores=self.interaction.score(h=h, r=r, t=t, slice_size=slice_size, slice_dim=1).squeeze(),
+            scores=self.interaction.score(h=h, r=r, t=t, slice_size=slice_size, slice_dim=1).view(-1, self.num_entities), # 会出现测试批度为1的特例，所以调整一下score的shape
             representations=self.entity_representations,
             num=self._get_entity_len(mode=mode) if heads is None else heads.shape[-1],
         )
