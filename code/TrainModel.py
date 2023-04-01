@@ -42,6 +42,7 @@ parser.add_argument('-rw', '--ReglurizerWeight', type=float, default=0.001)
 parser.add_argument('-rp', '--ReglurizerNorm', type=float, default=3.0)
 parser.add_argument('-hnt', '--ifHasNoneType', action='store_true', default=False)
 parser.add_argument('-tes', '--ifTestEarlyStop', action='store_true', default=False)
+parser.add_argument('-stop', '--stopper', type=str, choices=['early', 'nop'], default='early')
 args = parser.parse_args()
 
 
@@ -68,7 +69,7 @@ pipeline_config = dict(
         filtered=args.filtered,
         batch_size=args.evaluator_batch_size,
     ),
-    stopper='early',
+    stopper=args.stopper,
     stopper_kwargs=dict(
         frequency=frequency,
         patience=3,
