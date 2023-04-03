@@ -136,6 +136,9 @@ class RSETC(TypeFramework):
         h_s_type_emb = self.projection(torch.cat([head_type_emb, h],dim=-1)).to(self.device)
         # 确保t和t_type_emb的shape一致
         t = t.unsqueeze(dim=0).repeat(h.shape[0], 1, 1)
+        # 会出现测试批度为1的特例，所以调整一下tail_type_emb的shape
+        tail_type_emb = tail_type_emb.view(t.shape[0], t.shape[1], -1)
+        
         t_s_type_emb = self.projection(torch.cat([tail_type_emb, t],dim=-1)).to(self.device)
 
         if self.data_type == torch.cfloat:
@@ -179,6 +182,8 @@ class RSETC(TypeFramework):
         
         # 确保h和h_type_emb的shape一致
         h = h.unsqueeze(dim=0).repeat(t.shape[0], 1, 1)
+        head_type_emb = head_type_emb.view(h.shape[0], h.shape[1], -1)
+
         h_s_type_emb = self.projection(torch.cat([head_type_emb, h],dim=-1)).to(self.device)    
         t_s_type_emb = self.projection(torch.cat([tail_type_emb, t],dim=-1)).to(self.device)
         if self.data_type == torch.cfloat:
