@@ -84,7 +84,10 @@ for file_name in os.listdir(result_path):
                         results_dict['negative_sampler'].append('-')
                         results_dict['num_negs_per_pos'].append('-')
 
-                    
+                    if 'type_smoothing' in config:
+                        results_dict['type-smoothing'].append(config['type_smoothing'])
+                    else:
+                        results_dict['type-smoothing'].append('-')
                     if 'margin' in config['loss_kwargs']:
                         margin = re.search(r"'margin':\s*([\d\.]+)", config['loss_kwargs']).group(1)
                         results_dict['margin'].append(margin)

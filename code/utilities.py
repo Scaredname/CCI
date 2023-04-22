@@ -95,7 +95,7 @@ def get_white_list_relation(dataset, type_position = 0):
 
         return white_list_rel, rel_need              
 
-def readTypeData(data_name, data_pro_func, create_inverse_triples=False, type_position=0, hasNoneType=False):
+def readTypeData(data_name, data_pro_func, create_inverse_triples=False, type_position=0, hasNoneType=False, type_smoothing=0.0):
         """
         @Params: data_name, data_pro_func, create_inverse_triples, type_position
         @Return: Train, Test, Valid
@@ -114,7 +114,7 @@ def readTypeData(data_name, data_pro_func, create_inverse_triples=False, type_po
             create_inverse_triples=create_inverse_triples,)
 
         training_triples, training_type_triples, _, _ = data_pro_func(training, type_position=type_position)
-        training_data = TriplesTypesFactory.from_labeled_triples(triples=training_triples, type_triples=training_type_triples, type_position=type_position, create_inverse_triples=create_inverse_triples)
+        training_data = TriplesTypesFactory.from_labeled_triples(triples=training_triples, type_triples=training_type_triples, type_position=type_position, create_inverse_triples=create_inverse_triples, type_smoothing=type_smoothing)
 
         validation = TriplesFactory.from_path(
             valid_path, 

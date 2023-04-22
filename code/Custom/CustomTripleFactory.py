@@ -13,6 +13,38 @@ from pykeen.typing import (EntityMapping, LabeledTriples, MappedTriples,
 
 logger = logging.getLogger(__name__)
 
+def apply_label_smoothing(
+    labels: torch.FloatTensor,
+    epsilon: Optional[float] = None,
+    num_classes: Optional[int] = None,
+) -> torch.FloatTensor:
+    """Apply label smoothing to a target tensor.
+
+    Redistributes epsilon probability mass from the true target uniformly to the remaining classes by replacing
+        * a hard one by (1 - epsilon)
+        * a hard zero by epsilon / (num_classes - 1)
+
+    :param labels:
+        The one-hot label tensor.
+    :param epsilon:
+        The smoothing parameter. Determines how much probability should be transferred from the true class to the
+        other classes.
+    :param num_classes:
+        The number of classes.
+    :returns: A smoothed label tensor
+    :raises ValueError: if epsilon is negative or if num_classes is None
+    """
+    if not epsilon:  # either none or zero
+        return labels
+    if epsilon < 0.0:
+        raise ValueError(f"epsilon must be positive, but is {epsilon}")
+    if num_classes is None:
+        raise ValueError("must pass num_classes to perform label smoothing")
+
+    new_label_true = 1.0 - epsilon
+    new_label_false = epsilon / (num_classes - 1)
+    return new_label_true * labels + new_label_false * (1.0 - labels)
+
 def create_adjacency_matrix(
     triples: np.ndarray,
     entity_to_id: EntityMapping,
@@ -93,6 +125,7 @@ class TriplesTypesFactory(TriplesFactory):
         ents_types: np.ndarray,
         rels_types: np.ndarray,
         types_to_id: Mapping[str, int],
+        type_smoothing: float = 0.0,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -106,11 +139,18 @@ class TriplesTypesFactory(TriplesFactory):
         self.rels_types[0] = self._cal_propor(self.rels_types[0])
         self.rels_types[1] = self._cal_propor(self.rels_types[1])
 
+        if type_smoothing:
+            self.ents_types = apply_label_smoothing(self.ents_types, type_smoothing, ents_types.shape[1])
+            self.rels_types = apply_label_smoothing(self.rels_types, type_smoothing, rels_types.shape[2])
+            print("type smoothing applied")
+            
+
     @classmethod
     def from_labeled_triples(
         cls,
         triples: LabeledTriples,
         create_inverse_triples = False,
+        type_smoothing = 0.0,
         *,
         type_triples: LabeledTriples = None,
         type_position: int = 0,
@@ -135,6 +175,7 @@ class TriplesTypesFactory(TriplesFactory):
             ents_types=ents_types,
             rels_types=rels_types,
             types_to_id=types_to_id,
+            type_smoothing=type_smoothing,
         )
     
     @property

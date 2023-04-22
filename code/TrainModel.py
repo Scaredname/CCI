@@ -30,6 +30,7 @@ parser.add_argument('-eb', '--evaluator_batch_size', type=int, default=128)
 parser.add_argument('-med', '--model_ent_dim', type=int, default=100)
 parser.add_argument('-mrd', '--model_rel_dim', type=int, default=100)
 parser.add_argument('-mtd', '--model_type_dim', type=int, default=100)
+parser.add_argument('-tsm', '--type_smoothing', type=float, default=0.0)
 
 parser.add_argument('-pb', '--project_with_bias', action='store_true', default=False)
 parser.add_argument('-drop', '--dropout', type=float, default=0.0)
@@ -85,9 +86,9 @@ def splitTypeData(data:TriplesFactory, type_position = 0) -> "LabeledTriples, La
 
 dataset = args.dataset
 if dataset == 'fb15k-237-type':
-    training_data, validation, testing = readTypeData(dataset, data_pro_func=splitTypeData, type_position=HEAD, create_inverse_triples=args.CreateInverseTriples, hasNoneType=args.ifHasNoneType)
+    training_data, validation, testing = readTypeData(dataset, data_pro_func=splitTypeData, type_position=HEAD, create_inverse_triples=args.CreateInverseTriples, hasNoneType=args.ifHasNoneType, type_smoothing=args.type_smoothing)
 elif 'CAKE' in dataset:
-    training_data, validation, testing = readTypeData(dataset, data_pro_func=splitTypeData, type_position=TAIL, create_inverse_triples=args.CreateInverseTriples, hasNoneType=args.ifHasNoneType)
+    training_data, validation, testing = readTypeData(dataset, data_pro_func=splitTypeData, type_position=TAIL, create_inverse_triples=args.CreateInverseTriples, hasNoneType=args.ifHasNoneType, type_smoothing=args.type_smoothing)
 else:
     if dataset == 'FB15k237':
         data = FB15k237(create_inverse_triples = args.CreateInverseTriples)
@@ -96,7 +97,7 @@ else:
 
     if args.IfUseTypeLike:
         training_triples, training_type_triples, unlike_type_rel, like_type_rel = splitTypeData(data.training, type_position=TAIL)
-        training_data = TriplesTypesFactory.from_labeled_triples(triples=training_triples, type_triples=training_type_triples, type_position=TAIL, create_inverse_triples=args.CreateInverseTriples)
+        training_data = TriplesTypesFactory.from_labeled_triples(triples=training_triples, type_triples=training_type_triples, type_position=TAIL, create_inverse_triples=args.CreateInverseTriples, type_smoothing=args.type_smoothing)
 
         
         dataset += '-TypeLike'
@@ -144,6 +145,9 @@ if args.IfUsePreTrainTypeEmb:
 
 if args.ifHasNoneType:
     args.description+='HasNoneType'
+
+if args.type_smoothing:
+    args.description +='TypeSmoothing'
 
 if args.model_index == 0:
     model = ESETCwithTransE(
@@ -443,6 +447,7 @@ pipeline_result.configuration['num_parameter_bytes'] = str(model.num_parameter_b
 
 pipeline_result.configuration['loss_kwargs'] = str(model.loss.__dict__)
 pipeline_result.configuration['loss'] = type(model.loss).__name__
+pipeline_result.configuration['type_smoothing'] = args.type_smoothing
 if args.training_loop == 'slcwa':
     pipeline_result.configuration['negative_sampler'] = args.negative_sampler
     pipeline_result.configuration['num_negs_per_pos'] = args.num_negs_per_pos
