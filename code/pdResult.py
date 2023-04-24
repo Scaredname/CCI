@@ -2,7 +2,7 @@
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-02 16:32:08
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-04-24 13:32:43
+LastEditTime: 2023-04-24 15:34:30
 FilePath: /undefined/home/ni/code/ESETC/code/pdResult.py
 Description: 
 
@@ -77,6 +77,7 @@ for file_name in os.listdir(result_path):
                     else:
                         results_dict['num_negs_per_pos'].append('-')
 
+                    results_dict['batch-size'].append(config['batch_size'])
                     if 'type_smoothing' in config:
                         results_dict['type-smoothing'].append(config['type_smoothing'])
                     else:
@@ -90,7 +91,6 @@ for file_name in os.listdir(result_path):
                     results_dict['description'].append(file_name)
                     results_dict['dataset'].append(dataset)
                     results_dict['model-size'].append(float(config['num_parameter_bytes'][:-2])*0.125*0.25)
-                    results_dict['batch-size'].append(config['batch_size'])
                     results_dict['train-loop'].append(config['training_loop'])
                     results_dict['optimizer'].append(config['optimizer'])
                     if 'SLCWATrainingLoop' == config['training_loop']:
