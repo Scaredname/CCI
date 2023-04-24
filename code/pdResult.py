@@ -2,7 +2,7 @@
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-02 16:32:08
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-03-27 11:40:44
+LastEditTime: 2023-04-24 13:32:43
 FilePath: /undefined/home/ni/code/ESETC/code/pdResult.py
 Description: 
 
@@ -42,9 +42,8 @@ for file_name in os.listdir(result_path):
             if os.path.isdir(de_path):
                 model_name = f
                 for ff in os.listdir(de_path):
-                    results_dict['description'].append(file_name)
-                    results_dict['dataset'].append(dataset)
                     results_dict['model'].append(model_name)
+                    
                     date = ff
                     file_path1 = os.path.join(de_path, date)
                     if '-' in date:
@@ -62,10 +61,6 @@ for file_name in os.listdir(result_path):
                     results_dict['hits@3'].append(results['metrics']['both']['realistic']['hits_at_3'])
                     results_dict['hits@10'].append(results['metrics']['both']['realistic']['hits_at_10'])
 
-                    results_dict['model-size'].append(float(config['num_parameter_bytes'][:-2])*0.125*0.25)
-                    results_dict['batch-size'].append(config['batch_size'])
-                    results_dict['train-loop'].append(config['training_loop'])
-                    results_dict['optimizer'].append(config['optimizer'])
                     results_dict['learning-rate'].append(config['optimizer_kwargs'].split(',')[0].split(':')[1])
 
                     model_dims = re.findall(pattern1, config['model_kwargs'])
@@ -78,10 +73,8 @@ for file_name in os.listdir(result_path):
                         results_dict['type-dim'].append('-')
 
                     if 'SLCWATrainingLoop' == config['training_loop']:
-                        results_dict['negative_sampler'].append(config['negative_sampler'])
                         results_dict['num_negs_per_pos'].append(config['num_negs_per_pos'])
                     else:
-                        results_dict['negative_sampler'].append('-')
                         results_dict['num_negs_per_pos'].append('-')
 
                     if 'type_smoothing' in config:
@@ -93,6 +86,18 @@ for file_name in os.listdir(result_path):
                         results_dict['margin'].append(margin)
                     else:
                         results_dict['margin'].append('-')
+                    
+                    results_dict['description'].append(file_name)
+                    results_dict['dataset'].append(dataset)
+                    results_dict['model-size'].append(float(config['num_parameter_bytes'][:-2])*0.125*0.25)
+                    results_dict['batch-size'].append(config['batch_size'])
+                    results_dict['train-loop'].append(config['training_loop'])
+                    results_dict['optimizer'].append(config['optimizer'])
+                    if 'SLCWATrainingLoop' == config['training_loop']:
+                        results_dict['negative_sampler'].append(config['negative_sampler'])
+                    else:
+                        results_dict['negative_sampler'].append('-')
+
                     if 'loss' in config:
                         results_dict['loss'].append(config['loss'])
                         results_dict['loss_kwargs'].append(config['loss_kwargs'])
