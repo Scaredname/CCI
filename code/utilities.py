@@ -2,8 +2,8 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2022-12-22 12:02:34
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-03-01 15:32:15
-FilePath: /ESETC/code/utilities.py
+LastEditTime: 2023-04-25 11:24:09
+FilePath: /undefined/home/ni/code/ESETC/code/utilities.py
 Description: 
 
 Copyright (c) 2023 by Ni Runyu ni-runyu@ed.tmu.ac.jp, All Rights Reserved. 
@@ -115,6 +115,35 @@ def readTypeData(data_name, data_pro_func, create_inverse_triples=False, type_po
 
         training_triples, training_type_triples, _, _ = data_pro_func(training, type_position=type_position)
         training_data = TriplesTypesFactory.from_labeled_triples(triples=training_triples, type_triples=training_type_triples, type_position=type_position, create_inverse_triples=create_inverse_triples, type_smoothing=type_smoothing)
+
+        validation = TriplesFactory.from_path(
+            valid_path, 
+            entity_to_id=training_data.entity_to_id, 
+            relation_to_id=training_data.relation_to_id,
+            create_inverse_triples=create_inverse_triples,)
+        testing = TriplesFactory.from_path(
+                test_path, 
+                entity_to_id=training_data.entity_to_id, 
+                relation_to_id=training_data.relation_to_id,
+                create_inverse_triples=create_inverse_triples,)
+
+        return training_data, validation, testing
+
+def readTypeAsTrainData(data_name, create_inverse_triples=False):
+        """
+        @Params: data_name,  create_inverse_triples, 
+        @Return: Train, Test, Valid
+        """
+        if 'CAKE' in data_name:
+                data_name = 'data_concept/' + data_name.replace('CAKE-', '')
+
+        train_path = os.path.join('../data/%s/'%(data_name), 'train_type.txt')
+        valid_path = os.path.join('../data/%s/'%(data_name), 'valid.txt') 
+        test_path = os.path.join('../data/%s/'%(data_name), 'test.txt')
+
+        training_data = TriplesFactory.from_path(
+                path=train_path, 
+                create_inverse_triples=create_inverse_triples)
 
         validation = TriplesFactory.from_path(
             valid_path, 
