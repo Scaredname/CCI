@@ -39,6 +39,7 @@ class CatRSETC(RSETC):
     def __init__(self,
     **kwargs) -> None:
         super().__init__(**kwargs)
+        self.projection = None
 
     def score_hrt(self, hrt_batch: torch.LongTensor, *, mode: Optional[InductiveMode] = None) -> torch.FloatTensor:
         """Forward pass.
