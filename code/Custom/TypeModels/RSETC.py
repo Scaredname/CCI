@@ -58,7 +58,7 @@ class RSETC(TypeFramework):
         
         assignments = self.triples_factory.assignments.to(self.device)
         # type_emb = self.type_representations[0]._embeddings.weight.to(self.device)
-        type_emb = self.type_representations[0](indices = torch.arange(self.ents_types.shape[1]).long().to(self.device)) #取出所有的type embedding
+        type_emb = self.type_representations[0](indices = torch.arange(self.triples_factory.ents_types.shape[1]).long().to(self.device)) #取出所有的type embedding
 
         #通过邻接矩阵与类型嵌入矩阵的矩阵乘法可以快速每个实体对应的类型嵌入，如果是多个类型则是多个类型嵌入的加权和，权重为邻接矩阵中的值。如果值都为1则相当于sum操作，为平均值则是mean操作。
         rels_types_h = self.rels_types[0]
