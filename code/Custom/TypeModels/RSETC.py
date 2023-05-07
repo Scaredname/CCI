@@ -40,8 +40,8 @@ class RSETC(TypeFramework):
         super().__init__(**kwargs)
 
         # ents_types requires_grad=False, rels_types requires_grad=True
-        # self.ents_types = torch.nn.parameter.Parameter(torch.as_tensor(self.triples_factory.ents_types, dtype=self.data_type, device=self.device), requires_grad=False)
-        self.ents_types = torch.as_tensor(self.triples_factory.ents_types, dtype=self.data_type, device=self.device)
+        self.ents_types = torch.nn.parameter.Parameter(torch.as_tensor(self.triples_factory.ents_types, dtype=self.data_type, device=self.device), requires_grad=False)
+        # self.ents_types = torch.as_tensor(self.triples_factory.ents_types, dtype=self.data_type, device=self.device)
         self.rels_types = torch.nn.parameter.Parameter(torch.as_tensor(self.triples_factory.rels_types, dtype=self.data_type, device=self.device), requires_grad=True)
 
     
