@@ -68,9 +68,6 @@ class CatRSETC(RSETC):
         head_type_emb, tail_type_emb, h_assig, t_assig = self._get_enttype_representations(h=h_index, r_h=r_index, r_t=r_index, t=t_index, mode=mode)
         h_s_type_emb = torch.cat([head_type_emb, h],dim=-1).to(self.device)
         t_s_type_emb = torch.cat([tail_type_emb, t],dim=-1).to(self.device)
-        if self.data_type == torch.cfloat:
-            h_s_type_emb = self._complex_dropout(h_s_type_emb, p=self.dropout)
-            t_s_type_emb = self._complex_dropout(t_s_type_emb, p=self.dropout)
         
         h = h_s_type_emb
         t = t_s_type_emb
@@ -103,10 +100,6 @@ class CatRSETC(RSETC):
         tail_type_emb = tail_type_emb.view(t.shape[0], t.shape[1], -1)
 
         t_s_type_emb = torch.cat([tail_type_emb, t],dim=-1).to(self.device)
-
-        if self.data_type == torch.cfloat:
-            h_s_type_emb = self._complex_dropout(h_s_type_emb, p=self.dropout)
-            t_s_type_emb = self._complex_dropout(t_s_type_emb, p=self.dropout)
 
         h = h_s_type_emb
         t = t_s_type_emb
@@ -147,9 +140,6 @@ class CatRSETC(RSETC):
 
         h_s_type_emb = torch.cat([head_type_emb, h],dim=-1).to(self.device)    
         t_s_type_emb = torch.cat([tail_type_emb, t],dim=-1).to(self.device)
-        if self.data_type == torch.cfloat:
-            h_s_type_emb = self._complex_dropout(h_s_type_emb, p=self.dropout)
-            t_s_type_emb = self._complex_dropout(t_s_type_emb, p=self.dropout)
 
         h = h_s_type_emb
         t = t_s_type_emb
