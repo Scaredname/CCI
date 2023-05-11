@@ -40,8 +40,9 @@ class RSETC(TypeFramework):
         super().__init__(**kwargs)
 
         # ents_types requires_grad=False, rels_types requires_grad=True
-        self.ents_types = torch.nn.parameter.Parameter(torch.as_tensor(self.triples_factory.ents_types, dtype=self.data_type, device=self.device), requires_grad=False)
+        # self.ents_types = torch.nn.parameter.Parameter(torch.as_tensor(self.triples_factory.ents_types, dtype=self.data_type, device=self.device), requires_grad=False)
         # self.ents_types = torch.as_tensor(self.triples_factory.ents_types, dtype=self.data_type, device=self.device)
+        self.ents_types = None
         self.rels_types = torch.nn.parameter.Parameter(torch.as_tensor(self.triples_factory.rels_types, dtype=self.data_type, device=self.device), requires_grad=True)
 
     
@@ -63,7 +64,7 @@ class RSETC(TypeFramework):
         #通过邻接矩阵与类型嵌入矩阵的矩阵乘法可以快速每个实体对应的类型嵌入，如果是多个类型则是多个类型嵌入的加权和，权重为邻接矩阵中的值。如果值都为1则相当于sum操作，为平均值则是mean操作。
         rels_types_h = self.rels_types[0]
         rels_types_t = self.rels_types[1]
-        ents_types = self.ents_types
+        ents_types = self.triples_factory.ents_types.to(self.device)
 
         head_type_emb_tensor = torch.matmul(ents_types[h]+rels_types_h[r_h], type_emb)
         tail_type_emb_tensor = torch.matmul(ents_types[t]+rels_types_t[r_t], type_emb)

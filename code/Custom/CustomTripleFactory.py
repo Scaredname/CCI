@@ -143,6 +143,9 @@ class TriplesTypesFactory(TriplesFactory):
             self.ents_types = apply_label_smoothing(self.ents_types, type_smoothing, ents_types.shape[1])
             self.rels_types = apply_label_smoothing(self.rels_types, type_smoothing, rels_types.shape[2])
             print("type smoothing applied")
+        
+        self.ents_types = torch.from_numpy(self.ents_types)
+        self.rels_types = torch.from_numpy(self.rels_types)
             
 
     @classmethod
