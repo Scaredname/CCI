@@ -2,7 +2,7 @@
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-02 16:32:08
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-04-24 15:34:30
+LastEditTime: 2023-05-11 13:11:33
 FilePath: /undefined/home/ni/code/ESETC/code/pdResult.py
 Description: 
 
@@ -21,7 +21,7 @@ pattern = r"\(([^)]+)\)"
 pattern1 = r"\(_embeddings\): Embedding\((.*)\)"
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-d', '--dataset', choices=['YAGO3-10-TypeLike', 'YAGO3-10', 'CAKE-FB15K237', 'CAKE-FB15K', 'CAKE-NELL-995', 'CAKE-DBpedia-242'], default='YAGO3-10-TypeLike')
+parser.add_argument('-d', '--dataset', choices=['YAGO3-10-TypeLike', 'YAGO3-10', 'CAKE-FB15K237', 'CAKE-FB15K', 'CAKE-NELL-995', 'CAKE-DBpedia-242', 'fb15k-237-type'], default='YAGO3-10-TypeLike')
 args = parser.parse_args()
 
 
