@@ -35,13 +35,14 @@ class RSETC(TypeFramework):
     """
     
     """
-    def __init__(self,freeze_matrix = False,**kwargs) -> None:
+    def __init__(self,freeze_matrix = False, add_ent_type = True, **kwargs) -> None:
         super().__init__(**kwargs)
 
         # ents_types requires_grad=False, rels_types requires_grad=True
         # self.ents_types = torch.nn.parameter.Parameter(torch.as_tensor(self.triples_factory.ents_types, dtype=self.data_type, device=self.device), requires_grad=False)
         # self.ents_types = torch.as_tensor(self.triples_factory.ents_types, dtype=self.data_type, device=self.device)
         self.ents_types = None
+        self.add_ent_type = add_ent_type
         self.rels_types = torch.nn.parameter.Parameter(torch.as_tensor(self.triples_factory.rels_types, dtype=self.data_type, device=self.device), requires_grad= not freeze_matrix)
 
     
@@ -65,8 +66,13 @@ class RSETC(TypeFramework):
         rels_types_t = self.rels_types[1]
         ents_types = self.triples_factory.ents_types.to(self.device)
 
-        head_type_emb_tensor = torch.matmul(ents_types[h]+rels_types_h[r_h], type_emb)
-        tail_type_emb_tensor = torch.matmul(ents_types[t]+rels_types_t[r_t], type_emb)
+        if self.add_ent_type:
+            head_type_emb_tensor = torch.matmul(ents_types[h]+rels_types_h[r_h], type_emb)
+            tail_type_emb_tensor = torch.matmul(ents_types[t]+rels_types_t[r_t], type_emb)
+        else:
+            head_type_emb_tensor = torch.matmul(rels_types_h[r_h], type_emb)
+            tail_type_emb_tensor = torch.matmul(rels_types_t[r_t], type_emb)
+
         h_assignments = assignments[h]
         t_assignments = assignments[t]
 

@@ -46,6 +46,7 @@ parser.add_argument('-hnt', '--ifHasNoneType', action='store_true', default=Fals
 parser.add_argument('-tes', '--ifTestEarlyStop', action='store_true', default=False)
 parser.add_argument('-tat', '--ifTypeAsTrain', action='store_true', default=False)
 parser.add_argument('-fw', '--ifFreezeWeights', action='store_true', default=False)
+parser.add_argument('-naet', '--ifNotAddEntType', help="When get entity's type embedding, whether add entity_type weight to relation_type weight", action='store_true', default=False)
 parser.add_argument('-stop', '--stopper', type=str, choices=['early', 'nop'], default='early')
 args = parser.parse_args()
 
@@ -161,6 +162,9 @@ if args.ifTypeAsTrain:
 
 if args.ifFreezeWeights:
     args.description+='FreezeWeights'
+
+if args.ifNotAddEntType:
+    args.description+='NotAddEntType'
 
 if args.model_index == 0:
     model = ESETCwithTransE(
@@ -346,6 +350,7 @@ elif args.model_index == 21:
             rel_dim=args.model_rel_dim,
             type_dim=args.model_type_dim,
             freeze_matrix = args.ifFreezeWeights,
+            add_ent_type = not args.ifNotAddEntType,
             loss='NSSALoss',
             loss_kwargs=dict(
                 reduction='mean',
@@ -401,6 +406,7 @@ elif args.model_index == 41:
             rel_dim=args.model_rel_dim,
             type_dim=args.model_type_dim,
             freeze_matrix = args.ifFreezeWeights,
+            add_ent_type = not args.ifNotAddEntType,
             loss='NSSALoss',
             loss_kwargs=dict(
                 reduction='mean',
@@ -420,6 +426,7 @@ elif args.model_index == 42:
             rel_dim=args.model_rel_dim,
             type_dim=args.model_type_dim,
             freeze_matrix = args.ifFreezeWeights,
+            add_ent_type = not args.ifNotAddEntType,
             type_initializer='xavier_uniform_',
             entity_initializer='uniform',
             relation_initializer='init_phases',
