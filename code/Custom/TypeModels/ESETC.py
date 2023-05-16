@@ -2,8 +2,8 @@
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-28 16:19:48
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-02-22 13:51:57
-FilePath: /code/Custom/TypeModels/ESETC.py
+LastEditTime: 2023-05-16 10:21:10
+FilePath: /undefined/home/ni/code/ESETC/code/Custom/TypeModels/ESETC.py
 Description: "Entity Specific Entity and entity Type Combination" (ESETC)
 
 Copyright (c) 2022 by error: git config user.name && git config user.email & please set dead value or install git, All Rights Reserved. 
@@ -95,6 +95,7 @@ class TypeFramework(ERModel):
         entity_initializer: Hint[Initializer] = xavier_uniform_,
         relation_initializer: Hint[Initializer] = xavier_uniform_,
         type_initializer: Hint[Initializer] = xavier_uniform_,
+        freeze_matrix = False,
         **kwargs,) -> None:
 
         self.triples_factory = triples_factory
@@ -142,7 +143,8 @@ class TypeFramework(ERModel):
             skip_checks=skip_checks,
         )
 
-        self.ents_types = torch.nn.parameter.Parameter(torch.as_tensor(self.triples_factory.ents_types, dtype=self.data_type, device=self.device), requires_grad=True) #令获得实体对应的实体类型嵌入时的权重为可训练参数
+        self.ents_types = torch.nn.parameter.Parameter(torch.as_tensor(self.triples_factory.ents_types, dtype=self.data_type, device=self.device), requires_grad= not freeze_matrix) #令获得实体对应的实体类型嵌入时的权重为可训练参数
+        self
 
     def _build_type_representations(self, triples_factory: KGInfo, shape: Sequence[str], representations: OneOrManyHintOrType[Representation] = None, representations_kwargs: OneOrManyOptionalKwargs = None, **kwargs) -> Sequence[Representation]:
         return _prepare_representation_module_list(
