@@ -4,15 +4,11 @@ import datetime
 import json
 import os
 
-from Custom.CustomTripleFactory import TriplesTypesFactory
-from pykeen.datasets import YAGO310, FB15k237, Nations, get_dataset
 from pykeen.triples import TriplesFactory
 from pykeen.typing import LabeledTriples
-from utilities import (get_white_list_relation, readTypeAsTrainData,
-                       readTypeData)
 
-HEAD = 0
-TAIL = 2
+from Custom.CustomTripleFactory import TriplesTypesFactory
+from utilities import get_dataset
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model_index',type=int, default=0)
@@ -84,57 +80,19 @@ pipeline_config = dict(
     ),
 )
 
-def splitTypeData(data:TriplesFactory, type_position = 0) -> "LabeledTriples, LabeledTriples":
-    unlike_type_rel, like_type_rel = get_white_list_relation(data, type_position=type_position)
-    return data.label_triples(data.new_with_restriction(relations=unlike_type_rel).mapped_triples), data.label_triples(data.new_with_restriction(relations=like_type_rel).mapped_triples), unlike_type_rel, like_type_rel
+
 
 dataset = args.dataset
-if args.ifTypeAsTrain:
-    training_data, validation, testing = readTypeAsTrainData(dataset,create_inverse_triples=args.CreateInverseTriples)
-else:
-    if dataset == 'fb15k-237-type':
-        training_data, validation, testing = readTypeData(dataset, data_pro_func=splitTypeData, type_position=HEAD, create_inverse_triples=args.CreateInverseTriples, hasNoneType=args.ifHasNoneType, type_smoothing=args.type_smoothing)
-    elif 'CAKE' in dataset:
-        training_data, validation, testing = readTypeData(dataset, data_pro_func=splitTypeData, type_position=TAIL, create_inverse_triples=args.CreateInverseTriples, hasNoneType=args.ifHasNoneType, type_smoothing=args.type_smoothing)
-    else:
-        # 这里是之前考虑的从原数据集中分离出一些比较像type的关系。
-        if dataset == 'FB15k237':
-            data = FB15k237(create_inverse_triples = args.CreateInverseTriples)
-        elif dataset == 'YAGO3-10':
-            data = YAGO310(create_inverse_triples = args.CreateInverseTriples)
-
-        if args.IfUseTypeLike:
-            training_triples, training_type_triples, unlike_type_rel, like_type_rel = splitTypeData(data.training, type_position=TAIL)
-            training_data = TriplesTypesFactory.from_labeled_triples(triples=training_triples, type_triples=training_type_triples, type_position=TAIL, create_inverse_triples=args.CreateInverseTriples, type_smoothing=args.type_smoothing)
-
-            
-            dataset += '-TypeLike'
-
-            validation = TriplesFactory.from_labeled_triples(
-                    data.validation.label_triples(data.validation.mapped_triples), 
-                    entity_to_id=training_data.entity_to_id, 
-                    relation_to_id=training_data.relation_to_id,
-                    create_inverse_triples=args.CreateInverseTriples,)
-            validation = validation.new_with_restriction(relations=unlike_type_rel)
-            testing = TriplesFactory.from_labeled_triples(
-                    data.testing.label_triples(data.testing.mapped_triples), 
-                    entity_to_id=training_data.entity_to_id, 
-                    relation_to_id=training_data.relation_to_id,
-                    create_inverse_triples=args.CreateInverseTriples,)
-            testing = testing.new_with_restriction(relations=unlike_type_rel)
-
-            # a = get_dataset(training = training_data, validation = validation, testing = testing)
-            # print(a.summary_str())
-        else:
-            training_data = data.training
-            validation = data.validation
-            testing = data.testing
-
-
-
+training_data, validation, testing = get_dataset(dataset=dataset, IfUseTypeLike=args.IfUseTypeLike, CreateInverseTriples=args.CreateInverseTriples, type_smoothing=args.type_smoothing, ifHasNoneType=args.ifHasNoneType, ifTypeAsTrain=args.ifTypeAsTrain)
 
 
 import torch
+# Pick a model
+# from Custom.CustomModel import EETCRLwithRotate
+from pykeen.models import ComplEx, DistMultLiteral, RotatE, TransE
+from pykeen.nn.init import xavier_uniform_
+from pykeen.nn.modules import RotatEInteraction, TransEInteraction
+
 from Custom.TypeModels.CatESETC import CatESETCwithRotate, CatESETCwithTransE
 from Custom.TypeModels.CatRSETC import CatRSETCwithRotate, CatRSETCwithTransE
 from Custom.TypeModels.ESETCwithComplEx import (DistMult, ESETCwithComplEx,
@@ -142,11 +100,6 @@ from Custom.TypeModels.ESETCwithComplEx import (DistMult, ESETCwithComplEx,
 from Custom.TypeModels.ESETCwithRotate import ESETCwithRotate, ESETCwithTransE
 from Custom.TypeModels.ESETCwithTuckER import ESETCwithTuckER
 from Custom.TypeModels.RSETC import RSETCwithTransE
-# Pick a model
-# from Custom.CustomModel import EETCRLwithRotate
-from pykeen.models import ComplEx, DistMultLiteral, RotatE, TransE
-from pykeen.nn.init import xavier_uniform_
-from pykeen.nn.modules import RotatEInteraction, TransEInteraction
 
 if args.IfUsePreTrainTypeEmb:
     args.description+='PreTrainTypeEmb'

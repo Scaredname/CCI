@@ -2,8 +2,8 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2022-12-22 12:02:34
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-04-25 11:24:09
-FilePath: /undefined/home/ni/code/ESETC/code/utilities.py
+LastEditTime: 2023-05-23 15:47:13
+FilePath: /code/utilities.py
 Description: 
 
 Copyright (c) 2023 by Ni Runyu ni-runyu@ed.tmu.ac.jp, All Rights Reserved. 
@@ -11,9 +11,13 @@ Copyright (c) 2023 by Ni Runyu ni-runyu@ed.tmu.ac.jp, All Rights Reserved.
 import os
 from collections import defaultdict
 
-from Custom.CustomTripleFactory import TriplesTypesFactory
+from pykeen.datasets import YAGO310, FB15k237, Nations, get_dataset
 from pykeen.triples import TriplesFactory, TriplesNumericLiteralsFactory
 
+from Custom.CustomTripleFactory import TriplesTypesFactory
+
+HEAD = 0
+TAIL = 2
 
 def get_key(dict, va):
     return [k for k,v in dict.item() if v == va]
@@ -158,6 +162,53 @@ def readTypeAsTrainData(data_name, create_inverse_triples=False):
 
         return training_data, validation, testing
 
+def splitTypeData(data:TriplesFactory, type_position = 0):
+        unlike_type_rel, like_type_rel = get_white_list_relation(data, type_position=type_position)
+        return data.label_triples(data.new_with_restriction(relations=unlike_type_rel).mapped_triples), data.label_triples(data.new_with_restriction(relations=like_type_rel).mapped_triples), unlike_type_rel, like_type_rel
+
+def get_dataset(dataset, ifTypeAsTrain = False, IfUseTypeLike = False, CreateInverseTriples = False, ifHasNoneType = False, type_smoothing = 0.0):
+        if ifTypeAsTrain:
+                training_data, validation, testing = readTypeAsTrainData(dataset,create_inverse_triples=CreateInverseTriples)
+        else:
+                if dataset == 'fb15k-237-type':
+                        training_data, validation, testing = readTypeData(dataset, data_pro_func=splitTypeData, type_position=HEAD, create_inverse_triples=CreateInverseTriples, hasNoneType=ifHasNoneType, type_smoothing=type_smoothing)
+                elif 'CAKE' in dataset:
+                        training_data, validation, testing = readTypeData(dataset, data_pro_func=splitTypeData, type_position=TAIL, create_inverse_triples=CreateInverseTriples, hasNoneType=ifHasNoneType, type_smoothing=type_smoothing)
+                else:
+                        # 这里是之前考虑的从原数据集中分离出一些比较像type的关系。
+                        if dataset == 'FB15k237':
+                                data = FB15k237(create_inverse_triples = CreateInverseTriples)
+                        elif dataset == 'YAGO3-10':
+                                data = YAGO310(create_inverse_triples = CreateInverseTriples)
+
+                        if IfUseTypeLike:
+                                training_triples, training_type_triples, unlike_type_rel, like_type_rel = splitTypeData(data.training, type_position=TAIL)
+                                training_data = TriplesTypesFactory.from_labeled_triples(triples=training_triples, type_triples=training_type_triples, type_position=TAIL, create_inverse_triples=CreateInverseTriples, type_smoothing=type_smoothing)
+
+                                
+                                dataset += '-TypeLike'
+
+                                validation = TriplesFactory.from_labeled_triples(
+                                        data.validation.label_triples(data.validation.mapped_triples), 
+                                        entity_to_id=training_data.entity_to_id, 
+                                        relation_to_id=training_data.relation_to_id,
+                                        create_inverse_triples=CreateInverseTriples,)
+                                validation = validation.new_with_restriction(relations=unlike_type_rel)
+                                testing = TriplesFactory.from_labeled_triples(
+                                        data.testing.label_triples(data.testing.mapped_triples), 
+                                        entity_to_id=training_data.entity_to_id, 
+                                        relation_to_id=training_data.relation_to_id,
+                                        create_inverse_triples=CreateInverseTriples,)
+                                testing = testing.new_with_restriction(relations=unlike_type_rel)
+
+                        # a = get_dataset(training = training_data, validation = validation, testing = testing)
+                        # print(a.summary_str())
+                        else:
+                                training_data = data.training
+                                validation = data.validation
+                                testing = data.testing
+
+        return training_data, validation, testing
 
 
 
