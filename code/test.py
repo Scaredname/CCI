@@ -2,7 +2,7 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2023-05-23 14:24:50
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-05-23 15:35:00
+LastEditTime: 2023-05-23 15:56:59
 FilePath: /code/test.py
 Description: 测试1-1，1-n，n-1，n-n的结果。测试不同种类关系的结果。
 
@@ -13,6 +13,8 @@ import torch
 from pykeen.datasets import FB15k237
 from pykeen.datasets import analysis as ana
 from pykeen.evaluation import RankBasedEvaluator
+
+from utilities import load_dataset
 
 d = FB15k237(create_inverse_triples=True)
 data_analysis = ana.get_relation_cardinality_types_df(dataset=d)
@@ -101,3 +103,5 @@ if __name__ == "__main__":
     model_date = '20230427-161537'
     
     trained_model = load_model(dataset_name, description, model_date, model_name)
+
+    training_data, validation, testing = load_dataset(dataset=dataset_name)

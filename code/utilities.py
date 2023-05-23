@@ -2,7 +2,7 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2022-12-22 12:02:34
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-05-23 15:47:13
+LastEditTime: 2023-05-23 15:56:47
 FilePath: /code/utilities.py
 Description: 
 
@@ -166,7 +166,7 @@ def splitTypeData(data:TriplesFactory, type_position = 0):
         unlike_type_rel, like_type_rel = get_white_list_relation(data, type_position=type_position)
         return data.label_triples(data.new_with_restriction(relations=unlike_type_rel).mapped_triples), data.label_triples(data.new_with_restriction(relations=like_type_rel).mapped_triples), unlike_type_rel, like_type_rel
 
-def get_dataset(dataset, ifTypeAsTrain = False, IfUseTypeLike = False, CreateInverseTriples = False, ifHasNoneType = False, type_smoothing = 0.0):
+def load_dataset(dataset, ifTypeAsTrain = False, IfUseTypeLike = False, CreateInverseTriples = False, ifHasNoneType = False, type_smoothing = 0.0):
         if ifTypeAsTrain:
                 training_data, validation, testing = readTypeAsTrainData(dataset,create_inverse_triples=CreateInverseTriples)
         else:

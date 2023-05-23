@@ -8,7 +8,7 @@ from pykeen.triples import TriplesFactory
 from pykeen.typing import LabeledTriples
 
 from Custom.CustomTripleFactory import TriplesTypesFactory
-from utilities import get_dataset
+from utilities import load_dataset
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model_index',type=int, default=0)
@@ -83,7 +83,7 @@ pipeline_config = dict(
 
 
 dataset = args.dataset
-training_data, validation, testing = get_dataset(dataset=dataset, IfUseTypeLike=args.IfUseTypeLike, CreateInverseTriples=args.CreateInverseTriples, type_smoothing=args.type_smoothing, ifHasNoneType=args.ifHasNoneType, ifTypeAsTrain=args.ifTypeAsTrain)
+training_data, validation, testing = load_dataset(dataset=dataset, IfUseTypeLike=args.IfUseTypeLike, CreateInverseTriples=args.CreateInverseTriples, type_smoothing=args.type_smoothing, ifHasNoneType=args.ifHasNoneType, ifTypeAsTrain=args.ifTypeAsTrain)
 
 
 import torch
