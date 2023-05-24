@@ -2,22 +2,25 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2023-05-23 14:24:50
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-05-23 15:56:59
+LastEditTime: 2023-05-24 13:48:22
 FilePath: /code/test.py
 Description: 测试1-1，1-n，n-1，n-n的结果。测试不同种类关系的结果。
 
 Copyright (c) 2023 by ${git_name_email}, All Rights Reserved. 
 '''
+import os
+from collections import defaultdict
+
+import pandas as pd
 import pykeen
 import torch
 from pykeen.datasets import FB15k237
 from pykeen.datasets import analysis as ana
+from pykeen.datasets import get_dataset
 from pykeen.evaluation import RankBasedEvaluator
 
+from Custom.ir_evaluation import IRRankBasedEvaluator
 from utilities import load_dataset
-
-d = FB15k237(create_inverse_triples=True)
-data_analysis = ana.get_relation_cardinality_types_df(dataset=d)
 
 
 def get_relation_cardinality_dict(dataset: pykeen.datasets):
@@ -47,22 +50,24 @@ def get_relation_cardinality_dict(dataset: pykeen.datasets):
     
     return relation_cardinality_dict
 
-def relation_cardinality_type_result(model, evaluator, relation_set, head_or_tail = 'head', cardinality_type = 'one-to-one'):
-    test_data = d.testing.new_with_restriction(relations=relation_set)
+def relation_cardinality_type_result(model, dataset, evaluator, relation_set, head_or_tail = 'head', cardinality_type = 'one-to-one'):
+    test_data = dataset.testing.new_with_restriction(relations=relation_set[cardinality_type])
 
     results = evaluator.evaluate(
         batch_size=8,
         model=model,
         mapped_triples=test_data.mapped_triples,
-        additional_filter_triples=[d.training.mapped_triples,d.validation.mapped_triples, d.testing.mapped_triples],
+        additional_filter_triples=[dataset.training.mapped_triples,dataset.validation.mapped_triples, dataset.testing.mapped_triples],
     )
 
     result_dic = dict()
     result_dic['data_type'] = cardinality_type
     result_dic['target'] = head_or_tail
     results = results.to_dict()[head_or_tail]['realistic']
-    result_dic['amrr'] = results['inverse_harmonic_mean_rank']
-    result_dic['ah@10'] = results['hits_at_k']
+    result_dic['mrr'] = results['inverse_harmonic_mean_rank']
+    result_dic['h@10'] = results['hits_at_10']
+    result_dic['h@3'] = results['hits_at_3']
+    result_dic['h@1'] = results['hits_at_1']
     
     return result_dic
 
@@ -94,6 +99,28 @@ def load_model(default_dataset_name, default_description, default_model_date, de
 
     return trained_model
 
+def get_result_dict(model, evaluator, relation_set, dataset, ir_evaluator=None):
+    result_dict = defaultdict(list)
+    for ht in ['head', 'tail']:
+        for m in ['one-to-one', 'one-to-many', 'many-to-one', 'many-to-many']:
+            # print(relation_cardinality_type_result(model, dataset=dataset, evaluator=evaluator,relation_set=relation_set, head_or_tail=ht, cardinality_type=m))
+            result = relation_cardinality_type_result(model, dataset=dataset, evaluator=evaluator,relation_set=relation_set, head_or_tail=ht, cardinality_type=m)
+            result_dict['target'].append(ht)
+            result_dict['cardinality_type'].append(m)
+            result_dict['mrr'].append(result['mrr'])
+            result_dict['h@10'].append(result['h@10'])
+            result_dict['h@3'].append(result['h@3'])
+            result_dict['h@1'].append(result['h@1'])
+            if ir_evaluator:
+                result = relation_cardinality_type_result(model, dataset=dataset, evaluator=ir_evaluator,relation_set=relation_set, head_or_tail=ht, cardinality_type=m)
+                result_dict['ir_mrr'].append(result['mrr'])
+                result_dict['ir_h@10'].append(result['h@10'])
+                result_dict['ir_h@3'].append(result['h@3'])
+                result_dict['ir_h@1'].append(result['h@1'])
+
+    return result_dict
+
+
 
 if __name__ == "__main__":
     
@@ -105,3 +132,22 @@ if __name__ == "__main__":
     trained_model = load_model(dataset_name, description, model_date, model_name)
 
     training_data, validation, testing = load_dataset(dataset=dataset_name)
+    dataset = get_dataset(training=training_data, testing=testing, validation=validation)
+
+    relation_set = get_relation_cardinality_dict(dataset=dataset)
+
+    evaluator = RankBasedEvaluator()
+    ir_evaluator = IRRankBasedEvaluator()
+    # r = evaluator.evaluate(
+    #         model=trained_model,
+    #         mapped_triples=dataset.testing.mapped_triples,
+    #         additional_filter_triples=[dataset.training.mapped_triples,dataset.validation.mapped_triples, dataset.testing.mapped_triples],
+    #     )
+    
+    result_dic = get_result_dict(trained_model, evaluator, relation_set, dataset, ir_evaluator=ir_evaluator)
+    result_df = pd.DataFrame(result_dic)
+
+    save_path = '../result/cardinality/'
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+    result_df.to_csv(save_path + '%s.csv'%(dataset_name.replace('-', '')+'-'+description+'-'+model_name+'-'+model_date), index=False)
