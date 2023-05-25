@@ -35,13 +35,14 @@ parser.add_argument('-drop', '--dropout', type=float, default=0.0)
 parser.add_argument('-de', '--description', type=str, default='noDescription')
 parser.add_argument('-reverse', '--CreateInverseTriples', action='store_true', default=False)
 parser.add_argument('-t', '--IfUseTypeLike', action='store_true', default=False)
-parser.add_argument('-pre', '--IfUsePreTrainTypeEmb', action='store_true', default=False)
+parser.add_argument('-pre', '--IfUsePreTrainTypeEmb', action='store_true', default=False, help='If use pre-trained type embeddings, default is False')
 parser.add_argument('-rw', '--ReglurizerWeight', type=float, default=0.001)
 parser.add_argument('-rp', '--ReglurizerNorm', type=float, default=3.0)
 parser.add_argument('-hnt', '--ifHasNoneType', action='store_true', default=False)
 parser.add_argument('-tes', '--ifTestEarlyStop', action='store_true', default=False)
 parser.add_argument('-tat', '--ifTypeAsTrain', action='store_true', default=False)
 parser.add_argument('-fw', '--ifFreezeWeights', action='store_true', default=False)
+parser.add_argument('-fte', '--ifFreezeTypeEmb', action='store_true', default=False, help='If freeze type embeddings, default is False')
 parser.add_argument('-naet', '--ifNotAddEntType', help="When get entity's type embedding, whether add entity_type weight to relation_type weight", action='store_true', default=False)
 parser.add_argument('-stop', '--stopper', type=str, choices=['early', 'nop'], default='early')
 args = parser.parse_args()
@@ -116,6 +117,9 @@ if args.ifTypeAsTrain:
 if args.ifFreezeWeights:
     args.description+='FreezeWeights'
 
+if args.ifFreezeTypeEmb:
+    args.description+='FreezeTypeEmb'
+
 if args.ifNotAddEntType:
     args.description+='NotAddEntType'
 
@@ -128,6 +132,7 @@ if args.model_index == 0:
             rel_dim=args.model_rel_dim,
             type_dim=args.model_type_dim,
             freeze_matrix = args.ifFreezeWeights,
+            freeze_type_emb = args.ifFreezeTypeEmb,
             loss='NSSALoss',
             loss_kwargs=dict(
                 reduction='mean',
@@ -148,6 +153,7 @@ elif args.model_index == 1:
             rel_dim=args.model_rel_dim*2,
             type_dim=args.model_type_dim*2,
             freeze_matrix = args.ifFreezeWeights,
+            freeze_type_emb = args.ifFreezeTypeEmb,
             type_initializer='xavier_uniform_',
             entity_initializer='uniform',
             relation_initializer='init_phases',
@@ -170,6 +176,7 @@ elif args.model_index == 2:
             rel_dim=args.model_rel_dim,
             type_dim=args.model_type_dim,
             freeze_matrix = args.ifFreezeWeights,
+            freeze_type_emb = args.ifFreezeTypeEmb,
             loss='BCEAfterSigmoidLoss',
             dropout_0 = 0.3,
             usepretrained = args.IfUsePreTrainTypeEmb,
@@ -187,6 +194,7 @@ elif args.model_index == 3:
             relation_initializer=xavier_uniform_,
             type_initializer=xavier_uniform_,
             freeze_matrix = args.ifFreezeWeights,
+            freeze_type_emb = args.ifFreezeTypeEmb,
             loss='NSSALoss',
             loss_kwargs=dict(
                 reduction='mean',
@@ -212,6 +220,7 @@ elif args.model_index == 4:
             relation_initializer=xavier_uniform_,
             type_initializer=xavier_uniform_,
             freeze_matrix = args.ifFreezeWeights,
+            freeze_type_emb = args.ifFreezeTypeEmb,
             loss='NSSALoss',
             loss_kwargs=dict(
                 reduction='mean',
@@ -303,6 +312,7 @@ elif args.model_index == 21:
             rel_dim=args.model_rel_dim,
             type_dim=args.model_type_dim,
             freeze_matrix = args.ifFreezeWeights,
+            freeze_type_emb = args.ifFreezeTypeEmb,
             add_ent_type = not args.ifNotAddEntType,
             loss='NSSALoss',
             loss_kwargs=dict(
@@ -320,6 +330,7 @@ elif args.model_index == 31:
             rel_dim=args.model_rel_dim,
             type_dim=args.model_type_dim,
             freeze_matrix = args.ifFreezeWeights,
+            freeze_type_emb = args.ifFreezeTypeEmb,
             loss='NSSALoss',
             loss_kwargs=dict(
                 reduction='mean',
@@ -339,6 +350,7 @@ elif args.model_index == 32:
             rel_dim=args.model_rel_dim,
             type_dim=args.model_type_dim,
             freeze_matrix = args.ifFreezeWeights,
+            freeze_type_emb = args.ifFreezeTypeEmb,
             type_initializer='xavier_uniform_',
             entity_initializer='uniform',
             relation_initializer='init_phases',
@@ -359,6 +371,7 @@ elif args.model_index == 41:
             rel_dim=args.model_rel_dim,
             type_dim=args.model_type_dim,
             freeze_matrix = args.ifFreezeWeights,
+            freeze_type_emb = args.ifFreezeTypeEmb,
             add_ent_type = not args.ifNotAddEntType,
             loss='NSSALoss',
             loss_kwargs=dict(
@@ -379,6 +392,7 @@ elif args.model_index == 42:
             rel_dim=args.model_rel_dim,
             type_dim=args.model_type_dim,
             freeze_matrix = args.ifFreezeWeights,
+            freeze_type_emb = args.ifFreezeTypeEmb,
             add_ent_type = not args.ifNotAddEntType,
             type_initializer='xavier_uniform_',
             entity_initializer='uniform',

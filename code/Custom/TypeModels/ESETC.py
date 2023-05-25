@@ -2,7 +2,7 @@
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-28 16:19:48
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-05-16 10:21:10
+LastEditTime: 2023-05-25 14:54:04
 FilePath: /undefined/home/ni/code/ESETC/code/Custom/TypeModels/ESETC.py
 Description: "Entity Specific Entity and entity Type Combination" (ESETC)
 
@@ -96,6 +96,7 @@ class TypeFramework(ERModel):
         relation_initializer: Hint[Initializer] = xavier_uniform_,
         type_initializer: Hint[Initializer] = xavier_uniform_,
         freeze_matrix = False,
+        freeze_type_emb = False,
         **kwargs,) -> None:
 
         self.triples_factory = triples_factory
@@ -121,6 +122,8 @@ class TypeFramework(ERModel):
             self.dropout = dropout
             dropout = 0.0
 
+        # 冻结与可训练是相反的
+        type_representations_kwargs['trainable'] = not freeze_type_emb
         # Using pre-trained embeddings for type representations
         if usepretrained:
             types = list(triples_factory.types_to_id.keys())
@@ -128,7 +131,6 @@ class TypeFramework(ERModel):
             type_representations_kwargs['initializer'] = type_init
             type_representations_kwargs['shape'] = type_init.as_embedding().shape[0]
             self.type_dim = type_init.as_embedding().shape[0]
-            type_representations_kwargs['trainable'] = False
 
         self.projection = torch.nn.Sequential(
                 torch.nn.Linear(self.type_dim+ent_dim, ent_dim, bias=bias, dtype=data_type),
@@ -144,7 +146,6 @@ class TypeFramework(ERModel):
         )
 
         self.ents_types = torch.nn.parameter.Parameter(torch.as_tensor(self.triples_factory.ents_types, dtype=self.data_type, device=self.device), requires_grad= not freeze_matrix) #令获得实体对应的实体类型嵌入时的权重为可训练参数
-        self
 
     def _build_type_representations(self, triples_factory: KGInfo, shape: Sequence[str], representations: OneOrManyHintOrType[Representation] = None, representations_kwargs: OneOrManyOptionalKwargs = None, **kwargs) -> Sequence[Representation]:
         return _prepare_representation_module_list(
