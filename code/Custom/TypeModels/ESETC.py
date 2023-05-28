@@ -127,7 +127,11 @@ class TypeFramework(ERModel):
         # Using pre-trained embeddings for type representations
         if usepretrained:
             types = list(triples_factory.types_to_id.keys())
-            type_init = LabelBasedInitializer(labels=types, encoder='transformer')
+            encoder_kwargs=dict(
+					pretrained_model_name_or_path = "bert-base-uncased",
+                    max_length = 512,
+                    )
+            type_init = LabelBasedInitializer(labels=types, encoder='transformer', encoder_kwargs=encoder_kwargs)
             type_representations_kwargs['initializer'] = type_init
             type_representations_kwargs['shape'] = type_init.as_embedding().shape[0]
             self.type_dim = type_init.as_embedding().shape[0]
