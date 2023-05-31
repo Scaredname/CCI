@@ -67,11 +67,19 @@ class RSETC(TypeFramework):
         ents_types = self.triples_factory.ents_types.to(self.device)
 
         if self.add_ent_type:
-            head_type_emb_tensor = torch.matmul(ents_types[h]+rels_types_h[r_h], type_emb)
-            tail_type_emb_tensor = torch.matmul(ents_types[t]+rels_types_t[r_t], type_emb)
+            if self.activation_weight:
+                head_type_emb_tensor = torch.matmul(self.activation_function(ents_types[h]+rels_types_h[r_h]), type_emb)
+                tail_type_emb_tensor = torch.matmul(self.activation_function(ents_types[t]+rels_types_t[r_t]), type_emb)
+            else:
+                head_type_emb_tensor = torch.matmul(ents_types[h]+rels_types_h[r_h], type_emb)
+                tail_type_emb_tensor = torch.matmul(ents_types[t]+rels_types_t[r_t], type_emb)
         else:
-            head_type_emb_tensor = torch.matmul(rels_types_h[r_h], type_emb)
-            tail_type_emb_tensor = torch.matmul(rels_types_t[r_t], type_emb)
+            if self.activation_weight:
+                head_type_emb_tensor = torch.matmul(self.activation_function(rels_types_h[r_h]), type_emb)
+                tail_type_emb_tensor = torch.matmul(self.activation_function(rels_types_t[r_t]), type_emb)
+            else:
+                head_type_emb_tensor = torch.matmul(rels_types_h[r_h], type_emb)
+                tail_type_emb_tensor = torch.matmul(rels_types_t[r_t], type_emb)
 
         h_assignments = assignments[h]
         t_assignments = assignments[t]

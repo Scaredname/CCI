@@ -44,6 +44,7 @@ parser.add_argument('-tat', '--ifTypeAsTrain', action='store_true', default=Fals
 parser.add_argument('-fw', '--ifFreezeWeights', action='store_true', default=False)
 parser.add_argument('-fte', '--ifFreezeTypeEmb', action='store_true', default=False, help='If freeze type embeddings, default is False')
 parser.add_argument('-randw', '--ifRandomWeight', action='store_true', default=False, help='If use random weight, default is False')
+parser.add_argument('-af', '--ifActivationFuncion', action='store_true', default=False, help='If use ActivationFuncion for type weight')
 parser.add_argument('-naet', '--ifNotAddEntType', help="When get entity's type embedding, whether add entity_type weight to relation_type weight", action='store_true', default=False)
 parser.add_argument('-stop', '--stopper', type=str, choices=['early', 'nop'], default='early')
 args = parser.parse_args()
@@ -127,6 +128,9 @@ if args.ifNotAddEntType:
 if args.ifRandomWeight:
     args.description+='RandomWeight'
 
+if args.ifActivationFuncion:
+    args.description+='ActivationFuncion'
+
 if args.model_index == 0:
     model = ESETCwithTransE(
             triples_factory=training_data,
@@ -144,6 +148,7 @@ if args.model_index == 0:
                 margin=args.loss_margin,
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
+            activation_weight = args.ifActivationFuncion,
             )
 elif args.model_index == 1:
     # 因为没有使用cfloat，通过乘2来确保参数维度和实际维度相同
@@ -169,6 +174,7 @@ elif args.model_index == 1:
                 margin=args.loss_margin,
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
+            activation_weight = args.ifActivationFuncion,
             )
 elif args.model_index == 2:
 
@@ -184,6 +190,7 @@ elif args.model_index == 2:
             loss='BCEAfterSigmoidLoss',
             dropout_0 = 0.3,
             usepretrained = args.IfUsePreTrainTypeEmb,
+            activation_weight = args.ifActivationFuncion,
     )
 
 elif args.model_index == 3:
@@ -211,6 +218,7 @@ elif args.model_index == 3:
                 normalize=True,
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
+            activation_weight = args.ifActivationFuncion,
             )
 elif args.model_index == 4:
     model = ESETCwithDistMult(
@@ -237,6 +245,7 @@ elif args.model_index == 4:
                 normalize=True,
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
+            activation_weight = args.ifActivationFuncion,
             )
 
 elif args.model_index == 11:
@@ -325,6 +334,7 @@ elif args.model_index == 21:
                 margin=args.loss_margin,
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
+            activation_weight = args.ifActivationFuncion,
             )
 
 elif args.model_index == 31:
@@ -342,6 +352,7 @@ elif args.model_index == 31:
                 margin=args.loss_margin,
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
+            activation_weight = args.ifActivationFuncion,
             )
 
 elif args.model_index == 32:
@@ -366,6 +377,7 @@ elif args.model_index == 32:
                 margin=args.loss_margin,
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
+            activation_weight = args.ifActivationFuncion,
             )
 
 elif args.model_index == 41:
@@ -384,6 +396,7 @@ elif args.model_index == 41:
                 margin=args.loss_margin,
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
+            activation_weight = args.ifActivationFuncion,
             )
     
 elif args.model_index == 42:
@@ -409,6 +422,7 @@ elif args.model_index == 42:
                 margin=args.loss_margin,
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
+            activation_weight = args.ifActivationFuncion,
             )
 
 if torch.cuda.is_available():
