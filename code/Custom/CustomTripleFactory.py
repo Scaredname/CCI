@@ -126,6 +126,7 @@ class TriplesTypesFactory(TriplesFactory):
         rels_types: np.ndarray,
         types_to_id: Mapping[str, int],
         type_smoothing: float = 0.0,
+        use_random_weights: bool = False,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -146,6 +147,10 @@ class TriplesTypesFactory(TriplesFactory):
         
         self.ents_types = torch.from_numpy(self.ents_types)
         self.rels_types = torch.from_numpy(self.rels_types)
+
+        if use_random_weights:
+            self.ents_types = torch.rand_like(self.ents_types)
+            self.rels_types = torch.rand_like(self.rels_types)
             
 
     @classmethod
@@ -157,6 +162,7 @@ class TriplesTypesFactory(TriplesFactory):
         *,
         type_triples: LabeledTriples = None,
         type_position: int = 0,
+        use_random_weights: bool = False,
         **kwargs,
     ) -> "TriplesTypesFactory":
         if type_triples is None:
@@ -179,6 +185,7 @@ class TriplesTypesFactory(TriplesFactory):
             rels_types=rels_types,
             types_to_id=types_to_id,
             type_smoothing=type_smoothing,
+            use_random_weights=use_random_weights,
         )
     
     @property

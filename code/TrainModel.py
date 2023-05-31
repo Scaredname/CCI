@@ -43,6 +43,7 @@ parser.add_argument('-tes', '--ifTestEarlyStop', action='store_true', default=Fa
 parser.add_argument('-tat', '--ifTypeAsTrain', action='store_true', default=False)
 parser.add_argument('-fw', '--ifFreezeWeights', action='store_true', default=False)
 parser.add_argument('-fte', '--ifFreezeTypeEmb', action='store_true', default=False, help='If freeze type embeddings, default is False')
+parser.add_argument('-randw', '--ifRandomWeight', action='store_true', default=False, help='If use random weight, default is False')
 parser.add_argument('-naet', '--ifNotAddEntType', help="When get entity's type embedding, whether add entity_type weight to relation_type weight", action='store_true', default=False)
 parser.add_argument('-stop', '--stopper', type=str, choices=['early', 'nop'], default='early')
 args = parser.parse_args()
@@ -84,7 +85,7 @@ pipeline_config = dict(
 
 
 dataset = args.dataset
-training_data, validation, testing = load_dataset(dataset=dataset, IfUseTypeLike=args.IfUseTypeLike, CreateInverseTriples=args.CreateInverseTriples, type_smoothing=args.type_smoothing, ifHasNoneType=args.ifHasNoneType, ifTypeAsTrain=args.ifTypeAsTrain)
+training_data, validation, testing = load_dataset(dataset=dataset, IfUseTypeLike=args.IfUseTypeLike, CreateInverseTriples=args.CreateInverseTriples, type_smoothing=args.type_smoothing, ifHasNoneType=args.ifHasNoneType, ifTypeAsTrain=args.ifTypeAsTrain, use_random_weights=args.ifRandomWeight)
 
 
 import torch
@@ -122,6 +123,9 @@ if args.ifFreezeTypeEmb:
 
 if args.ifNotAddEntType:
     args.description+='NotAddEntType'
+
+if args.ifRandomWeight:
+    args.description+='RandomWeight'
 
 if args.model_index == 0:
     model = ESETCwithTransE(
