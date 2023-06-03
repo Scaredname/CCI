@@ -152,7 +152,7 @@ class TypeFramework(ERModel):
         )
 
         self.ents_types = torch.nn.parameter.Parameter(torch.as_tensor(self.triples_factory.ents_types, dtype=self.data_type, device=self.device), requires_grad= not freeze_matrix) #令获得实体对应的实体类型嵌入时的权重为可训练参数
-        self.activation_function = nn.ReLU()
+        self.activation_function = nn.Softmax(dim=-1)
 
     def _build_type_representations(self, triples_factory: KGInfo, shape: Sequence[str], representations: OneOrManyHintOrType[Representation] = None, representations_kwargs: OneOrManyOptionalKwargs = None, **kwargs) -> Sequence[Representation]:
         return _prepare_representation_module_list(
