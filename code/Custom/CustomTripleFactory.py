@@ -131,7 +131,9 @@ class TriplesTypesFactory(TriplesFactory):
     ) -> None:
         super().__init__(**kwargs)
         self.ents_types = ents_types
+        self.ents_types_mask = torch.where(torch.tensor(ents_types) != 0, torch.tensor(1), torch.tensor(0))
         self.rels_types = rels_types
+        self.rels_types_mask = torch.where(torch.tensor(rels_types) != 0, torch.tensor(1), torch.tensor(0))
         self.types_to_id = types_to_id
         self.assignments = self._get_assignment(ents_types)
 

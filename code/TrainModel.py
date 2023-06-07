@@ -45,8 +45,10 @@ parser.add_argument('-fw', '--ifFreezeWeights', action='store_true', default=Fal
 parser.add_argument('-fte', '--ifFreezeTypeEmb', action='store_true', default=False, help='If freeze type embeddings, default is False')
 parser.add_argument('-randw', '--ifRandomWeight', action='store_true', default=False, help='If use random weight, default is False')
 parser.add_argument('-af', '--ifActivationFuncion', action='store_true', default=False, help='If use ActivationFuncion for type weight')
+parser.add_argument('-wm', '--ifWeightMask', action='store_true', default=False, help='If use entity types constrains for type weight')
 parser.add_argument('-naet', '--ifNotAddEntType', help="When get entity's type embedding, whether add entity_type weight to relation_type weight", action='store_true', default=False)
 parser.add_argument('-stop', '--stopper', type=str, choices=['early', 'nop'], default='early')
+parser.add_argument('--device', type=str, choices=['cuda', 'cpu'], default='cuda')
 args = parser.parse_args()
 
 
@@ -131,6 +133,9 @@ if args.ifRandomWeight:
 if args.ifActivationFuncion:
     args.description+='ActivationFuncion'
 
+if args.ifWeightMask:
+    args.description+='WeightMask'
+
 if args.model_index == 0:
     model = ESETCwithTransE(
             triples_factory=training_data,
@@ -149,6 +154,7 @@ if args.model_index == 0:
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = args.ifActivationFuncion,
+            weight_mask = args.ifWeightMask,
             )
 elif args.model_index == 1:
     # 因为没有使用cfloat，通过乘2来确保参数维度和实际维度相同
@@ -175,6 +181,7 @@ elif args.model_index == 1:
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = args.ifActivationFuncion,
+            weight_mask = args.ifWeightMask,
             )
 elif args.model_index == 2:
 
@@ -191,6 +198,7 @@ elif args.model_index == 2:
             dropout_0 = 0.3,
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = args.ifActivationFuncion,
+            weight_mask = args.ifWeightMask,
     )
 
 elif args.model_index == 3:
@@ -219,6 +227,7 @@ elif args.model_index == 3:
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = args.ifActivationFuncion,
+            weight_mask = args.ifWeightMask,
             )
 elif args.model_index == 4:
     model = ESETCwithDistMult(
@@ -246,6 +255,7 @@ elif args.model_index == 4:
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = args.ifActivationFuncion,
+            weight_mask = args.ifWeightMask,
             )
 
 elif args.model_index == 11:
@@ -335,6 +345,7 @@ elif args.model_index == 21:
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = args.ifActivationFuncion,
+            weight_mask = args.ifWeightMask,
             )
 
 elif args.model_index == 31:
@@ -353,6 +364,7 @@ elif args.model_index == 31:
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = args.ifActivationFuncion,
+            weight_mask = args.ifWeightMask,
             )
 
 elif args.model_index == 32:
@@ -378,6 +390,7 @@ elif args.model_index == 32:
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = args.ifActivationFuncion,
+            weight_mask = args.ifWeightMask,
             )
 
 elif args.model_index == 41:
@@ -397,6 +410,7 @@ elif args.model_index == 41:
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = args.ifActivationFuncion,
+            weight_mask = args.ifWeightMask,
             )
     
 elif args.model_index == 42:
@@ -423,10 +437,13 @@ elif args.model_index == 42:
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = args.ifActivationFuncion,
+            weight_mask = args.ifWeightMask,
             )
 
 if torch.cuda.is_available():
+    print('Using GPU')
     model.to('cuda')
+    
 
 # Pick an optimizer from Torch
 from torch.optim import Adam

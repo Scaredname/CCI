@@ -58,6 +58,7 @@ class RSETC(TypeFramework):
         """Get representations for head ent type emb and tail ent type emb."""
         
         assignments = self.triples_factory.assignments.to(self.device)
+        self.rels_types_mask = self.rels_types_mask.to(self.device)
         # type_emb = self.type_representations[0]._embeddings.weight.to(self.device)
         type_emb = self.type_representations[0](indices = torch.arange(self.triples_factory.ents_types.shape[1]).long().to(self.device)) #取出所有的type embedding
 
@@ -65,6 +66,10 @@ class RSETC(TypeFramework):
         rels_types_h = self.rels_types[0]
         rels_types_t = self.rels_types[1]
         ents_types = self.triples_factory.ents_types.to(self.device)
+
+        if self.weight_mask:
+            rels_types_h = rels_types_h * self.rels_types_mask[0]
+            rels_types_t = rels_types_t * self.rels_types_mask[1]
 
         if self.add_ent_type:
             if self.activation_weight:
