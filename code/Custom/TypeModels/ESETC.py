@@ -2,7 +2,7 @@
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-28 16:19:48
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-06-07 11:46:46
+LastEditTime: 2023-06-07 11:56:59
 FilePath: /code/Custom/TypeModels/ESETC.py
 Description: "Entity Specific Entity and entity Type Combination" (ESETC)
 
@@ -222,19 +222,20 @@ class TypeFramework(ERModel):
         """Get representations for head ent type emb and tail ent type emb."""
         
         assignments = self.triples_factory.assignments.to(self.device)
-        self.ents_types = self.ents_types.to(self.device)
+        self.ents_types_mask = self.ents_types_mask.to(self.device)
+        ents_types = self.ents_types.to(self.device)
         # type_emb = self.type_representations[0]._embeddings.weight.to(self.device)
         type_emb = self.type_representations[0](indices = torch.arange(self.ents_types.shape[1]).long().to(self.device)) #取出所有的type embedding
 
         #通过邻接矩阵与类型嵌入矩阵的矩阵乘法可以快速每个实体对应的类型嵌入，如果是多个类型则是多个类型嵌入的加权和，权重为邻接矩阵中的值。如果值都为1则相当于sum操作，为平均值则是mean操作。
         if self.weight_mask:
-            self.ents_types = self.ents_types*self.ents_types_mask
+            ents_types = self.ents_types*self.ents_types_mask
         if self.activation_weight:
-            head_type_emb_tensor = torch.matmul(self.activation_function(self.ents_types[h]), type_emb)
-            tail_type_emb_tensor = torch.matmul(self.activation_function(self.ents_types[t]), type_emb)
+            head_type_emb_tensor = torch.matmul(self.activation_function(ents_types[h]), type_emb)
+            tail_type_emb_tensor = torch.matmul(self.activation_function(ents_types[t]), type_emb)
         else:
-            head_type_emb_tensor = torch.matmul(self.ents_types[h], type_emb)
-            tail_type_emb_tensor = torch.matmul(self.ents_types[t], type_emb)
+            head_type_emb_tensor = torch.matmul(ents_types[h], type_emb)
+            tail_type_emb_tensor = torch.matmul(ents_types[t], type_emb)
         h_assignments = assignments[h]
         t_assignments = assignments[t]
 
