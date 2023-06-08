@@ -42,6 +42,7 @@ parser.add_argument('-hnt', '--ifHasNoneType', action='store_true', default=Fals
 parser.add_argument('-tes', '--ifTestEarlyStop', action='store_true', default=False)
 parser.add_argument('-tat', '--ifTypeAsTrain', action='store_true', default=False)
 parser.add_argument('-fw', '--ifFreezeWeights', action='store_true', default=False)
+parser.add_argument('-shp', '--ifSearchHyperParameters', action='store_true', default=False)
 parser.add_argument('-fte', '--ifFreezeTypeEmb', action='store_true', default=False, help='If freeze type embeddings, default is False')
 parser.add_argument('-randw', '--ifRandomWeight', action='store_true', default=False, help='If use random weight, default is False')
 parser.add_argument('-af', '--ifActivationFuncion', action='store_true', default=False, help='If use ActivationFuncion for type weight')
@@ -54,6 +55,8 @@ args = parser.parse_args()
 
 if args.ifTestEarlyStop:
     frequency = 1
+elif args.ifSearchHyperParameters:
+    frequency = 5
 else:
     frequency = 50
 pipeline_config = dict(
@@ -135,6 +138,9 @@ if args.ifActivationFuncion:
 
 if args.ifWeightMask:
     args.description+='WeightMask'
+
+if args.ifSearchHyperParameters:
+    args.description+='SearchHP'
 
 if args.model_index == 0:
     model = ESETCwithTransE(
