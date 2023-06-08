@@ -2,7 +2,7 @@
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-28 16:19:48
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-06-07 11:56:59
+LastEditTime: 2023-06-08 13:34:19
 FilePath: /code/Custom/TypeModels/ESETC.py
 Description: "Entity Specific Entity and entity Type Combination" (ESETC)
 
@@ -166,6 +166,10 @@ class TypeFramework(ERModel):
             label= 'type',
             **kwargs,
     )
+    @property
+    def num_parameter_bytes(self) -> int:
+        """Different from origin function. Calculate the number of bytes used for gradient enabled parameters of the model."""
+        return sum(param.numel() * param.element_size() for param in self.parameters() if param.requires_grad)
 
     def _replace_emb(self, emb_list, assignments):
         """
