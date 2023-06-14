@@ -89,7 +89,7 @@ class CatESETC(TypeFramework):
         hr_batch = hr_batch.unsqueeze(dim=1)
         h, r, t = self._get_representations(h=hr_batch[..., 0], r=hr_batch[..., 1], t=tails, mode=mode)
 
-        head_type_emb, tail_type_emb, h_assig, t_assig = self.head_type_emb, tail_type_emb, h_assig, t_assig = self._get_enttype_representations(h=hr_batch[..., 0], t=tails, mode=mode)
+        head_type_emb, tail_type_emb, h_assig, t_assig = self._get_enttype_representations(h=hr_batch[..., 0], t=tails, mode=mode)
         
         tail_type_emb = tail_type_emb.view(t.shape[0], -1)
         t_assig = t_assig.view(t.shape[0], -1)
