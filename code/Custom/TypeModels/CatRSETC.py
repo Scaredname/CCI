@@ -87,7 +87,7 @@ class CatRSETC(RSETC):
         hr_batch = hr_batch.unsqueeze(dim=1)
         h, r, t = self._get_representations(h=hr_batch[..., 0], r=hr_batch[..., 1], t=tails, mode=mode)
 
-        head_type_emb, tail_type_emb, h_assig, t_assig = self._get_enttype_representations(h=hr_batch[..., 0], r_h=hr_batch[..., 1], r_t=hr_batch[..., 1], t=tails, mode=mode)
+        head_type_emb, tail_type_emb, h_assig, t_assig = self._get_enttype_representations(h=hr_batch[..., 0], r_h=hr_batch[..., 1], r_t=hr_batch[..., 1].repeat(1, self.triples_factory.num_entities), t=tails, mode=mode)
         
         
         t_assig = t_assig.view(t.shape[0], -1)
@@ -128,11 +128,11 @@ class CatRSETC(RSETC):
         rt_batch = rt_batch.unsqueeze(dim=1)
         h, r, t = self._get_representations(h=heads, r=rt_batch[..., 0], t=rt_batch[..., 1], mode=mode)
         
-        head_type_emb, tail_type_emb, h_assig, t_assig = self._get_enttype_representations(h=heads, r_h=rt_batch[..., 0], r_t=rt_batch[..., 0], t=rt_batch[..., 1], mode=mode)
+        # 发现问题，当不使用ent-type权重时，head_type_emb无法通过广播机制来得到合适的shape。解决方法，令r_h重复num_ent次。
+        head_type_emb, tail_type_emb, h_assig, t_assig = self._get_enttype_representations(h=heads, r_h=rt_batch[..., 0].repeat(1, self.triples_factory.num_entities), r_t=rt_batch[..., 0], t=rt_batch[..., 1], mode=mode)
 
         h_assig = h_assig.view(h.shape[0], -1)
         tail_type_emb = tail_type_emb.view(t.shape[0], t.shape[1], -1)
-        
         # 确保h和h_type_emb的shape一致
         h = h.unsqueeze(dim=0).repeat(t.shape[0], 1, 1)
         # 会出现测试批度为1的特例，所以调整一下head_type_emb的shape
