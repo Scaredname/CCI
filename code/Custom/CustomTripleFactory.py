@@ -127,6 +127,7 @@ class TriplesTypesFactory(TriplesFactory):
         types_to_id: Mapping[str, int],
         type_smoothing: float = 0.0,
         use_random_weights: bool = False,
+        select_one_type: bool = False,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -153,6 +154,31 @@ class TriplesTypesFactory(TriplesFactory):
         if use_random_weights:
             self.ents_types = torch.rand_like(self.ents_types)
             self.rels_types = torch.rand_like(self.rels_types)
+        
+        if select_one_type:
+            # 只保留最相关的实体类型
+            max_values_ent, _ = torch.max(self.ents_types, dim=1)
+            max_values_rel, _ = torch.max(self.rels_types, dim=2)
+
+            ones_ents_types = torch.ones_like(self.ents_types)
+            ones_rels_types = torch.ones_like(self.rels_types)
+
+            # 将全1矩阵中每一行的最大值所在位置的元素设为1，其他元素保持为0
+            ents_type_result = torch.where(self.ents_types == max_values_ent.unsqueeze(1), ones_ents_types, torch.zeros_like(self.ents_types))
+            rels_type_result = torch.where(self.rels_types == max_values_rel.unsqueeze(2), ones_rels_types, torch.zeros_like(self.rels_types))
+
+            # 如果存在多个最大值，随机选择一个最大值的位置，并将其设为1
+            max_indices_ent = torch.multinomial(ents_type_result, num_samples=1)
+            max_indices_rel_h = torch.multinomial(rels_type_result[0], num_samples=1)
+            max_indices_rel_t = torch.multinomial(rels_type_result[1], num_samples=1)
+            ents_type_result.zero_()
+            rels_type_result.zero_()
+            ents_type_result.scatter_(1, max_indices_ent, 1)
+            rels_type_result[0].scatter_(1, max_indices_rel_h, 1)
+            rels_type_result[1].scatter_(1, max_indices_rel_t, 1)
+
+            self.ents_types = ents_type_result
+            self.rels_types = rels_type_result
             
 
     @classmethod
@@ -165,6 +191,7 @@ class TriplesTypesFactory(TriplesFactory):
         type_triples: LabeledTriples = None,
         type_position: int = 0,
         use_random_weights: bool = False,
+        select_one_type: bool = False,
         **kwargs,
     ) -> "TriplesTypesFactory":
         if type_triples is None:
@@ -188,6 +215,7 @@ class TriplesTypesFactory(TriplesFactory):
             types_to_id=types_to_id,
             type_smoothing=type_smoothing,
             use_random_weights=use_random_weights,
+            select_one_type=select_one_type,
         )
     
     @property
