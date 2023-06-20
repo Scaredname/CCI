@@ -4,10 +4,9 @@ import datetime
 import json
 import os
 
+from Custom.CustomTripleFactory import TriplesTypesFactory
 from pykeen.triples import TriplesFactory
 from pykeen.typing import LabeledTriples
-
-from Custom.CustomTripleFactory import TriplesTypesFactory
 from utilities import load_dataset
 
 parser = argparse.ArgumentParser()
@@ -96,12 +95,7 @@ training_data, validation, testing = load_dataset(dataset=dataset, IfUseTypeLike
 
 
 import torch
-# Pick a model
-# from Custom.CustomModel import EETCRLwithRotate
-from pykeen.models import ComplEx, DistMultLiteral, RotatE, TransE
-from pykeen.nn.init import xavier_uniform_
-from pykeen.nn.modules import RotatEInteraction, TransEInteraction
-
+from Custom.OriginRotatE import FloatRotatE
 from Custom.TypeModels.CatESETC import CatESETCwithRotate, CatESETCwithTransE
 from Custom.TypeModels.CatRSETC import CatRSETCwithRotate, CatRSETCwithTransE
 from Custom.TypeModels.ESETCwithComplEx import (DistMult, ESETCwithComplEx,
@@ -109,6 +103,11 @@ from Custom.TypeModels.ESETCwithComplEx import (DistMult, ESETCwithComplEx,
 from Custom.TypeModels.ESETCwithRotate import ESETCwithRotate, ESETCwithTransE
 from Custom.TypeModels.ESETCwithTuckER import ESETCwithTuckER
 from Custom.TypeModels.RSETC import RSETCwithTransE
+# Pick a model
+# from Custom.CustomModel import EETCRLwithRotate
+from pykeen.models import ComplEx, DistMultLiteral, RotatE, TransE
+from pykeen.nn.init import xavier_uniform_
+from pykeen.nn.modules import RotatEInteraction, TransEInteraction
 
 if args.IfUsePreTrainTypeEmb:
     args.description+='PreTrainTypeEmb'
@@ -335,6 +334,21 @@ elif args.model_index == 14:
                 normalize=True,
             ),
             )
+    
+elif args.model_index == 15:
+    model = FloatRotatE(
+            triples_factory=training_data,
+            embedding_dim=args.model_ent_dim,
+            entity_initializer='uniform',
+            relation_initializer='init_phases',
+            relation_constrainer= 'complex_normalize',
+            loss='NSSALoss',
+            loss_kwargs=dict(
+                reduction='mean',
+                adversarial_temperature=1.0,
+                margin=args.loss_margin,
+            ),
+    )
 
 elif args.model_index == 21:
     model = RSETCwithTransE(
