@@ -340,7 +340,7 @@ elif args.model_index == 15:
             triples_factory=training_data,
             embedding_dim=args.model_ent_dim,
             entity_initializer='uniform',
-            relation_initializer='init_phases',
+            relation_initializer='uniform',
             relation_constrainer= 'complex_normalize',
             loss='NSSALoss',
             loss_kwargs=dict(

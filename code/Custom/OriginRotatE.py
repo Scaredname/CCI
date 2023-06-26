@@ -2,7 +2,7 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2023-06-20 11:26:31
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-06-20 15:05:52
+LastEditTime: 2023-06-26 12:47:51
 FilePath: /ESETC/code/Custom/OriginRotatE.py
 Description: 在pykeen中引入不使用complex张量的RotatE
 
@@ -32,11 +32,11 @@ def rotate_origin_interaction(
     .. note::
         this method expects all tensors to be of complex datatype, i.e., `torch.is_complex(x)` to evaluate to `True`.
 
-    :param h: shape: (`*batch_dims`, dim)
+    :param h: shape: (`*batch_dims`, dim * 2)
         The head representations.
     :param r: shape: (`*batch_dims`, dim)
         The relation representations.
-    :param t: shape: (`*batch_dims`, dim)
+    :param t: shape: (`*batch_dims`, dim * 2)
         The tail representations.
 
     :return: shape: batch_dims
@@ -47,11 +47,13 @@ def rotate_origin_interaction(
         h = h.view(*h.shape[:-1], -1, 2)
     if t.shape[-1] != 2:
         t = t.view(*t.shape[:-1], -1, 2)
-    if r.shape[-1] != 2:
-        r = r.view(*r.shape[:-1], -1, 2)
     re_h, im_h = torch.chunk(h, 2, dim=-1)
     re_t, im_t = torch.chunk(t, 2, dim=-1)
-    re_r, im_r = torch.chunk(r, 2, dim=-1)
+
+    phase_relation = r * np.pi
+    re_r = torch.cos(phase_relation).unsqueeze(-1)
+    im_r = torch.sin(phase_relation).unsqueeze(-1)
+
 
     if estimate_cost_of_sequence(h.shape, r.shape) < estimate_cost_of_sequence(r.shape, t.shape):
     # 当h和r的计算量小于r和t的计算量时，说明此时我们替换的是尾实体，也就是原Rotate代码中的tail-batch
@@ -100,7 +102,7 @@ class FloatRotatE(ERModel):
         *,
         embedding_dim: int = 200,
         entity_initializer: Hint[Initializer] = xavier_uniform_,
-        relation_initializer: Hint[Initializer] = init_phases,
+        relation_initializer: Hint[Initializer] = xavier_uniform_,
         relation_constrainer: Hint[Constrainer] = complex_normalize,
         regularizer: HintOrType[Regularizer] = None,
         regularizer_kwargs: OptionalKwargs = None,
@@ -127,7 +129,8 @@ class FloatRotatE(ERModel):
         super().__init__(
             interaction=RotatEOriginInteraction,
             entity_representations_kwargs=dict(
-                shape=embedding_dim,
+                shape=embedding_dim * 2, 
+                # 采用原作者的方案，另实体维度是关系维度的两倍。
                 initializer=entity_initializer,
                 regularizer=regularizer,
                 regularizer_kwargs=regularizer_kwargs,
