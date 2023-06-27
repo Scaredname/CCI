@@ -274,7 +274,7 @@ elif args.model_index == 11:
             loss='NSSALoss',
             loss_kwargs=dict(
                 reduction='mean',
-                adversarial_temperature=1.0,
+                adversarial_temperature=args.adversarial_temperature,
                 margin=args.loss_margin,
             ),
             # loss = 'BCEAfterSigmoidLoss',
@@ -284,13 +284,13 @@ elif args.model_index == 12:
     model = RotatE(
             triples_factory=training_data,
             embedding_dim=args.model_ent_dim,
-            entity_initializer='uniform',
+            # entity_initializer='uniform',
             relation_initializer='init_phases',
             relation_constrainer= 'complex_normalize',
             loss='NSSALoss',
             loss_kwargs=dict(
                 reduction='mean',
-                adversarial_temperature=1.0,
+                adversarial_temperature=args.adversarial_temperature,
                 margin=args.loss_margin,
             ),
     )
@@ -339,13 +339,14 @@ elif args.model_index == 15:
     model = FloatRotatE(
             triples_factory=training_data,
             embedding_dim=args.model_ent_dim,
-            entity_initializer='uniform',
-            relation_initializer='uniform',
+            # entity_initializer='uniform',
+            # relation_initializer='uniform',
+            # relation_constrainer= 'complex_normalize',
             relation_constrainer= 'complex_normalize',
             loss='NSSALoss',
             loss_kwargs=dict(
                 reduction='mean',
-                adversarial_temperature=1.0,
+                adversarial_temperature=args.adversarial_temperature,
                 margin=args.loss_margin,
             ),
     )
