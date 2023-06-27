@@ -2,8 +2,8 @@
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-28 16:19:48
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-06-08 13:34:19
-FilePath: /code/Custom/TypeModels/ESETC.py
+LastEditTime: 2023-06-27 15:06:12
+FilePath: /ESETC/code/Custom/TypeModels/ESETC.py
 Description: "Entity Specific Entity and entity Type Combination" (ESETC)
 
 Copyright (c) 2022 by error: git config user.name && git config user.email & please set dead value or install git, All Rights Reserved. 
@@ -91,7 +91,7 @@ class TypeFramework(ERModel):
         shape: Sequence[str] = ('d',),
         activation: HintOrType[nn.Module] = nn.Identity,
         activation_kwargs: OptionalKwargs = None,
-        usepretrained = False,
+        usepretrained = None,
         entity_initializer: Hint[Initializer] = xavier_uniform_,
         relation_initializer: Hint[Initializer] = xavier_uniform_,
         type_initializer: Hint[Initializer] = xavier_uniform_,
@@ -132,7 +132,7 @@ class TypeFramework(ERModel):
         if usepretrained:
             types = list(triples_factory.types_to_id.keys())
             encoder_kwargs=dict(
-					pretrained_model_name_or_path = "bert-base-uncased",
+					pretrained_model_name_or_path = usepretrained,
                     max_length = 512,
                     )
             type_init = LabelBasedInitializer(labels=types, encoder='transformer', encoder_kwargs=encoder_kwargs)

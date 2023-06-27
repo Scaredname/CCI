@@ -34,7 +34,7 @@ parser.add_argument('-drop', '--dropout', type=float, default=0.0)
 parser.add_argument('-de', '--description', type=str, default='noDescription')
 parser.add_argument('-reverse', '--CreateInverseTriples', action='store_true', default=False)
 parser.add_argument('-t', '--IfUseTypeLike', action='store_true', default=False)
-parser.add_argument('-pre', '--IfUsePreTrainTypeEmb', action='store_true', default=False, help='If use pre-trained type embeddings, default is False')
+parser.add_argument('-pre', '--IfUsePreTrainTypeEmb', default=None, type=str, choices=[None, 'bert-base-uncased', 'bert-large-uncased'], help='If use pre-trained type embeddings, the name of pretained model')
 parser.add_argument('-rw', '--ReglurizerWeight', type=float, default=0.001)
 parser.add_argument('-rp', '--ReglurizerNorm', type=float, default=3.0)
 parser.add_argument('-hnt', '--ifHasNoneType', action='store_true', default=False)
@@ -284,7 +284,7 @@ elif args.model_index == 12:
     model = RotatE(
             triples_factory=training_data,
             embedding_dim=args.model_ent_dim,
-            # entity_initializer='uniform',
+            entity_initializer='uniform',
             relation_initializer='init_phases',
             relation_constrainer= 'complex_normalize',
             loss='NSSALoss',
@@ -339,10 +339,10 @@ elif args.model_index == 15:
     model = FloatRotatE(
             triples_factory=training_data,
             embedding_dim=args.model_ent_dim,
-            # entity_initializer='uniform',
-            # relation_initializer='uniform',
+            entity_initializer='uniform',
+            relation_initializer='uniform',
             # relation_constrainer= 'complex_normalize',
-            relation_constrainer= 'complex_normalize',
+            relation_constrainer=None,
             loss='NSSALoss',
             loss_kwargs=dict(
                 reduction='mean',
@@ -508,6 +508,9 @@ pipeline_result.configuration['type_smoothing'] = args.type_smoothing
 if args.training_loop == 'slcwa':
     pipeline_result.configuration['negative_sampler'] = args.negative_sampler
     pipeline_result.configuration['num_negs_per_pos'] = args.num_negs_per_pos
+
+if args.IfUsePreTrainTypeEmb:
+    pipeline_result.configuration['pre_trained_type_name'] = args.IfUsePreTrainTypeEmb
 
 pipeline_result.save_to_directory(modelpath)
 with open(os.path.join(modelpath, 'config.json'), 'w') as f:

@@ -2,7 +2,7 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2023-06-20 11:26:31
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-06-26 12:47:51
+LastEditTime: 2023-06-27 14:46:02
 FilePath: /ESETC/code/Custom/OriginRotatE.py
 Description: 在pykeen中引入不使用complex张量的RotatE
 
@@ -50,7 +50,7 @@ def rotate_origin_interaction(
     re_h, im_h = torch.chunk(h, 2, dim=-1)
     re_t, im_t = torch.chunk(t, 2, dim=-1)
 
-    phase_relation = r * np.pi
+    phase_relation = r / (r.abs().clamp_min(torch.finfo(r.dtype).eps) / np.pi)
     re_r = torch.cos(phase_relation).unsqueeze(-1)
     im_r = torch.sin(phase_relation).unsqueeze(-1)
 
@@ -71,13 +71,14 @@ def rotate_origin_interaction(
         im_score = im_score - im_h
 
     score = torch.stack([re_score, im_score], dim = 0)
-    score = score.norm(dim = 0).squeeze()
+    score = score.norm(dim = 0)
+    score = score.squeeze()
 
     # 测试时使用1-N scoring方法会出现维度不匹配的问题，这里消除一下
     if len(score.shape) > 3:
         score = score.view(score.shape[0], score.shape[1], -1)
 
-    return -score.sum(dim = -1)
+    return negative_norm(score, p=2, power_norm=False)
 
 
 class RotatEOriginInteraction(FunctionalInteraction[torch.FloatTensor, torch.FloatTensor, torch.FloatTensor]):
@@ -143,4 +144,4 @@ class FloatRotatE(ERModel):
                 dtype=torch.float,
             ),
             **kwargs,
-        )
+        )     

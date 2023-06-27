@@ -2,8 +2,8 @@
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-02 16:32:08
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-05-11 13:11:33
-FilePath: /undefined/home/ni/code/ESETC/code/pdResult.py
+LastEditTime: 2023-06-27 15:04:35
+FilePath: /ESETC/code/pdResult.py
 Description: 
 
 Copyright (c) 2023 by error: git config user.name && git config user.email & please set dead value or install git, All Rights Reserved. 
@@ -97,6 +97,12 @@ for file_name in os.listdir(result_path):
                         results_dict['negative_sampler'].append(config['negative_sampler'])
                     else:
                         results_dict['negative_sampler'].append('-')
+                    
+                    if 'PreTrain' in results_dict['description']:
+                        if 'pre_trained_type_name' in config:
+                            results_dict['pre_trained_type_name'].append(config['pre_trained_type_name'])
+                        else:
+                            results_dict['pre_trained_type_name'].append('bert-base-uncased')
 
                     if 'loss' in config:
                         results_dict['loss'].append(config['loss'])
