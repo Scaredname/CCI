@@ -2,7 +2,7 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2023-06-20 11:26:31
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-06-27 14:46:02
+LastEditTime: 2023-06-27 15:26:16
 FilePath: /ESETC/code/Custom/OriginRotatE.py
 Description: 在pykeen中引入不使用complex张量的RotatE
 
@@ -78,7 +78,7 @@ def rotate_origin_interaction(
     if len(score.shape) > 3:
         score = score.view(score.shape[0], score.shape[1], -1)
 
-    return negative_norm(score, p=2, power_norm=False)
+    return -score.sum(dim = -1)
 
 
 class RotatEOriginInteraction(FunctionalInteraction[torch.FloatTensor, torch.FloatTensor, torch.FloatTensor]):
