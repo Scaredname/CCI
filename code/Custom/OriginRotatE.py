@@ -2,7 +2,7 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2023-06-20 11:26:31
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-06-27 15:26:16
+LastEditTime: 2023-06-28 11:10:50
 FilePath: /ESETC/code/Custom/OriginRotatE.py
 Description: 在pykeen中引入不使用complex张量的RotatE
 
@@ -12,6 +12,7 @@ from typing import Any, ClassVar, Mapping
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 from class_resolver import HintOrType, OptionalKwargs
 from pykeen.models.nbase import ERModel
 from pykeen.nn.init import init_phases, xavier_uniform_
@@ -50,7 +51,8 @@ def rotate_origin_interaction(
     re_h, im_h = torch.chunk(h, 2, dim=-1)
     re_t, im_t = torch.chunk(t, 2, dim=-1)
 
-    phase_relation = r / (r.abs().clamp_min(torch.finfo(r.dtype).eps) / np.pi)
+    # phase_relation = r / (r.abs().clamp_min(torch.finfo(r.dtype).eps) / np.pi)
+    phase_relation = F.normalize(r) * np.pi
     re_r = torch.cos(phase_relation).unsqueeze(-1)
     im_r = torch.sin(phase_relation).unsqueeze(-1)
 
