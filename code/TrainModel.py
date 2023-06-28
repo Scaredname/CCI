@@ -341,8 +341,8 @@ elif args.model_index == 15:
             embedding_dim=args.model_ent_dim,
             entity_initializer='uniform',
             relation_initializer='uniform',
-            # relation_constrainer= 'complex_normalize',
-            relation_constrainer=None,
+            relation_constrainer= 'complex_normalize',
+            # relation_constrainer=None,
             loss='NSSALoss',
             loss_kwargs=dict(
                 reduction='mean',
