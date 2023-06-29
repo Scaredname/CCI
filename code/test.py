@@ -2,7 +2,7 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2023-05-23 14:24:50
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-06-29 10:00:49
+LastEditTime: 2023-06-29 10:20:30
 FilePath: /ESETC/code/test.py
 Description: 测试1-1，1-n，n-1，n-n的结果。测试不同种类关系的结果。
 
@@ -128,9 +128,12 @@ if __name__ == "__main__":
     model_name = 'CatESETCwithRotate'
     model_date = '20230427-161537'
     
-    
+    if 'TypeAsTrain' in description:
+        type_as_train  = True
+    else:
+        type_as_train = False
 
-    training_data, validation, testing = load_dataset(dataset=dataset_name)
+    training_data, validation, testing = load_dataset(dataset=dataset_name, ifTypeAsTrain = type_as_train )
     dataset = get_dataset(training=training_data, testing=testing, validation=validation)
 
     relation_set = get_relation_cardinality_dict(dataset=dataset)
