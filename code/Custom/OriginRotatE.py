@@ -2,7 +2,7 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2023-06-20 11:26:31
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-06-28 15:20:02
+LastEditTime: 2023-06-29 09:21:17
 FilePath: /ESETC/code/Custom/OriginRotatE.py
 Description: 在pykeen中引入不使用complex张量的RotatE
 
@@ -48,14 +48,17 @@ def rotate_origin_interaction(
         h = h.view(*h.shape[:-1], -1, 2)
     if t.shape[-1] != 2:
         t = t.view(*t.shape[:-1], -1, 2)
+    if r.shape[-1] != 2:
+        r = r.view(*r.shape[:-1], -1, 2)
     re_h, im_h = torch.chunk(h, 2, dim=-1)
     re_t, im_t = torch.chunk(t, 2, dim=-1)
+    re_r, im_r = torch.chunk(r, 2, dim=-1)
 
     # phase_relation = r / (r.abs().clamp_min(torch.finfo(r.dtype).eps) / np.pi)
     # phase_relation = F.normalize(r) * np.pi
-    phase_relation = r * np.pi
-    re_r = torch.cos(phase_relation).unsqueeze(-1)
-    im_r = torch.sin(phase_relation).unsqueeze(-1)
+    # phase_relation = r * np.pi
+    # re_r = torch.cos(phase_relation).unsqueeze(-1)
+    # im_r = torch.sin(phase_relation).unsqueeze(-1)
 
 
     if estimate_cost_of_sequence(h.shape, r.shape) < estimate_cost_of_sequence(r.shape, t.shape):
@@ -105,7 +108,7 @@ class FloatRotatE(ERModel):
         *,
         embedding_dim: int = 200,
         entity_initializer: Hint[Initializer] = xavier_uniform_,
-        relation_initializer: Hint[Initializer] = xavier_uniform_,
+        relation_initializer: Hint[Initializer] = init_phases,
         relation_constrainer: Hint[Constrainer] = complex_normalize,
         regularizer: HintOrType[Regularizer] = None,
         regularizer_kwargs: OptionalKwargs = None,
@@ -132,7 +135,7 @@ class FloatRotatE(ERModel):
         super().__init__(
             interaction=RotatEOriginInteraction,
             entity_representations_kwargs=dict(
-                shape=embedding_dim * 2, 
+                shape=embedding_dim, 
                 # 采用原作者的方案，另实体维度是关系维度的两倍。
                 initializer=entity_initializer,
                 regularizer=regularizer,

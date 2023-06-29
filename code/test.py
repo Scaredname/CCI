@@ -2,8 +2,8 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2023-05-23 14:24:50
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-05-24 13:48:22
-FilePath: /code/test.py
+LastEditTime: 2023-06-28 20:18:05
+FilePath: /ESETC/code/test.py
 Description: 测试1-1，1-n，n-1，n-n的结果。测试不同种类关系的结果。
 
 Copyright (c) 2023 by ${git_name_email}, All Rights Reserved. 
@@ -14,12 +14,11 @@ from collections import defaultdict
 import pandas as pd
 import pykeen
 import torch
+from Custom.ir_evaluation import IRRankBasedEvaluator
 from pykeen.datasets import FB15k237
 from pykeen.datasets import analysis as ana
 from pykeen.datasets import get_dataset
 from pykeen.evaluation import RankBasedEvaluator
-
-from Custom.ir_evaluation import IRRankBasedEvaluator
 from utilities import load_dataset
 
 
@@ -124,17 +123,27 @@ def get_result_dict(model, evaluator, relation_set, dataset, ir_evaluator=None):
 
 if __name__ == "__main__":
     
-    dataset_name = 'CAKE-FB15K237'
+    dataset_name = 'CAKE-DBpedia-242'
     description = 'noDescription'
     model_name = 'CatESETCwithRotate'
     model_date = '20230427-161537'
     
-    trained_model = load_model(dataset_name, description, model_date, model_name)
+    
 
     training_data, validation, testing = load_dataset(dataset=dataset_name)
     dataset = get_dataset(training=training_data, testing=testing, validation=validation)
 
     relation_set = get_relation_cardinality_dict(dataset=dataset)
+    print(dataset_name)
+    for m in ['one-to-one', 'one-to-many', 'many-to-one', 'many-to-many']:
+        test_data = dataset.testing.new_with_restriction(relations=relation_set[m])
+        print(m, ':', test_data.mapped_triples.shape[0])
+    
+    breakpoint()
+    trained_model = load_model(dataset_name, description, model_date, model_name)
+
+    # 统计每种类别的关系的数据量。
+
 
     evaluator = RankBasedEvaluator()
     ir_evaluator = IRRankBasedEvaluator()
