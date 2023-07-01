@@ -104,12 +104,13 @@ for file_name in os.listdir(result_path):
                         results_dict['negative_sampler'].append(config['negative_sampler'])
                     else:
                         results_dict['negative_sampler'].append('-')
-                    
-                    if 'PreTrain' in results_dict['description']:
+                    if 'PreTrain' in file_name:
                         if 'pre_trained_type_name' in config:
                             results_dict['pre_trained_type_name'].append(config['pre_trained_type_name'])
                         else:
                             results_dict['pre_trained_type_name'].append('bert-base-uncased')
+                    else:
+                        results_dict['pre_trained_type_name'].append('-')
 
                     if 'loss' in config:
                         results_dict['loss'].append(config['loss'])
