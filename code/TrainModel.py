@@ -16,6 +16,7 @@ parser.add_argument('-o', '--optimizer', type=str, default='adam')
 parser.add_argument('-lr', '--learning_rate', type=float, default=0.001)
 parser.add_argument('-lm', '--loss_margin', type=float, default=9.0)
 parser.add_argument('-at', '--adversarial_temperature', type=float, default=1.0)
+parser.add_argument('-twt', '--type_weight_temperature', type=float, default=1.0)
 parser.add_argument('-b', '--batch_size', type=int, default=256)
 parser.add_argument('-e', '--epochs', type=int, default=1000)
 parser.add_argument('-train', '--training_loop', type=str, default='lcwa')
@@ -164,6 +165,7 @@ if args.model_index == 0:
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = args.ifActivationFuncion,
             weight_mask = args.ifWeightMask,
+            type_weight_temperature = args.type_weight_temperature,
             )
 elif args.model_index == 1:
     # 因为没有使用cfloat，通过乘2来确保参数维度和实际维度相同
@@ -191,6 +193,7 @@ elif args.model_index == 1:
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = args.ifActivationFuncion,
             weight_mask = args.ifWeightMask,
+            type_weight_temperature = args.type_weight_temperature,
             )
 elif args.model_index == 2:
 
@@ -208,6 +211,7 @@ elif args.model_index == 2:
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = args.ifActivationFuncion,
             weight_mask = args.ifWeightMask,
+            type_weight_temperature = args.type_weight_temperature,
     )
 
 elif args.model_index == 3:
@@ -237,6 +241,8 @@ elif args.model_index == 3:
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = args.ifActivationFuncion,
             weight_mask = args.ifWeightMask,
+
+            type_weight_temperature = args.type_weight_temperature,
             )
 elif args.model_index == 4:
     model = ESETCwithDistMult(
@@ -265,6 +271,7 @@ elif args.model_index == 4:
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = args.ifActivationFuncion,
             weight_mask = args.ifWeightMask,
+            type_weight_temperature = args.type_weight_temperature,
             )
 
 elif args.model_index == 11:
@@ -284,9 +291,15 @@ elif args.model_index == 12:
     model = RotatE(
             triples_factory=training_data,
             embedding_dim=args.model_ent_dim,
+            rel_dim=args.model_rel_dim,
             entity_initializer='uniform',
             relation_initializer='init_phases',
-            relation_constrainer= 'complex_normalize',
+            # relation_constrainer= 'complex_normalize',
+            relation_constrainer=None,
+            # relation_constrainer='normalize',
+            # relation_constrainer_kwargs = dict(
+            #     p = 1.0,
+            # ),
             loss='NSSALoss',
             loss_kwargs=dict(
                 reduction='mean',
@@ -342,7 +355,7 @@ elif args.model_index == 15:
             entity_initializer='uniform',
             relation_initializer='init_phases',
             relation_constrainer= 'complex_normalize',
-            # relation_constrainer=None,
+            # relation_constrainer='normalize',
             loss='NSSALoss',
             loss_kwargs=dict(
                 reduction='mean',
@@ -371,6 +384,7 @@ elif args.model_index == 21:
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = args.ifActivationFuncion,
             weight_mask = args.ifWeightMask,
+            type_weight_temperature = args.type_weight_temperature,
             )
 
 elif args.model_index == 31:
@@ -390,6 +404,7 @@ elif args.model_index == 31:
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = args.ifActivationFuncion,
             weight_mask = args.ifWeightMask,
+            type_weight_temperature = args.type_weight_temperature,
             )
 
 elif args.model_index == 32:
@@ -416,6 +431,7 @@ elif args.model_index == 32:
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = args.ifActivationFuncion,
             weight_mask = args.ifWeightMask,
+            type_weight_temperature = args.type_weight_temperature,
             )
 
 elif args.model_index == 41:
@@ -436,6 +452,7 @@ elif args.model_index == 41:
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = args.ifActivationFuncion,
             weight_mask = args.ifWeightMask,
+            type_weight_temperature = args.type_weight_temperature,
             )
     
 elif args.model_index == 42:
@@ -463,6 +480,7 @@ elif args.model_index == 42:
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = args.ifActivationFuncion,
             weight_mask = args.ifWeightMask,
+            type_weight_temperature = args.type_weight_temperature,
             )
 
 if torch.cuda.is_available():
@@ -511,6 +529,8 @@ if args.training_loop == 'slcwa':
 
 if args.IfUsePreTrainTypeEmb:
     pipeline_result.configuration['pre_trained_type_name'] = args.IfUsePreTrainTypeEmb
+
+pipeline_result.configuration['type_weight_temperature'] = args.type_weight_temperature
 
 pipeline_result.save_to_directory(modelpath)
 with open(os.path.join(modelpath, 'config.json'), 'w') as f:

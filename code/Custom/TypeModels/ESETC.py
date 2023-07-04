@@ -2,7 +2,7 @@
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-28 16:19:48
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-06-27 15:06:12
+LastEditTime: 2023-07-04 14:30:01
 FilePath: /ESETC/code/Custom/TypeModels/ESETC.py
 Description: "Entity Specific Entity and entity Type Combination" (ESETC)
 
@@ -99,6 +99,7 @@ class TypeFramework(ERModel):
         freeze_type_emb = False,
         activation_weight = False,
         weight_mask = False,
+        type_weight_temperature = 1.0,
         **kwargs,) -> None:
 
         self.triples_factory = triples_factory
@@ -111,6 +112,7 @@ class TypeFramework(ERModel):
         self.data_type = data_type
         self.activation_weight = activation_weight
         self.weight_mask = weight_mask
+        self.type_weight_temperature = type_weight_temperature
 
         super().__init__(
             triples_factory=triples_factory,
@@ -235,8 +237,8 @@ class TypeFramework(ERModel):
         if self.weight_mask:
             ents_types = self.ents_types*self.ents_types_mask
         if self.activation_weight:
-            head_type_emb_tensor = torch.matmul(self.activation_function(ents_types[h]), type_emb)
-            tail_type_emb_tensor = torch.matmul(self.activation_function(ents_types[t]), type_emb)
+            head_type_emb_tensor = torch.matmul(self.activation_function(self.type_weight_temperature * ents_types[h]), type_emb)
+            tail_type_emb_tensor = torch.matmul(self.activation_function(self.type_weight_temperature * ents_types[t]), type_emb)
         else:
             head_type_emb_tensor = torch.matmul(ents_types[h], type_emb)
             tail_type_emb_tensor = torch.matmul(ents_types[t], type_emb)

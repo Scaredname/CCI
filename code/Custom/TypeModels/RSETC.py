@@ -73,15 +73,15 @@ class RSETC(TypeFramework):
 
         if self.add_ent_type:
             if self.activation_weight:
-                head_type_emb_tensor = torch.matmul(self.activation_function(ents_types[h]+rels_types_h[r_h]), type_emb)
-                tail_type_emb_tensor = torch.matmul(self.activation_function(ents_types[t]+rels_types_t[r_t]), type_emb)
+                head_type_emb_tensor = torch.matmul(self.activation_function(self.type_weight_temperature * (ents_types[h]+rels_types_h[r_h])), type_emb)
+                tail_type_emb_tensor = torch.matmul(self.activation_function(self.type_weight_temperature * (ents_types[t]+rels_types_t[r_t])), type_emb)
             else:
                 head_type_emb_tensor = torch.matmul(ents_types[h]+rels_types_h[r_h], type_emb)
                 tail_type_emb_tensor = torch.matmul(ents_types[t]+rels_types_t[r_t], type_emb)
         else:
             if self.activation_weight:
-                head_type_emb_tensor = torch.matmul(self.activation_function(rels_types_h[r_h]), type_emb)
-                tail_type_emb_tensor = torch.matmul(self.activation_function(rels_types_t[r_t]), type_emb)
+                head_type_emb_tensor = torch.matmul(self.activation_function(self.type_weight_temperature * rels_types_h[r_h]), type_emb)
+                tail_type_emb_tensor = torch.matmul(self.activation_function(self.type_weight_temperature * rels_types_t[r_t]), type_emb)
             else:
                 head_type_emb_tensor = torch.matmul(rels_types_h[r_h], type_emb)
                 tail_type_emb_tensor = torch.matmul(rels_types_t[r_t], type_emb)
