@@ -2,7 +2,7 @@
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-02 16:32:08
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-06-29 09:34:42
+LastEditTime: 2023-07-06 20:06:02
 FilePath: /ESETC/code/pdResult.py
 Description: 
 
@@ -89,6 +89,13 @@ for file_name in os.listdir(result_path):
                         results_dict['margin'].append('-')
                     
                     # {'training': False, '_parameters': OrderedDict(), '_buffers': OrderedDict(), '_non_persistent_buffers_set': set(), '_backward_pre_hooks': OrderedDict(), '_backward_hooks': OrderedDict(), '_is_full_backward_hook': None, '_forward_hooks': OrderedDict(), '_forward_hooks_with_kwargs': OrderedDict(), '_forward_pre_hooks': OrderedDict(), '_forward_pre_hooks_with_kwargs': OrderedDict(), '_state_dict_hooks': OrderedDict(), '_state_dict_pre_hooks': OrderedDict(), '_load_state_dict_pre_hooks': OrderedDict(), '_load_state_dict_post_hooks': OrderedDict(), '_modules': OrderedDict(), 'reduction': 'mean', '_reduction_method': <built-in method mean of type object at 0x7f2261842540>, 'inverse_softmax_temperature': 1.0, 'factor': 0.5, 'margin': 8.0}
+                    if "ETC" in model_name:
+                        if 'type_weight_temperature' in config:
+                            results_dict['type_weight_temperature'].append(config['type_weight_temperature'])
+                        else:
+                            results_dict['type_weight_temperature'].append(str(1.0))
+                    else:
+                        results_dict['type_weight_temperature'].append('-')
                     if 'inverse_softmax_temperature' in config['loss_kwargs']:
                         adversarial_temperature = re.search(r"'inverse_softmax_temperature':\s*([\d\.]+)", config['loss_kwargs']).group(1)
                         results_dict['adversarial-temperature'].append(adversarial_temperature)
