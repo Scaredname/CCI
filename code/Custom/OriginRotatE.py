@@ -2,7 +2,7 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2023-06-20 11:26:31
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-06-29 09:21:17
+LastEditTime: 2023-07-06 17:05:50
 FilePath: /ESETC/code/Custom/OriginRotatE.py
 Description: 在pykeen中引入不使用complex张量的RotatE
 
@@ -21,7 +21,15 @@ from pykeen.regularizers import Regularizer
 from pykeen.typing import Constrainer, Hint, Initializer
 from pykeen.utils import (complex_normalize, ensure_complex,
                           estimate_cost_of_sequence, negative_norm)
+from torch.nn.functional import normalize
 
+
+def rotate_initialize(tensor, bound):
+    torch.nn.init.uniform_(tensor, -bound, bound)
+    return tensor
+
+def rotate_relation_initialize(tensor, bound):
+    return rotate_initialize(tensor, bound)/(bound/np.pi)
 
 def rotate_origin_interaction(
     h: torch.FloatTensor,
@@ -48,18 +56,20 @@ def rotate_origin_interaction(
         h = h.view(*h.shape[:-1], -1, 2)
     if t.shape[-1] != 2:
         t = t.view(*t.shape[:-1], -1, 2)
-    if r.shape[-1] != 2:
-        r = r.view(*r.shape[:-1], -1, 2)
+    
     re_h, im_h = torch.chunk(h, 2, dim=-1)
     re_t, im_t = torch.chunk(t, 2, dim=-1)
-    re_r, im_r = torch.chunk(r, 2, dim=-1)
+
+    # if r.shape[-1] != 2:
+    #     r = r.view(*r.shape[:-1], -1, 2)
+    # re_r, im_r = torch.chunk(r, 2, dim=-1)
 
     # phase_relation = r / (r.abs().clamp_min(torch.finfo(r.dtype).eps) / np.pi)
     # phase_relation = F.normalize(r) * np.pi
     # phase_relation = r * np.pi
-    # re_r = torch.cos(phase_relation).unsqueeze(-1)
-    # im_r = torch.sin(phase_relation).unsqueeze(-1)
-
+    # r = r/(bound/np.pi)
+    re_r = torch.cos(r).unsqueeze(-1)
+    im_r = torch.sin(r).unsqueeze(-1)
 
     if estimate_cost_of_sequence(h.shape, r.shape) < estimate_cost_of_sequence(r.shape, t.shape):
     # 当h和r的计算量小于r和t的计算量时，说明此时我们替换的是尾实体，也就是原Rotate代码中的tail-batch
@@ -75,6 +85,7 @@ def rotate_origin_interaction(
 
         re_score = re_score - re_h
         im_score = im_score - im_h
+
 
     score = torch.stack([re_score, im_score], dim = 0)
     score = score.norm(dim = 0).squeeze()
@@ -107,11 +118,13 @@ class FloatRotatE(ERModel):
         self,
         *,
         embedding_dim: int = 200,
-        entity_initializer: Hint[Initializer] = xavier_uniform_,
-        relation_initializer: Hint[Initializer] = init_phases,
-        relation_constrainer: Hint[Constrainer] = complex_normalize,
+        entity_initializer: Hint[Initializer] = rotate_initialize,
+        # relation_initializer: Hint[Initializer] = init_phases,
+        relation_initializer: Hint[Initializer] = rotate_relation_initialize,
+        relation_constrainer: Hint[Constrainer] = normalize,
         regularizer: HintOrType[Regularizer] = None,
         regularizer_kwargs: OptionalKwargs = None,
+        lm : float = 9.0,
         **kwargs,
     ) -> None:
         """
@@ -132,12 +145,14 @@ class FloatRotatE(ERModel):
         :param kwargs:
             additional keyword-based parameters passed to :meth:`ERModel.__init__`
         """
+        self.epsilon = 2.0
+        bound = (lm + self.epsilon) / embedding_dim
         super().__init__(
             interaction=RotatEOriginInteraction,
             entity_representations_kwargs=dict(
-                shape=embedding_dim, 
-                # 采用原作者的方案，另实体维度是关系维度的两倍。
+                shape=embedding_dim*2, 
                 initializer=entity_initializer,
+                initializer_kwargs=dict(bound=bound),
                 regularizer=regularizer,
                 regularizer_kwargs=regularizer_kwargs,
                 dtype=torch.float,
@@ -145,7 +160,9 @@ class FloatRotatE(ERModel):
             relation_representations_kwargs=dict(
                 shape=embedding_dim,
                 initializer=relation_initializer,
+                initializer_kwargs=dict(bound=bound),
                 constrainer=relation_constrainer,
+                # constrainer_kwargs=dict(bound=bound),
                 dtype=torch.float,
             ),
             **kwargs,
