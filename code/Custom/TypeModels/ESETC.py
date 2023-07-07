@@ -2,7 +2,7 @@
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-28 16:19:48
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-07-04 14:30:01
+LastEditTime: 2023-07-07 13:12:58
 FilePath: /ESETC/code/Custom/TypeModels/ESETC.py
 Description: "Entity Specific Entity and entity Type Combination" (ESETC)
 
@@ -141,6 +141,10 @@ class TypeFramework(ERModel):
             type_representations_kwargs['initializer'] = type_init
             type_representations_kwargs['shape'] = type_init.as_embedding().shape[0]
             self.type_dim = type_init.as_embedding().shape[0]
+            logger.info(f"Using pre-trained type embeddings: {usepretrained}")
+            if data_type == torch.cfloat:
+                type_representations_kwargs['dtype'] = torch.cfloat
+                self.type_dim = self.type_dim/2
 
         self.projection = torch.nn.Sequential(
                 torch.nn.Linear(self.type_dim+ent_dim, ent_dim, bias=bias, dtype=data_type),
