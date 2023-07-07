@@ -2,8 +2,8 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2022-12-22 12:02:34
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-05-31 11:46:59
-FilePath: /lmkbc23/home/ni/code/ESETC/code/utilities.py
+LastEditTime: 2023-07-07 12:58:53
+FilePath: /ESETC/code/utilities.py
 Description: 
 
 Copyright (c) 2023 by Ni Runyu ni-runyu@ed.tmu.ac.jp, All Rights Reserved. 
@@ -11,10 +11,9 @@ Copyright (c) 2023 by Ni Runyu ni-runyu@ed.tmu.ac.jp, All Rights Reserved.
 import os
 from collections import defaultdict
 
+from Custom.CustomTripleFactory import TriplesTypesFactory
 from pykeen.datasets import YAGO310, FB15k237, Nations, get_dataset
 from pykeen.triples import TriplesFactory, TriplesNumericLiteralsFactory
-
-from Custom.CustomTripleFactory import TriplesTypesFactory
 
 HEAD = 0
 TAIL = 2
@@ -91,6 +90,7 @@ def get_white_list_relation(dataset, type_position = 0):
                                 rel_need.append(data.relation_id_to_label[rel])
 
         white_list_rel = list(data.relation_to_id.keys())
+        print(rel_need)
         for rel in rel_need:
                 white_list_rel.remove(rel)
 
@@ -172,7 +172,7 @@ def load_dataset(dataset, ifTypeAsTrain = False, IfUseTypeLike = False, CreateIn
         else:
                 if dataset == 'fb15k-237-type':
                         training_data, validation, testing = readTypeData(dataset, data_pro_func=splitTypeData, type_position=HEAD, create_inverse_triples=CreateInverseTriples, hasNoneType=ifHasNoneType, type_smoothing=type_smoothing, use_random_weights=use_random_weights, select_one_type=select_one_type)
-                elif 'CAKE' in dataset:
+                elif 'CAKE' in dataset or 'yago5k' in dataset:
                         training_data, validation, testing = readTypeData(dataset, data_pro_func=splitTypeData, type_position=TAIL, create_inverse_triples=CreateInverseTriples, hasNoneType=ifHasNoneType, type_smoothing=type_smoothing, use_random_weights=use_random_weights, select_one_type=select_one_type)
                 else:
                         # 这里是之前考虑的从原数据集中分离出一些比较像type的关系。

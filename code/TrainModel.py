@@ -11,7 +11,7 @@ from utilities import load_dataset
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model_index',type=int, default=0)
-parser.add_argument('-d', '--dataset', type=str, choices=['fb15k-237-type', 'YAGO3-10', 'FB15k237', 'CAKE-FB15K237', 'CAKE-FB15K', 'CAKE-NELL-995', 'CAKE-DBpedia-242'], default='fb15k-237-type')
+parser.add_argument('-d', '--dataset', type=str, choices=['fb15k-237-type', 'YAGO3-10', 'FB15k237', 'CAKE-FB15K237', 'CAKE-FB15K', 'CAKE-NELL-995', 'CAKE-DBpedia-242', 'yago5k-106'], default='fb15k-237-type')
 parser.add_argument('-o', '--optimizer', type=str, default='adam')
 parser.add_argument('-lr', '--learning_rate', type=float, default=0.001)
 parser.add_argument('-lm', '--loss_margin', type=float, default=9.0)
