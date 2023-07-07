@@ -21,7 +21,7 @@ pattern = r"\(([^)]+)\)"
 pattern1 = r"\(_embeddings\): Embedding\((.*)\)"
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-d', '--dataset', choices=['YAGO3-10-TypeLike', 'YAGO3-10', 'CAKE-FB15K237', 'CAKE-FB15K', 'CAKE-NELL-995', 'CAKE-DBpedia-242', 'fb15k-237-type'], default='YAGO3-10-TypeLike')
+parser.add_argument('-d', '--dataset', choices=['YAGO3-10-TypeLike', 'YAGO3-10', 'CAKE-FB15K237', 'CAKE-FB15K', 'CAKE-NELL-995', 'CAKE-DBpedia-242', 'fb15k-237-type', 'yago5k-106'], default='YAGO3-10-TypeLike')
 args = parser.parse_args()
 
 
