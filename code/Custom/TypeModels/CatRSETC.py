@@ -222,7 +222,9 @@ class CatRSETCwithRotate(CatRSETC):
             regularizer: HintOrType[Regularizer] = None,
             regularizer_kwargs: OptionalKwargs = None,
             bias = False,
-            data_type = torch.float,
+            ent_dtype = torch.float,
+            rel_dtype = torch.float,
+            type_dtype = torch.float,
             dropout = 0.3,
             **kwargs,) -> None:
         super().__init__(
@@ -231,24 +233,24 @@ class CatRSETCwithRotate(CatRSETC):
             ent_dim=ent_dim,
             rel_dim=rel_dim,
             type_dim=type_dim,
-            data_type=data_type,
+            data_type=ent_dtype,
             interaction=RotatEInteraction,
             entity_representations_kwargs=dict(
                 shape=ent_dim,
                 initializer=entity_initializer,
                 regularizer=regularizer,
                 regularizer_kwargs=regularizer_kwargs,
-                dtype=data_type,
+                dtype=ent_dtype,
             ),
             relation_representations_kwargs=dict(
                 shape=rel_dim,
                 initializer=relation_initializer,
                 constrainer=relation_constrainer,
-                dtype=data_type,
+                dtype=rel_dtype,
             ),
             type_representations_kwargs=dict(
                 shape=type_dim,
                 initializer=type_initializer,
-                dtype=data_type,
+                dtype=type_dtype,
             ),
             **kwargs)

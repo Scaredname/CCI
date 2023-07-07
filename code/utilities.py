@@ -90,7 +90,6 @@ def get_white_list_relation(dataset, type_position = 0):
                                 rel_need.append(data.relation_id_to_label[rel])
 
         white_list_rel = list(data.relation_to_id.keys())
-        print(rel_need)
         for rel in rel_need:
                 white_list_rel.remove(rel)
 

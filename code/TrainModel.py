@@ -460,10 +460,12 @@ elif args.model_index == 42:
     model = CatRSETCwithRotate(
             triples_factory=training_data,
             dropout=args.dropout,
-            data_type=torch.cfloat,
+            ent_dtype = torch.float,
+            rel_dtype = torch.cfloat,
+            type_dtype = torch.float,
             bias = args.project_with_bias,
             ent_dim=args.model_ent_dim,
-            rel_dim=args.model_rel_dim,
+            rel_dim=args.model_rel_dim // 2, # relation的数据类型的cfloat
             type_dim=args.model_type_dim,
             freeze_matrix = args.ifFreezeWeights,
             freeze_type_emb = args.ifFreezeTypeEmb,
