@@ -291,15 +291,9 @@ elif args.model_index == 12:
     model = RotatE(
             triples_factory=training_data,
             embedding_dim=args.model_ent_dim,
-            rel_dim=args.model_rel_dim,
             entity_initializer='uniform',
             relation_initializer='init_phases',
             relation_constrainer= 'complex_normalize',
-            # relation_constrainer=None,
-            # relation_constrainer='normalize',
-            # relation_constrainer_kwargs = dict(
-            #     p = 1.0,
-            # ),
             loss='NSSALoss',
             loss_kwargs=dict(
                 reduction='mean',
