@@ -2,7 +2,7 @@
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-02 16:32:08
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-07-06 20:06:02
+LastEditTime: 2023-07-08 15:24:55
 FilePath: /ESETC/code/pdResult.py
 Description: 
 
@@ -121,10 +121,10 @@ for file_name in os.listdir(result_path):
 
                     if 'loss' in config:
                         results_dict['loss'].append(config['loss'])
-                        results_dict['loss_kwargs'].append(config['loss_kwargs'])
+                        # results_dict['loss_kwargs'].append(config['loss_kwargs'])
                     else:
                         results_dict['loss'].append('see config')
-                        results_dict['loss_kwargs'].append(config['loss_kwargs'])
+                        # results_dict['loss_kwargs'].append(config['loss_kwargs'])
 
 r = pd.DataFrame(results_dict)
 
