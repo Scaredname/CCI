@@ -57,6 +57,12 @@ def hake_interaction(
         The scores.
     """
     pi = np.pi
+    if h.shape[-1] != 2:
+        h = h.view(*h.shape[:-1], -1, 2)
+    if t.shape[-1] != 2:
+        t = t.view(*t.shape[:-1], -1, 2)
+    if r.shape[-1] != 3:
+        r = r.view(*r.shape[:-1], -1, 3)
     phase_head, mod_head = torch.chunk(h, 2, dim=2)
     phase_relation, mod_relation, bias_relation = torch.chunk(r, 3, dim=2)
     phase_tail, mod_tail = torch.chunk(t, 2, dim=2)
@@ -80,8 +86,7 @@ def hake_interaction(
 
     phase_score = torch.sum(torch.abs(torch.sin(phase_score / 2)), dim=2) * phase_weight
     r_score = torch.norm(r_score, dim=2) * modulus_weight
-
-    return - (phase_score + r_score)
+    return - (phase_score + r_score).sum(dim=-1)
 
 class HAKEInteraction(FunctionalInteraction[torch.FloatTensor, torch.FloatTensor, torch.FloatTensor]):
     func = hake_interaction
