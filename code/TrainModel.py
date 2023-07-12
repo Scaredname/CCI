@@ -17,6 +17,8 @@ parser.add_argument('-lr', '--learning_rate', type=float, default=0.001)
 parser.add_argument('-lm', '--loss_margin', type=float, default=9.0)
 parser.add_argument('-at', '--adversarial_temperature', type=float, default=1.0)
 parser.add_argument('-twt', '--type_weight_temperature', type=float, default=1.0)
+parser.add_argument('-mw', '--modulus_weight', type=float, default=1.0)
+parser.add_argument('-pw', '--phase_weight', type=float, default=1.0)
 parser.add_argument('-b', '--batch_size', type=int, default=256)
 parser.add_argument('-e', '--epochs', type=int, default=1000)
 parser.add_argument('-train', '--training_loop', type=str, default='lcwa')
@@ -96,6 +98,7 @@ training_data, validation, testing = load_dataset(dataset=dataset, IfUseTypeLike
 
 
 import torch
+from Custom.HAKE import HAKEModel
 from Custom.OriginRotatE import FloatRotatE
 from Custom.TypeModels.CatESETC import CatESETCwithRotate, CatESETCwithTransE
 from Custom.TypeModels.CatRSETC import CatRSETCwithRotate, CatRSETCwithTransE
@@ -357,6 +360,21 @@ elif args.model_index == 15:
                 adversarial_temperature=args.adversarial_temperature,
                 margin=args.loss_margin,
             ),
+    )
+
+elif args.model_index == 16:
+    model = HAKEModel(
+            triples_factory=training_data,
+            embedding_dim=args.model_ent_dim,
+            lm=args.loss_margin,
+            loss='NSSALoss',
+            loss_kwargs=dict(
+                reduction='mean',
+                adversarial_temperature=args.adversarial_temperature,
+                margin=args.loss_margin,
+            ),
+            phase_weight=args.phase_weight,
+            modulus_weight=args.modulus_weight,
     )
 
 elif args.model_index == 21:
