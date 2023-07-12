@@ -2,13 +2,13 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2023-06-20 11:26:31
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-07-06 17:05:50
+LastEditTime: 2023-07-12 13:43:50
 FilePath: /ESETC/code/Custom/OriginRotatE.py
 Description: 在pykeen中引入不使用complex张量的RotatE
 
 Copyright (c) 2023 by ${git_name_email}, All Rights Reserved. 
 '''
-from typing import Any, ClassVar, Mapping
+from typing import Any, ClassVar, Mapping, MutableMapping
 
 import numpy as np
 import torch
@@ -28,13 +28,14 @@ def rotate_initialize(tensor, bound):
     torch.nn.init.uniform_(tensor, -bound, bound)
     return tensor
 
-def rotate_relation_initialize(tensor, bound):
-    return rotate_initialize(tensor, bound)/(bound/np.pi)
+# def rotate_relation_initialize(tensor, bound):
+#     return rotate_initialize(tensor, bound)/(bound/np.pi)
 
 def rotate_origin_interaction(
     h: torch.FloatTensor,
     r: torch.FloatTensor,
     t: torch.FloatTensor,
+    bound: float,
 ) -> torch.FloatTensor:
     """the RotatE interaction function without complex tensor.
 
@@ -56,7 +57,6 @@ def rotate_origin_interaction(
         h = h.view(*h.shape[:-1], -1, 2)
     if t.shape[-1] != 2:
         t = t.view(*t.shape[:-1], -1, 2)
-    
     re_h, im_h = torch.chunk(h, 2, dim=-1)
     re_t, im_t = torch.chunk(t, 2, dim=-1)
 
@@ -67,7 +67,7 @@ def rotate_origin_interaction(
     # phase_relation = r / (r.abs().clamp_min(torch.finfo(r.dtype).eps) / np.pi)
     # phase_relation = F.normalize(r) * np.pi
     # phase_relation = r * np.pi
-    # r = r/(bound/np.pi)
+    r = r/(bound/np.pi)
     re_r = torch.cos(r).unsqueeze(-1)
     im_r = torch.sin(r).unsqueeze(-1)
 
@@ -102,8 +102,15 @@ class RotatEOriginInteraction(FunctionalInteraction[torch.FloatTensor, torch.Flo
 
     .. seealso:: :func:`pykeen.nn.functional.rotate_interaction`
     """
-
     func = rotate_origin_interaction
+    
+    def __init__(self, bound):
+        super().__init__()
+        self.bound = bound
+
+    def _prepare_state_for_functional(self) -> MutableMapping[str, Any]:
+        return dict(bound=self.bound)
+    
 
 class FloatRotatE(ERModel):
     r"""An implementation of RotatE using Float tensor.
@@ -120,7 +127,7 @@ class FloatRotatE(ERModel):
         embedding_dim: int = 200,
         entity_initializer: Hint[Initializer] = rotate_initialize,
         # relation_initializer: Hint[Initializer] = init_phases,
-        relation_initializer: Hint[Initializer] = rotate_relation_initialize,
+        relation_initializer: Hint[Initializer] = rotate_initialize,
         relation_constrainer: Hint[Constrainer] = normalize,
         regularizer: HintOrType[Regularizer] = None,
         regularizer_kwargs: OptionalKwargs = None,
@@ -148,7 +155,7 @@ class FloatRotatE(ERModel):
         self.epsilon = 2.0
         bound = (lm + self.epsilon) / embedding_dim
         super().__init__(
-            interaction=RotatEOriginInteraction,
+            interaction=RotatEOriginInteraction(bound=bound),
             entity_representations_kwargs=dict(
                 shape=embedding_dim*2, 
                 initializer=entity_initializer,

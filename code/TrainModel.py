@@ -480,9 +480,11 @@ elif args.model_index == 42:
             type_weight_temperature = args.type_weight_temperature,
             )
 
-if torch.cuda.is_available():
+if torch.cuda.is_available() and args.device == 'cuda':
     print('Using GPU')
     model.to('cuda')
+else:
+    model.to('cpu')
     
 
 # Pick an optimizer from Torch
@@ -503,6 +505,7 @@ pipeline_result = pipeline(
     validation=validation,
     testing=testing,
     model=model,
+    device=args.device,
     result_tracker='tensorboard',
     result_tracker_kwargs=dict(
         experiment_path='../result/tensorBoard_log' + date_time,
