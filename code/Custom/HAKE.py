@@ -2,7 +2,7 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2023-07-12 13:14:46
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-07-12 14:05:53
+LastEditTime: 2023-07-13 11:15:28
 FilePath: /ESETC/code/Custom/HAKE.py
 Description: 基于pykeen实现HAKE
 
@@ -146,6 +146,7 @@ class HAKEModel(ERModel):
         """
         self.epsilon = 2.0
         bound = (lm + self.epsilon) / embedding_dim
+        phase_weight = phase_weight * bound
         super().__init__(
             interaction=HAKEInteraction(bound=bound, phase_weight=phase_weight, modulus_weight=modulus_weight),
             entity_representations_kwargs=dict(
