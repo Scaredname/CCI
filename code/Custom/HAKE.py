@@ -63,17 +63,26 @@ def hake_interaction(
         t = t.view(*t.shape[:-1], -1, 2)
     if r.shape[-1] != 3:
         r = r.view(*r.shape[:-1], -1, 3)
-    phase_head, mod_head = torch.chunk(h, 2, dim=2)
-    phase_relation, mod_relation, bias_relation = torch.chunk(r, 3, dim=2)
-    phase_tail, mod_tail = torch.chunk(t, 2, dim=2)
+    phase_head, mod_head = torch.chunk(h, 2, dim=-1)
+    phase_relation, mod_relation, bias_relation = torch.chunk(r, 3, dim=-1)
+    phase_tail, mod_tail = torch.chunk(t, 2, dim=-1)
 
     phase_head = phase_head / (bound / pi)
     phase_relation = phase_relation / (bound  / pi)
     phase_tail = phase_tail / (bound / pi)
+
+
+    # 适配1-N测试方法的shape
+    if len(phase_head.shape) > 2:
+        phase_relation.unsqueeze(dim=1)
+        phase_tail.unsqueeze(dim=1)
+    if len(phase_tail.shape) > 2:
+        phase_relation.unsqueeze(dim=1)
+        phase_head.unsqueeze(dim=1)
+
     if estimate_cost_of_sequence(h.shape, r.shape) < estimate_cost_of_sequence(r.shape, t.shape):
     # 当h和r的计算量小于r和t的计算量时，说明此时我们替换的是尾实体，也就是原Rotate代码中的tail-batch
         phase_score = (phase_head + phase_relation) - phase_tail
-
     else:
         phase_score = phase_head + (phase_relation - phase_tail)
     
