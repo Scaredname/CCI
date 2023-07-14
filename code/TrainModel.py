@@ -8,6 +8,7 @@ from Custom.CustomTripleFactory import TriplesTypesFactory
 from pykeen.triples import TriplesFactory
 from pykeen.typing import LabeledTriples
 from utilities import load_dataset
+from pykeen.constants import PYKEEN_CHECKPOINTS
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model_index',type=int, default=0)
@@ -35,6 +36,7 @@ parser.add_argument('-pb', '--project_with_bias', action='store_true', default=F
 parser.add_argument('-drop', '--dropout', type=float, default=0.0)
 
 parser.add_argument('-de', '--description', type=str, default='noDescription')
+parser.add_argument('-ch', '--checkpoint', type=str, default=None)
 parser.add_argument('-reverse', '--CreateInverseTriples', action='store_true', default=False)
 parser.add_argument('-t', '--IfUseTypeLike', action='store_true', default=False)
 parser.add_argument('-pre', '--IfUsePreTrainTypeEmb', default=None, type=str, choices=[None, 'bert-base-uncased', 'bert-large-uncased'], help='If use pre-trained type embeddings, the name of pretained model')
@@ -498,7 +500,10 @@ elif args.model_index == 42:
             weight_mask = args.ifWeightMask,
             type_weight_temperature = args.type_weight_temperature,
             )
-
+if args.checkpoint:
+    checkpoint = torch.load(PYKEEN_CHECKPOINTS.joinpath(args.checkpoint))
+    print('load %s')
+    model.load_state_dict(checkpoint['model_state_dict'])
 if torch.cuda.is_available() and args.device == 'cuda':
     print('Using GPU')
     model.to('cuda')
