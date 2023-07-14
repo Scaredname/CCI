@@ -71,6 +71,7 @@ pipeline_config = dict(
     training_kwargs=dict(
         num_epochs=args.epochs,
         batch_size=args.batch_size,
+        checkpoint_on_failure=True,
     ),
     negative_sampler=args.negative_sampler,
     negative_sampler_kwargs=dict(
