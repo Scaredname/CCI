@@ -501,8 +501,9 @@ elif args.model_index == 42:
             type_weight_temperature = args.type_weight_temperature,
             )
 if args.checkpoint:
-    model = torch.load(PYKEEN_CHECKPOINTS.joinpath(args.checkpoint))
+    checkpoint = torch.load(PYKEEN_CHECKPOINTS.joinpath(args.checkpoint))
     print('load %s' % args.checkpoint)
+    model.load_state_dict(checkpoint) 
 if torch.cuda.is_available() and args.device == 'cuda':
     print('Using GPU')
     model.to('cuda')
