@@ -2,7 +2,7 @@
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-28 16:19:48
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-07-15 13:55:29
+LastEditTime: 2023-07-15 14:23:08
 FilePath: /ESETC/code/Custom/TypeModels/ESETC.py
 Description: "Entity Specific Entity and entity Type Combination" (ESETC)
 
@@ -235,7 +235,7 @@ class TypeFramework(ERModel):
         self.ents_types_mask = self.ents_types_mask.to(self.device)
         ents_types = self.ents_types.to(self.device)
         # type_emb = self.type_representations[0]._embeddings.weight.to(self.device)
-        ents_types = nn.ReLU(ents_types) # 确保始终为正.
+        ents_types.data = nn.functional.relu(ents_types.data) # 确保始终为正.
         type_emb = self.type_representations[0](indices = torch.arange(self.ents_types.shape[1]).long().to(self.device)) #取出所有的type embedding
 
         #通过邻接矩阵与类型嵌入矩阵的矩阵乘法可以快速每个实体对应的类型嵌入，如果是多个类型则是多个类型嵌入的加权和，权重为邻接矩阵中的值。如果值都为1则相当于sum操作，为平均值则是mean操作。
