@@ -73,7 +73,9 @@ def create_matrix_of_types(
     type_position: int = 0,
     if_reverse: bool = False,
 ) -> Tuple[np.ndarray, Dict[str, int]]:
-    """Create matrix of literals where each row corresponds to an entity and each column to a type."""
+    """
+    Create matrix of literals where each row corresponds to an entity and each column to a type.
+    """
     data_types = np.unique(np.ndarray.flatten(type_triples[:, type_position]))
     data_type_to_id: Dict[str, int] = {value: key for key, value in enumerate(data_types)}
     # Prepare literal matrix, set every type to zero, and afterwards fill in the corresponding value if available
@@ -91,7 +93,7 @@ def create_matrix_of_types(
                 # row define entity, and column the type.
                 ents_types[entity_to_id[ent], data_type_to_id[typ]] = 1
                 # 所以实体作为尾实体共现时的关系也要计算
-                for rel_id in np.where(ents_rels[0, entity_to_id[ent], :] == 1)[0]:
+                for rel_id in np.where(ents_rels[0, entity_to_id[ent], :] == 1)[0]: # 获得所有和该实体共现的关系id
                     rels_types[0, rel_id, data_type_to_id[typ]] += 1
                 for rel_id in np.where(ents_rels[1, entity_to_id[ent], :] == 1)[0]:
                     rels_types[1, rel_id, data_type_to_id[typ]] += 1

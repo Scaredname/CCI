@@ -5,10 +5,10 @@ import json
 import os
 
 from Custom.CustomTripleFactory import TriplesTypesFactory
+from pykeen.constants import PYKEEN_CHECKPOINTS
 from pykeen.triples import TriplesFactory
 from pykeen.typing import LabeledTriples
 from utilities import load_dataset
-from pykeen.constants import PYKEEN_CHECKPOINTS
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model_index',type=int, default=0)
@@ -49,7 +49,7 @@ parser.add_argument('-fw', '--ifFreezeWeights', action='store_true', default=Fal
 parser.add_argument('-shp', '--ifSearchHyperParameters', action='store_true', default=False)
 parser.add_argument('-fte', '--ifFreezeTypeEmb', action='store_true', default=False, help='If freeze type embeddings, default is False')
 parser.add_argument('-randw', '--ifRandomWeight', action='store_true', default=False, help='If use random weight, default is False')
-parser.add_argument('-af', '--ifActivationFuncion', action='store_true', default=False, help='If use ActivationFuncion for type weight')
+parser.add_argument('-naf', '--ifNoActivationFuncion', action='store_true', default=False, help='If use ActivationFuncion for type weight')
 parser.add_argument('-wm', '--ifWeightMask', action='store_true', default=False, help='If use entity types constrains for type weight')
 parser.add_argument('-ot', '--ifOneType', action='store_true', default=False, help='If only use the most related entity type')
 parser.add_argument('-naet', '--ifNotAddEntType', help="When get entity's type embedding, whether add entity_type weight to relation_type weight", action='store_true', default=False)
@@ -140,8 +140,8 @@ if args.ifNotAddEntType:
 if args.ifRandomWeight:
     args.description+='RandomWeight'
 
-if args.ifActivationFuncion:
-    args.description+='ActivationFuncion'
+if not args.ifNoActivationFuncion:
+    args.description+='UsingSoftMax'
 
 if args.ifWeightMask:
     args.description+='WeightMask'
@@ -169,7 +169,7 @@ if args.model_index == 0:
                 margin=args.loss_margin,
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
-            activation_weight = args.ifActivationFuncion,
+            activation_weight = not args.ifNoActivationFuncion,
             weight_mask = args.ifWeightMask,
             type_weight_temperature = args.type_weight_temperature,
             )
@@ -197,7 +197,7 @@ elif args.model_index == 1:
                 margin=args.loss_margin,
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
-            activation_weight = args.ifActivationFuncion,
+            activation_weight = not args.ifNoActivationFuncion,
             weight_mask = args.ifWeightMask,
             type_weight_temperature = args.type_weight_temperature,
             )
@@ -215,7 +215,7 @@ elif args.model_index == 2:
             loss='BCEAfterSigmoidLoss',
             dropout_0 = 0.3,
             usepretrained = args.IfUsePreTrainTypeEmb,
-            activation_weight = args.ifActivationFuncion,
+            activation_weight = not args.ifNoActivationFuncion,
             weight_mask = args.ifWeightMask,
             type_weight_temperature = args.type_weight_temperature,
     )
@@ -245,7 +245,7 @@ elif args.model_index == 3:
                 normalize=True,
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
-            activation_weight = args.ifActivationFuncion,
+            activation_weight = not args.ifNoActivationFuncion,
             weight_mask = args.ifWeightMask,
 
             type_weight_temperature = args.type_weight_temperature,
@@ -275,7 +275,7 @@ elif args.model_index == 4:
                 normalize=True,
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
-            activation_weight = args.ifActivationFuncion,
+            activation_weight = not args.ifNoActivationFuncion,
             weight_mask = args.ifWeightMask,
             type_weight_temperature = args.type_weight_temperature,
             )
@@ -398,7 +398,7 @@ elif args.model_index == 21:
                 margin=args.loss_margin,
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
-            activation_weight = args.ifActivationFuncion,
+            activation_weight = not args.ifNoActivationFuncion,
             weight_mask = args.ifWeightMask,
             type_weight_temperature = args.type_weight_temperature,
             )
@@ -418,7 +418,7 @@ elif args.model_index == 31:
                 margin=args.loss_margin,
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
-            activation_weight = args.ifActivationFuncion,
+            activation_weight = not args.ifNoActivationFuncion,
             weight_mask = args.ifWeightMask,
             type_weight_temperature = args.type_weight_temperature,
             )
@@ -445,7 +445,7 @@ elif args.model_index == 32:
                 margin=args.loss_margin,
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
-            activation_weight = args.ifActivationFuncion,
+            activation_weight = not args.ifNoActivationFuncion,
             weight_mask = args.ifWeightMask,
             type_weight_temperature = args.type_weight_temperature,
             )
@@ -466,7 +466,7 @@ elif args.model_index == 41:
                 margin=args.loss_margin,
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
-            activation_weight = args.ifActivationFuncion,
+            activation_weight = not args.ifNoActivationFuncion,
             weight_mask = args.ifWeightMask,
             type_weight_temperature = args.type_weight_temperature,
             )
@@ -496,7 +496,7 @@ elif args.model_index == 42:
                 margin=args.loss_margin,
             ),
             usepretrained = args.IfUsePreTrainTypeEmb,
-            activation_weight = args.ifActivationFuncion,
+            activation_weight = not args.ifNoActivationFuncion,
             weight_mask = args.ifWeightMask,
             type_weight_temperature = args.type_weight_temperature,
             )
