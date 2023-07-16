@@ -1,17 +1,40 @@
 import logging
 import pathlib
 from typing import (Any, ClassVar, Dict, Iterable, Mapping, MutableMapping,
-                    Optional, TextIO, Tuple, Union)
+                    Optional, TextIO, Tuple, Union, Collection)
 
 import numpy as np
-import pandas
+import pandas as pd
 import torch
 from pykeen.triples.triples_factory import TriplesFactory
 from pykeen.triples.utils import load_triples
-from pykeen.typing import (EntityMapping, LabeledTriples, MappedTriples,
-                           RelationMapping)
+from pykeen.typing import (COLUMN_HEAD, COLUMN_RELATION, COLUMN_TAIL, LABEL_HEAD, LABEL_RELATION, LABEL_TAIL,EntityMapping, LabeledTriples, MappedTriples,RelationMapping)
+from pykeen.constants import COLUMN_LABELS, TARGET_TO_INDEX
 
 logger = logging.getLogger(__name__)
+
+def calculate_injective_confidence(
+    df: pd.DataFrame,
+    source: str,
+    target: str,
+) -> Tuple[int, float]:
+    """
+    Calcualte the confidence of wheter there is an injective mapping from source to target.
+
+    :param df:
+        The dataframe.
+    :param source:
+        The source column.
+    :param target:
+        The target column.
+
+    :return:
+        the relative frequency of unique target per source.
+    """
+    grouped = df.groupby(by=source)
+    n_unique = grouped.agg({target: "nunique"})[target]
+    conf = (n_unique <= 1).mean()
+    return conf
 
 def apply_label_smoothing(
     labels: torch.FloatTensor,
@@ -65,6 +88,18 @@ def create_adjacency_matrix(
             adjacency_matrix[1, entity_to_id[head_id], relation_to_id[relation_id] + num_relations // 2] = 1
     return adjacency_matrix
 
+def create_relation_injective_confidence(mapped_triples: Collection[Tuple[int, int, int]]):
+    '''
+    return: injective_confidence: [head2tail, tail2head]
+    '''
+    injective_confidence = list()
+    df = pd.DataFrame(data=mapped_triples, columns=COLUMN_LABELS)
+    for relation, group in df.groupby(by=LABEL_RELATION):
+        injective_confidence.append((calculate_injective_confidence(df=group, source=LABEL_HEAD, target=LABEL_TAIL), calculate_injective_confidence(df=group, source=LABEL_TAIL, target=LABEL_HEAD)))
+
+    return np.array(injective_confidence)
+        
+
 def create_matrix_of_types(
     type_triples: np.array,
     ents_rels: np.array,
@@ -72,7 +107,7 @@ def create_matrix_of_types(
     relation_to_id: RelationMapping,
     type_position: int = 0,
     if_reverse: bool = False,
-) -> Tuple[np.ndarray, Dict[str, int]]:
+):
     """
     Create matrix of literals where each row corresponds to an entity and each column to a type.
     """
@@ -126,6 +161,7 @@ class TriplesTypesFactory(TriplesFactory):
         *,
         ents_types: np.ndarray,
         rels_types: np.ndarray,
+        rels_inj_conf: np.ndarray,
         types_to_id: Mapping[str, int],
         type_smoothing: float = 0.0,
         use_random_weights: bool = False,
@@ -139,6 +175,7 @@ class TriplesTypesFactory(TriplesFactory):
         self.rels_types_mask = torch.where(torch.tensor(rels_types) != 0, torch.tensor(1), torch.tensor(0))
         self.types_to_id = types_to_id
         self.assignments = self._get_assignment(ents_types)
+        self.rels_inj_conf = rels_inj_conf
 
         # Calculate the proportion of each type.
         self.ents_types = self._cal_propor(self.ents_types)
@@ -207,6 +244,8 @@ class TriplesTypesFactory(TriplesFactory):
             type_triples=type_triples, entity_to_id=base.entity_to_id, relation_to_id=base.relation_to_id, type_position=type_position, ents_rels=ents_rels_adj, if_reverse=create_inverse_triples
         )
 
+        relation_injective_confidence = create_relation_injective_confidence(base.mapped_triples)
+
         return cls(
             entity_to_id=base.entity_to_id,
             relation_to_id=base.relation_to_id,
@@ -215,6 +254,7 @@ class TriplesTypesFactory(TriplesFactory):
             ents_types=ents_types,
             rels_types=rels_types,
             types_to_id=types_to_id,
+            rels_inj_conf = relation_injective_confidence,
             type_smoothing=type_smoothing,
             use_random_weights=use_random_weights,
             select_one_type=select_one_type,
