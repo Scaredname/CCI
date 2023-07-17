@@ -4,10 +4,8 @@ import datetime
 import json
 import os
 
-from Custom.CustomTripleFactory import TriplesTypesFactory
+from Custom.CustomTrain import TypeSLCWATrainingLoop
 from pykeen.constants import PYKEEN_CHECKPOINTS
-from pykeen.triples import TriplesFactory
-from pykeen.typing import LabeledTriples
 from utilities import load_dataset
 
 parser = argparse.ArgumentParser()
@@ -64,17 +62,21 @@ elif args.ifSearchHyperParameters:
     frequency = 5
 else:
     frequency = 50
+
+
+training_setting = dict(
+        num_epochs=args.epochs,
+        batch_size=args.batch_size,
+        checkpoint_on_failure=True,
+    )
+
 pipeline_config = dict(
     optimizer=args.optimizer,
     optimizer_kwargs=dict(
         lr=args.learning_rate,
     ),
     training_loop=args.training_loop,
-    training_kwargs=dict(
-        num_epochs=args.epochs,
-        batch_size=args.batch_size,
-        checkpoint_on_failure=True,
-    ),
+    training_kwargs=training_setting,
     negative_sampler=args.negative_sampler,
     negative_sampler_kwargs=dict(
         num_negs_per_pos=args.num_negs_per_pos,
@@ -101,6 +103,7 @@ training_data, validation, testing = load_dataset(dataset=dataset, IfUseTypeLike
 
 
 import torch
+from Custom.CustomLoss import SoftTypeawareNegativeSmapling
 from Custom.HAKE import HAKEModel
 from Custom.OriginRotatE import FloatRotatE
 from Custom.TypeModels.CatESETC import CatESETCwithRotate, CatESETCwithTransE
@@ -115,6 +118,9 @@ from Custom.TypeModels.RSETC import RSETCwithTransE
 from pykeen.models import ComplEx, DistMultLiteral, RotatE, TransE
 from pykeen.nn.init import xavier_uniform_
 from pykeen.nn.modules import RotatEInteraction, TransEInteraction
+
+if args.model_index in [41, 42] and args.description == 'noDescription':
+    args.description = 'STNS-'
 
 if args.IfUsePreTrainTypeEmb:
     args.description+='PreTrainTypeEmb'
@@ -451,6 +457,11 @@ elif args.model_index == 32:
             )
 
 elif args.model_index == 41:
+    loss = SoftTypeawareNegativeSmapling(
+                reduction='mean',
+                adversarial_temperature=args.adversarial_temperature,
+                margin=args.loss_margin,
+            )
     model = CatRSETCwithTransE(
             triples_factory=training_data,
             ent_dim=args.model_ent_dim,
@@ -459,12 +470,7 @@ elif args.model_index == 41:
             freeze_matrix = args.ifFreezeWeights,
             freeze_type_emb = args.ifFreezeTypeEmb,
             add_ent_type = not args.ifNotAddEntType,
-            loss='NSSALoss',
-            loss_kwargs=dict(
-                reduction='mean',
-                adversarial_temperature=args.adversarial_temperature,
-                margin=args.loss_margin,
-            ),
+            loss=loss,
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = not args.ifNoActivationFuncion,
             weight_mask = args.ifWeightMask,
@@ -472,6 +478,11 @@ elif args.model_index == 41:
             )
     
 elif args.model_index == 42:
+    loss = SoftTypeawareNegativeSmapling(
+                reduction='mean',
+                adversarial_temperature=args.adversarial_temperature,
+                margin=args.loss_margin,
+            )
     model = CatRSETCwithRotate(
             triples_factory=training_data,
             dropout=args.dropout,
@@ -489,12 +500,7 @@ elif args.model_index == 42:
             entity_initializer='uniform',
             relation_initializer='init_phases',
             relation_constrainer= 'complex_normalize',
-            loss='NSSALoss',
-            loss_kwargs=dict(
-                reduction='mean',
-                adversarial_temperature=args.adversarial_temperature,
-                margin=args.loss_margin,
-            ),
+            loss=loss,
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = not args.ifNoActivationFuncion,
             weight_mask = args.ifWeightMask,
@@ -509,7 +515,9 @@ if torch.cuda.is_available() and args.device == 'cuda':
     model.to('cuda')
 else:
     model.to('cpu')
-    
+
+if args.model_index in [41, 42]:
+    pipeline_config['training_loop'] = TypeSLCWATrainingLoop
 
 # Pick an optimizer from Torch
 from torch.optim import Adam
@@ -547,7 +555,7 @@ pipeline_result.configuration['num_parameter_bytes'] = str(model.num_parameter_b
 pipeline_result.configuration['loss_kwargs'] = str(model.loss.__dict__)
 pipeline_result.configuration['loss'] = type(model.loss).__name__
 pipeline_result.configuration['type_smoothing'] = args.type_smoothing
-if args.training_loop == 'slcwa':
+if args.training_loop != 'lcwa':
     pipeline_result.configuration['negative_sampler'] = args.negative_sampler
     pipeline_result.configuration['num_negs_per_pos'] = args.num_negs_per_pos
 

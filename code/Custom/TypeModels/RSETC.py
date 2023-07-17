@@ -13,7 +13,8 @@ from pykeen.models import ERModel
 from pykeen.models.nbase import _prepare_representation_module_list
 from pykeen.nn import Representation
 from pykeen.nn.combination import Combination
-from pykeen.nn.init import init_phases, xavier_uniform_, xavier_uniform_norm_
+from pykeen.nn.init import (PretrainedInitializer, init_phases,
+                            xavier_uniform_, xavier_uniform_norm_)
 from pykeen.nn.modules import (Interaction, RotatEInteraction,
                                TransEInteraction, interaction_resolver,
                                parallel_unsqueeze)
@@ -38,12 +39,35 @@ class RSETC(TypeFramework):
     def __init__(self,freeze_matrix = False, add_ent_type = True, **kwargs) -> None:
         super().__init__(**kwargs)
 
-        # ents_types requires_grad=False, rels_types requires_grad=True
-        # self.ents_types = torch.nn.parameter.Parameter(torch.as_tensor(self.triples_factory.ents_types, dtype=self.data_type, device=self.device), requires_grad=False)
-        # self.ents_types = torch.as_tensor(self.triples_factory.ents_types, dtype=self.data_type, device=self.device)
         self.ents_types = None
+        self.ents_types_weight = self.triples_factory.ents_types.to(self.device).detach()
         self.add_ent_type = add_ent_type
-        self.rels_types = torch.nn.parameter.Parameter(torch.as_tensor(self.triples_factory.rels_types, dtype=self.data_type, device=self.device), requires_grad= not freeze_matrix)
+
+        rel_num, type_num  = self.triples_factory.rels_types[0].shape
+        self.rel_type_h_weights = self._build_weights_representations(
+            max_id = rel_num,
+            representations=None,
+            representations_kwargs=dict(
+            initializer = PretrainedInitializer(tensor=self.triples_factory.rels_types[0]),
+            constrainer='clamp',
+            constrainer_kwargs = dict(min = 0),
+            trainable = not freeze_matrix,
+            shape=type_num,
+            ),
+        )
+        self.rel_type_t_weights = self._build_weights_representations(
+            max_id = rel_num,
+            representations=None,
+            representations_kwargs=dict(
+            initializer = PretrainedInitializer(tensor=self.triples_factory.rels_types[1]),
+            constrainer='clamp',
+            constrainer_kwargs = dict(min = 0),
+            trainable = not freeze_matrix,
+            shape=type_num,
+            ),
+        )
+        # self.rels_types = torch.nn.parameter.Parameter(torch.as_tensor(self.triples_factory.rels_types, dtype=self.data_type, device=self.device), requires_grad= not freeze_matrix)
+        
 
     
     def _get_enttype_representations(
@@ -62,12 +86,13 @@ class RSETC(TypeFramework):
         # type_emb = self.type_representations[0]._embeddings.weight.to(self.device)
         type_emb = self.type_representations[0](indices = torch.arange(self.triples_factory.ents_types.shape[1]).long().to(self.device)) #取出所有的type embedding
 
-        self.rels_types.data = functional.relu(self.rels_types.data) # 因为使用了权重mask,所以需要确保权重始终为正
+        # self.rels_types.data = functional.relu(self.rels_types.data) 
+        # self.rels_types.data = torch.clamp(self.rels_types.data, min=0) # 因为使用了权重mask,所以需要确保权重始终为正
 
         #通过邻接矩阵与类型嵌入矩阵的矩阵乘法可以快速每个实体对应的类型嵌入，如果是多个类型则是多个类型嵌入的加权和，权重为邻接矩阵中的值。如果值都为1则相当于sum操作，为平均值则是mean操作。
-        rels_types_h = self.rels_types[0]
-        rels_types_t = self.rels_types[1]
-        ents_types = self.triples_factory.ents_types.to(self.device)
+        rels_types_h = self.rel_type_h_weights[0]._embeddings.weight.data
+        rels_types_t = self.rel_type_t_weights[0]._embeddings.weight.data
+        ents_types = self.ents_types_weight
 
         if self.weight_mask:
             rels_types_h = rels_types_h * self.rels_types_mask[0]
@@ -135,6 +160,27 @@ class RSETC(TypeFramework):
 
         return self.interaction.score_hrt(h=h, r=r, t=t)
     
+    def _build_weights_representations(
+        self,
+        representations: OneOrManyHintOrType[Representation] = None,
+        representations_kwargs: OneOrManyOptionalKwargs = None,
+        label = None,
+        max_id = None,
+        shapes = ['d'],
+        **kwargs,
+    ) -> Sequence[Representation]:
+        """Build representations for the given factory."""
+        # note, triples_factory is required instead of just using self.num_entities
+        # and self.num_relations for the inductive case when this is different
+        return _prepare_representation_module_list(
+            representations=representations,
+            representations_kwargs=representations_kwargs,
+            max_id=max_id,
+            shapes=shapes,
+            label=label,
+            **kwargs,
+        )
+
     def score_t(
         self,
         hr_batch: torch.LongTensor,

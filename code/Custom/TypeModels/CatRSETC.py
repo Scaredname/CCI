@@ -13,7 +13,8 @@ from pykeen.models import ERModel
 from pykeen.models.nbase import _prepare_representation_module_list
 from pykeen.nn import Representation
 from pykeen.nn.combination import Combination
-from pykeen.nn.init import init_phases, xavier_uniform_, xavier_uniform_norm_
+from pykeen.nn.init import (PretrainedInitializer, init_phases,
+                            xavier_uniform_, xavier_uniform_norm_)
 from pykeen.nn.modules import (Interaction, RotatEInteraction,
                                TransEInteraction, interaction_resolver,
                                parallel_unsqueeze)
@@ -39,6 +40,7 @@ class CatRSETC(RSETC):
     def __init__(self,
     **kwargs) -> None:
         super().__init__(**kwargs)
+        self.rels_inj_conf = self.triples_factory.rels_inj_conf
         self.projection = None
 
     def score_hrt(self, hrt_batch: torch.LongTensor, *, mode: Optional[InductiveMode] = None) -> torch.FloatTensor:
@@ -62,7 +64,25 @@ class CatRSETC(RSETC):
         h_index = hrt_batch[:, 0]
         r_index = hrt_batch[:, 1]
         t_index = hrt_batch[:, 2]
+
+        rels_types_h = self.rel_type_h_weights[0]._embeddings.weight.data
+        rels_types_t = self.rel_type_t_weights[0]._embeddings.weight.data
+
+        self.ents_types_weight = self.ents_types_weight.to(self.device)
+        self.rels_inj_conf = torch.tensor(self.rels_inj_conf).clone().detach().to(self.device)
+
+        h_type_weight = self.ents_types_weight[h_index]
+        r_h_type_weight = rels_types_h[r_index]
+        r_t_type_weight = rels_types_t[r_index]
+        t_type_weight = self.ents_types_weight[t_index]
+
         
+        injective_confidence = self.rels_inj_conf[r_index]
+
+        h_rel = (h_type_weight * r_h_type_weight).sum(-1)
+        t_rel = (t_type_weight * r_t_type_weight).sum(-1)
+        type_rel = torch.stack([h_rel, t_rel], dim=-1)
+        # type_rel = 2*functional.sigmoid(type_rel) - 1
         
         h, r, t = self._get_representations(h=h_index, r=r_index, t=t_index, mode=mode)
         head_type_emb, tail_type_emb, h_assig, t_assig = self._get_enttype_representations(h=h_index, r_h=r_index, r_t=r_index, t=t_index, mode=mode)
@@ -72,7 +92,7 @@ class CatRSETC(RSETC):
         h = h_s_type_emb
         t = t_s_type_emb
 
-        return self.interaction.score_hrt(h=h, r=r, t=t)
+        return self.interaction.score_hrt(h=h, r=r, t=t), injective_confidence, type_rel
     
     def score_t(
         self,
