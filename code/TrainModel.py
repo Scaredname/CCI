@@ -146,7 +146,7 @@ if args.ifNotAddEntType:
 if args.ifRandomWeight:
     args.description+='RandomWeight'
 
-if not args.ifNoActivationFuncion:
+if not args.ifNoActivationFuncion and args.model_index in [41, 42]:
     args.description+='UsingSoftMax'
 
 if args.ifWeightMask:
