@@ -65,8 +65,8 @@ class CatRSETC(RSETC):
         r_index = hrt_batch[:, 1]
         t_index = hrt_batch[:, 2]
 
-        rels_types_h = self.rel_type_h_weights[0]._embeddings.weight.data
-        rels_types_t = self.rel_type_t_weights[0]._embeddings.weight.data
+        rels_types_h = self.rel_type_h_weights[0]._embeddings.weight
+        rels_types_t = self.rel_type_t_weights[0]._embeddings.weight
 
         self.ents_types_weight = self.ents_types_weight.to(self.device)
         self.rels_inj_conf = self.rels_inj_conf.clone().detach().to(self.device)
