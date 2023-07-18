@@ -40,7 +40,7 @@ class CatRSETC(RSETC):
     def __init__(self,
     **kwargs) -> None:
         super().__init__(**kwargs)
-        self.rels_inj_conf = self.triples_factory.rels_inj_conf
+        self.rels_inj_conf = torch.tensor(self.triples_factory.rels_inj_conf)
         self.projection = None
 
     def score_hrt(self, hrt_batch: torch.LongTensor, *, mode: Optional[InductiveMode] = None) -> torch.FloatTensor:
@@ -69,7 +69,7 @@ class CatRSETC(RSETC):
         rels_types_t = self.rel_type_t_weights[0]._embeddings.weight.data
 
         self.ents_types_weight = self.ents_types_weight.to(self.device)
-        self.rels_inj_conf = torch.tensor(self.rels_inj_conf).clone().detach().to(self.device)
+        self.rels_inj_conf = self.rels_inj_conf.clone().detach().to(self.device)
 
         h_type_weight = self.ents_types_weight[h_index]
         r_h_type_weight = rels_types_h[r_index]
