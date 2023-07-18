@@ -2,7 +2,7 @@
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-02 16:32:08
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-07-08 15:24:55
+LastEditTime: 2023-07-18 09:39:49
 FilePath: /ESETC/code/pdResult.py
 Description: 
 
@@ -72,7 +72,7 @@ for file_name in os.listdir(result_path):
                     except:
                         results_dict['type-dim'].append('-')
 
-                    if 'SLCWATrainingLoop' == config['training_loop']:
+                    if 'num_negs_per_pos' in config:
                         results_dict['num_negs_per_pos'].append(config['num_negs_per_pos'])
                     else:
                         results_dict['num_negs_per_pos'].append('-')
