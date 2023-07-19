@@ -14,6 +14,8 @@ def type_constrain_replacement_(batch: torch.LongTensor, index: int, rel_related
         the batch of indices
     :param index:
         the index (of the last axis) which to replace
+    :param rel_related_ent:
+        the relation related ent matrix
     :param selection:
         a selection of the batch, e.g., a slice or a mask
     :param size:
@@ -22,14 +24,27 @@ def type_constrain_replacement_(batch: torch.LongTensor, index: int, rel_related
         the maximum index value at the chosen position
     """
 
-    print(batch[selection])
+    candidate_ents = rel_related_ent[batch[selection, 1]]
 
-    replacement = torch.randint(
-        high=max_index - 1,
-        size=(size,),
-        device=batch.device,
-    )
-    replacement += (replacement >= batch[selection, index]).long()
+    candidate_ents = torch.masked_fill(candidate_ents, candidate_ents == batch[selection, index].unsqueeze(dim=-1), -1) # mask the original entity
+
+    sampled_ent = list()
+    for i, ent in enumerate(candidate_ents[:]):
+      try:
+        ent_index = torch.where(ent != -1)[0]
+        random_index = torch.randint(high=len(ent_index), size=(1,))
+        sampled_ent.append(ent[ent_index[random_index]])
+      except:
+        # 当该关系没有足够的相关实体的情况下, 随机抽取一个实体
+        random_i = torch.randint(
+            high=max_index - 1,
+            size=(1,),
+            device=batch.device,
+        )
+        random_i += (random_i >= batch[selection, index][i]).long()
+        sampled_ent.append(random_i)
+      
+    replacement = torch.tensor(sampled_ent)
     batch[selection, index] = replacement
 
 class TypeNegativeSampler(BasicNegativeSampler):

@@ -2,7 +2,7 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2022-12-26 11:19:42
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-07-19 14:38:24
+LastEditTime: 2023-07-19 16:07:11
 FilePath: /ESETC/code/STNS_train.py
 Description: 
 
@@ -98,7 +98,9 @@ if __name__ == '__main__':
         model = model,
         triples_factory = training_data,
         negative_sampler = TypeNegativeSampler,
-        negative_sampler_kwargs = dict(rel_related_ent = training_data.rel_related_ent)
+        negative_sampler_kwargs = dict(
+            rel_related_ent = training_data.rel_related_ent,
+            num_negs_per_pos=2,)
     )
 
     _ = train_loop.train(
