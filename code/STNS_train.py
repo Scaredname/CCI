@@ -2,8 +2,8 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2022-12-26 11:19:42
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-07-17 15:46:33
-FilePath: /ESETC/code/try.py
+LastEditTime: 2023-07-19 14:38:24
+FilePath: /ESETC/code/STNS_train.py
 Description: 
 
 Copyright (c) 2023 by Ni Runyu ni-runyu@ed.tmu.ac.jp, All Rights Reserved. 
@@ -14,6 +14,7 @@ import json
 import os
 
 from Custom.CustomLoss import SoftTypeawareNegativeSmapling
+from Custom.CustomSampler import TypeNegativeSampler
 from Custom.CustomTrain import TypeSLCWATrainingLoop
 from Custom.TypeModels.CatRSETC import CatRSETCwithRotate, CatRSETCwithTransE
 from utilities import load_dataset
@@ -96,6 +97,8 @@ if __name__ == '__main__':
     train_loop = TypeSLCWATrainingLoop(
         model = model,
         triples_factory = training_data,
+        negative_sampler = TypeNegativeSampler,
+        negative_sampler_kwargs = dict(rel_related_ent = training_data.rel_related_ent)
     )
 
     _ = train_loop.train(

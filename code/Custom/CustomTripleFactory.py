@@ -1,15 +1,18 @@
 import logging
 import pathlib
-from typing import (Any, ClassVar, Dict, Iterable, Mapping, MutableMapping,
-                    Optional, TextIO, Tuple, Union, Collection)
+from typing import (Any, ClassVar, Collection, Dict, Iterable, Mapping,
+                    MutableMapping, Optional, TextIO, Tuple, Union)
 
 import numpy as np
 import pandas as pd
 import torch
+from pykeen.constants import COLUMN_LABELS, TARGET_TO_INDEX
 from pykeen.triples.triples_factory import TriplesFactory
 from pykeen.triples.utils import load_triples
-from pykeen.typing import (COLUMN_HEAD, COLUMN_RELATION, COLUMN_TAIL, LABEL_HEAD, LABEL_RELATION, LABEL_TAIL,EntityMapping, LabeledTriples, MappedTriples,RelationMapping)
-from pykeen.constants import COLUMN_LABELS, TARGET_TO_INDEX
+from pykeen.typing import (COLUMN_HEAD, COLUMN_RELATION, COLUMN_TAIL,
+                           LABEL_HEAD, LABEL_RELATION, LABEL_TAIL,
+                           EntityMapping, LabeledTriples, MappedTriples,
+                           RelationMapping)
 
 logger = logging.getLogger(__name__)
 
@@ -152,6 +155,42 @@ def create_matrix_of_types(
 
     return ents_types, rels_types, data_type_to_id
 
+def crate_rel_type_related_ent(ents_types, rels_types):
+
+    '''
+    return LongTensor
+    '''
+    rels_related_h_ents = list()
+    rels_related_t_ents = list()
+    h_ent_max_num = 0
+    t_ent_max_num = 0
+    
+
+    for rel_id in range(rels_types.shape[1]):
+        rel_related_h_type = np.where(rels_types[0, rel_id] > 0)[0]
+        rel_related_t_type = np.where(rels_types[1, rel_id] > 0)[0]
+        
+        t_related_h_ent = []
+        t_related_t_ent = []
+        for t_h_id in rel_related_h_type:
+            type_related_h_ent = np.where(ents_types.T[t_h_id] > 0)[0]
+            t_related_h_ent += type_related_h_ent.tolist()
+            
+        
+        for t_t_id in rel_related_t_type:
+            type_related_t_ent = np.where(ents_types.T[t_t_id] > 0)[0]
+            t_related_t_ent += type_related_t_ent.tolist()
+
+        h_ent_max_num = len(t_related_h_ent) if h_ent_max_num < len(t_related_h_ent) else h_ent_max_num
+        rels_related_h_ents.append(t_related_h_ent)
+        t_ent_max_num = len(t_related_t_ent) if t_ent_max_num < len(t_related_t_ent) else t_ent_max_num
+        rels_related_t_ents.append(t_related_t_ent)
+        
+    rels_related_h_ents = torch.LongTensor([np.pad(ents, (0, h_ent_max_num - len(ents)), 'constant', constant_values=-1) for ents in rels_related_h_ents])
+    rels_related_t_ents = torch.LongTensor([np.pad(ents, (0, t_ent_max_num - len(ents)), 'constant', constant_values=-1) for ents in rels_related_t_ents])
+    
+    return rels_related_h_ents, rels_related_t_ents
+
 class TriplesTypesFactory(TriplesFactory):
     file_name_type_to_id: ClassVar[str] = "type_to_id"
     file_name_types: ClassVar[str] = "types"
@@ -162,6 +201,7 @@ class TriplesTypesFactory(TriplesFactory):
         ents_types: np.ndarray,
         rels_types: np.ndarray,
         rels_inj_conf: np.ndarray,
+        rel_related_ent: list[torch.tensor, torch.tensor],
         types_to_id: Mapping[str, int],
         type_smoothing: float = 0.0,
         use_random_weights: bool = False,
@@ -176,7 +216,7 @@ class TriplesTypesFactory(TriplesFactory):
         self.types_to_id = types_to_id
         self.assignments = self._get_assignment(ents_types)
         self.rels_inj_conf = rels_inj_conf
-
+        self.rel_related_ent = rel_related_ent
         # Calculate the proportion of each type.
         self.ents_types = self._cal_propor(self.ents_types)
         self.rels_types[0] = self._cal_propor(self.rels_types[0])
@@ -244,6 +284,8 @@ class TriplesTypesFactory(TriplesFactory):
             type_triples=type_triples, entity_to_id=base.entity_to_id, relation_to_id=base.relation_to_id, type_position=type_position, ents_rels=ents_rels_adj, if_reverse=create_inverse_triples
         )
 
+        rel_related_ent = crate_rel_type_related_ent(ents_types = ents_types, rels_types = rels_types)
+
         relation_injective_confidence = create_relation_injective_confidence(base.mapped_triples)
 
         return cls(
@@ -258,6 +300,7 @@ class TriplesTypesFactory(TriplesFactory):
             type_smoothing=type_smoothing,
             use_random_weights=use_random_weights,
             select_one_type=select_one_type,
+            rel_related_ent = rel_related_ent
         )
     
     @property
