@@ -2,7 +2,7 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2023-07-16 15:42:35
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-07-17 15:34:11
+LastEditTime: 2023-07-19 12:26:45
 FilePath: /ESETC/code/Custom/CustomLoss.py
 Description: 新的损失函数
 
@@ -15,6 +15,7 @@ from typing import Optional
 import torch
 from pykeen.losses import (NSSALoss, UnsupportedLabelSmoothingError,
                            prepare_negative_scores_for_softmax)
+from torch.nn import functional as F
 
 
 class SoftTypeawareNegativeSmapling(NSSALoss):
@@ -49,10 +50,12 @@ class SoftTypeawareNegativeSmapling(NSSALoss):
         # compute weights (without gradient tracking)
         assert negative_scores.ndimension() == 2
         weights = negative_scores.detach().mul(self.inverse_softmax_temperature).softmax(dim=-1)
+
+        type_relatedness = 2 * F.sigmoid(type_relatedness.data) -1 # scaled to [0,1]
         STNS_weights = injective_confidence * type_relatedness + (1 - injective_confidence) * (1 - type_relatedness)
 
         STNS_weights = STNS_weights.view(*negative_scores.shape)
-        weights = weights * STNS_weights.detach() # 此处不更新type权重. 这里还没想清楚,是否需要更新参数.
+        weights = weights * STNS_weights.detach() # 不计算STNS的梯度
 
         # fill negative scores with some finite value, e.g., 0 (they will get masked out anyway)
         negative_scores = torch.masked_fill(negative_scores, mask=~torch.isfinite(negative_scores), value=0.0)
