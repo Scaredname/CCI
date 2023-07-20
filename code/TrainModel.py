@@ -113,6 +113,7 @@ from Custom.TypeModels.ESETCwithComplEx import (DistMult, ESETCwithComplEx,
                                                 ESETCwithDistMult)
 from Custom.TypeModels.ESETCwithRotate import ESETCwithRotate, ESETCwithTransE
 from Custom.TypeModels.ESETCwithTuckER import ESETCwithTuckER
+from Custom.TypeModels.no_name import NNYwithRotatE, NNYwithTransE
 from Custom.TypeModels.RSETC import RSETCwithTransE
 # Pick a model
 # from Custom.CustomModel import EETCRLwithRotate
@@ -120,7 +121,7 @@ from pykeen.models import ComplEx, DistMultLiteral, RotatE, TransE
 from pykeen.nn.init import xavier_uniform_
 from pykeen.nn.modules import RotatEInteraction, TransEInteraction
 
-if args.model_index in [41, 42] and args.description == 'noDescription':
+if args.model_index in [41, 42, 51, 52] and args.description == 'noDescription':
     args.description = 'STNS-'
 
 if args.IfUsePreTrainTypeEmb:
@@ -147,7 +148,7 @@ if args.ifNotAddEntType:
 if args.ifRandomWeight:
     args.description+='RandomWeight'
 
-if not args.ifNoActivationFuncion and args.model_index in [41, 42]:
+if not args.ifNoActivationFuncion and args.model_index in [41, 42, 51, 52]:
     args.description+='UsingSoftMax'
 
 if args.ifWeightMask:
@@ -158,6 +159,12 @@ if args.ifSearchHyperParameters:
 
 if args.ifOneType:
     args.description+='OneType'
+
+soft_loss = SoftTypeawareNegativeSmapling(
+                reduction='mean',
+                adversarial_temperature=args.adversarial_temperature,
+                margin=args.loss_margin,
+            )
 
 if args.model_index == 0:
     model = ESETCwithTransE(
@@ -458,11 +465,7 @@ elif args.model_index == 32:
             )
 
 elif args.model_index == 41:
-    loss = SoftTypeawareNegativeSmapling(
-                reduction='mean',
-                adversarial_temperature=args.adversarial_temperature,
-                margin=args.loss_margin,
-            )
+    
     model = CatRSETCwithTransE(
             triples_factory=training_data,
             ent_dim=args.model_ent_dim,
@@ -471,7 +474,7 @@ elif args.model_index == 41:
             freeze_matrix = args.ifFreezeWeights,
             freeze_type_emb = args.ifFreezeTypeEmb,
             add_ent_type = not args.ifNotAddEntType,
-            loss=loss,
+            loss=soft_loss,
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = not args.ifNoActivationFuncion,
             weight_mask = args.ifWeightMask,
@@ -479,11 +482,6 @@ elif args.model_index == 41:
             )
     
 elif args.model_index == 42:
-    loss = SoftTypeawareNegativeSmapling(
-                reduction='mean',
-                adversarial_temperature=args.adversarial_temperature,
-                margin=args.loss_margin,
-            )
     model = CatRSETCwithRotate(
             triples_factory=training_data,
             dropout=args.dropout,
@@ -501,12 +499,55 @@ elif args.model_index == 42:
             entity_initializer='uniform',
             relation_initializer='init_phases',
             relation_constrainer= 'complex_normalize',
-            loss=loss,
+            loss=soft_loss,
             usepretrained = args.IfUsePreTrainTypeEmb,
             activation_weight = not args.ifNoActivationFuncion,
             weight_mask = args.ifWeightMask,
             type_weight_temperature = args.type_weight_temperature,
             )
+    
+elif args.model_index == 51:
+    
+    model = NNYwithTransE(
+            triples_factory=training_data,
+            ent_dim=args.model_ent_dim,
+            rel_dim=args.model_rel_dim,
+            type_dim=args.model_type_dim,
+            freeze_matrix = args.ifFreezeWeights,
+            freeze_type_emb = args.ifFreezeTypeEmb,
+            add_ent_type = not args.ifNotAddEntType,
+            loss=soft_loss,
+            usepretrained = args.IfUsePreTrainTypeEmb,
+            activation_weight = not args.ifNoActivationFuncion,
+            weight_mask = args.ifWeightMask,
+            type_weight_temperature = args.type_weight_temperature,
+            )
+    
+elif args.model_index == 52:
+    model = NNYwithTransE(
+            triples_factory=training_data,
+            dropout=args.dropout,
+            ent_dtype = torch.float,
+            rel_dtype = torch.cfloat,
+            type_dtype = torch.float,
+            bias = args.project_with_bias,
+            ent_dim=args.model_ent_dim,
+            rel_dim=args.model_rel_dim // 2, # relation的数据类型的cfloat
+            type_dim=args.model_type_dim,
+            freeze_matrix = args.ifFreezeWeights,
+            freeze_type_emb = args.ifFreezeTypeEmb,
+            add_ent_type = not args.ifNotAddEntType,
+            type_initializer='xavier_uniform_',
+            entity_initializer='uniform',
+            relation_initializer='init_phases',
+            relation_constrainer= 'complex_normalize',
+            loss=soft_loss,
+            usepretrained = args.IfUsePreTrainTypeEmb,
+            activation_weight = not args.ifNoActivationFuncion,
+            weight_mask = args.ifWeightMask,
+            type_weight_temperature = args.type_weight_temperature,
+            )
+
 if args.checkpoint:
     checkpoint = torch.load(PYKEEN_CHECKPOINTS.joinpath(args.checkpoint))
     print('load %s' % args.checkpoint)
@@ -517,7 +558,7 @@ if torch.cuda.is_available() and args.device == 'cuda':
 else:
     model.to('cpu')
 
-if args.model_index in [41, 42]:
+if args.model_index in [41, 42, 51, 52]:
     pipeline_config['training_loop'] = TypeSLCWATrainingLoop
 
     if args.negative_sampler == 'type':
