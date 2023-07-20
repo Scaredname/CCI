@@ -2,7 +2,7 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2022-12-26 11:19:42
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-07-19 16:07:11
+LastEditTime: 2023-07-20 14:04:36
 FilePath: /ESETC/code/STNS_train.py
 Description: 
 
@@ -13,10 +13,12 @@ import datetime
 import json
 import os
 
+import torch
 from Custom.CustomLoss import SoftTypeawareNegativeSmapling
 from Custom.CustomSampler import TypeNegativeSampler
 from Custom.CustomTrain import TypeSLCWATrainingLoop
 from Custom.TypeModels.CatRSETC import CatRSETCwithRotate, CatRSETCwithTransE
+from Custom.TypeModels.no_name import NNYwithRotatE, NNYwithTransE
 from utilities import load_dataset
 
 if __name__ == '__main__':
@@ -78,11 +80,14 @@ if __name__ == '__main__':
                 margin=args.loss_margin,
             )
 
-    model = CatRSETCwithTransE(
+    model = NNYwithRotatE(
             triples_factory=training_data,
             ent_dim=args.model_ent_dim,
-            rel_dim=args.model_rel_dim,
+            rel_dim=args.model_rel_dim // 2,
             type_dim=args.model_type_dim,
+            ent_dtype = torch.float,
+            rel_dtype = torch.cfloat,
+            type_dtype = torch.float,
             freeze_matrix = args.ifFreezeWeights,
             freeze_type_emb = args.ifFreezeTypeEmb,
             add_ent_type = not args.ifNotAddEntType,
