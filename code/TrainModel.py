@@ -4,6 +4,7 @@ import datetime
 import json
 import os
 
+from Custom.CustomSampler import TypeNegativeSampler
 from Custom.CustomTrain import TypeSLCWATrainingLoop
 from pykeen.constants import PYKEEN_CHECKPOINTS
 from utilities import load_dataset
@@ -518,6 +519,14 @@ else:
 
 if args.model_index in [41, 42]:
     pipeline_config['training_loop'] = TypeSLCWATrainingLoop
+
+    if args.negative_sampler == 'type':
+        pipeline_config['negative_sampler'] = TypeNegativeSampler
+        pipeline_config['negative_sampler_kwargs'] = dict(
+        rel_related_ent = training_data.rel_related_ent,
+        num_negs_per_pos=args.num_negs_per_pos,
+        )
+        args.description+='TypeNegativeSampler'
 
 # Pick an optimizer from Torch
 from torch.optim import Adam
