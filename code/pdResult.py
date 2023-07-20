@@ -2,7 +2,7 @@
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-02 16:32:08
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-07-18 09:39:49
+LastEditTime: 2023-07-20 20:12:01
 FilePath: /ESETC/code/pdResult.py
 Description: 
 
@@ -89,7 +89,7 @@ for file_name in os.listdir(result_path):
                         results_dict['margin'].append('-')
                     
                     # {'training': False, '_parameters': OrderedDict(), '_buffers': OrderedDict(), '_non_persistent_buffers_set': set(), '_backward_pre_hooks': OrderedDict(), '_backward_hooks': OrderedDict(), '_is_full_backward_hook': None, '_forward_hooks': OrderedDict(), '_forward_hooks_with_kwargs': OrderedDict(), '_forward_pre_hooks': OrderedDict(), '_forward_pre_hooks_with_kwargs': OrderedDict(), '_state_dict_hooks': OrderedDict(), '_state_dict_pre_hooks': OrderedDict(), '_load_state_dict_pre_hooks': OrderedDict(), '_load_state_dict_post_hooks': OrderedDict(), '_modules': OrderedDict(), 'reduction': 'mean', '_reduction_method': <built-in method mean of type object at 0x7f2261842540>, 'inverse_softmax_temperature': 1.0, 'factor': 0.5, 'margin': 8.0}
-                    if "ETC" in model_name:
+                    if "ETC" in model_name or "NNY":
                         if 'type_weight_temperature' in config:
                             results_dict['type_weight_temperature'].append(config['type_weight_temperature'])
                         else:
