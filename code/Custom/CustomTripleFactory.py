@@ -185,9 +185,10 @@ def crate_rel_type_related_ent(ents_types, rels_types):
         rels_related_h_ents.append(t_related_h_ent)
         t_ent_max_num = len(t_related_t_ent) if t_ent_max_num < len(t_related_t_ent) else t_ent_max_num
         rels_related_t_ents.append(t_related_t_ent)
-        
-    rels_related_h_ents = torch.LongTensor([np.pad(ents, (0, h_ent_max_num - len(ents)), 'constant', constant_values=-1) for ents in rels_related_h_ents])
-    rels_related_t_ents = torch.LongTensor([np.pad(ents, (0, t_ent_max_num - len(ents)), 'constant', constant_values=-1) for ents in rels_related_t_ents])
+
+
+    rels_related_h_ents = torch.LongTensor(np.array([np.pad(ents, (0, h_ent_max_num - len(ents)), 'constant', constant_values=-1) for ents in rels_related_h_ents]))
+    rels_related_t_ents = torch.LongTensor(np.array([np.pad(ents, (0, t_ent_max_num - len(ents)), 'constant', constant_values=-1) for ents in rels_related_t_ents]))
     
     return rels_related_h_ents, rels_related_t_ents
 
