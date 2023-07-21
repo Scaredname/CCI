@@ -107,7 +107,7 @@ class NoNameYet(CatRSETC):
                 t = parallel_unsqueeze(t, dim=0)
         return repeat_if_necessary(
             # score shape: (batch_size, num_entities)
-            scores=self.interaction.score(h=h, r=r, t=t, slice_size=slice_size, slice_dim=1).view(-1, self.num_entities) + type_score, # 会出现测试批度为1的特例，所以调整一下score的shape
+            scores=self.interaction.score(h=h, r=r, t=t, slice_size=slice_size, slice_dim=1).view(-1, self.num_entities) + type_score.view(-1, self.num_entities), # 会出现测试批度为1的特例，所以调整一下score的shape
             representations=self.entity_representations,
             num=self._get_entity_len(mode=mode) if tails is None else tails.shape[-1],
         )
@@ -157,9 +157,8 @@ class NoNameYet(CatRSETC):
         if heads is None or heads.ndimension() == 1:
             h = parallel_unsqueeze(h, dim=0)
 
-
         return repeat_if_necessary(
-            scores=self.interaction.score(h=h, r=r, t=t, slice_size=slice_size, slice_dim=1).view(-1, self.num_entities) + type_score, # 会出现测试批度为1的特例，所以调整一下score的shape
+            scores=self.interaction.score(h=h, r=r, t=t, slice_size=slice_size, slice_dim=1).view(-1, self.num_entities) + type_score.view(-1, self.num_entities), # 会出现测试批度为1的特例，所以调整一下score的shape
             representations=self.entity_representations,
             num=self._get_entity_len(mode=mode) if heads is None else heads.shape[-1],
         )
