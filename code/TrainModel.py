@@ -17,6 +17,7 @@ parser.add_argument('-lr', '--learning_rate', type=float, default=0.001)
 parser.add_argument('-lm', '--loss_margin', type=float, default=9.0)
 parser.add_argument('-at', '--adversarial_temperature', type=float, default=1.0)
 parser.add_argument('-twt', '--type_weight_temperature', type=float, default=1.0)
+parser.add_argument('-tsw', '--type_score_weight', type=float, default=1.0)
 parser.add_argument('-mw', '--modulus_weight', type=float, default=1.0)
 parser.add_argument('-pw', '--phase_weight', type=float, default=1.0)
 parser.add_argument('-b', '--batch_size', type=int, default=256)
@@ -521,10 +522,11 @@ elif args.model_index == 51:
             activation_weight = not args.ifNoActivationFuncion,
             weight_mask = args.ifWeightMask,
             type_weight_temperature = args.type_weight_temperature,
+            type_score_weight= args.type_score_weight,
             )
     
 elif args.model_index == 52:
-    model = NNYwithTransE(
+    model = NNYwithRotatE(
             triples_factory=training_data,
             dropout=args.dropout,
             ent_dtype = torch.float,
@@ -546,6 +548,7 @@ elif args.model_index == 52:
             activation_weight = not args.ifNoActivationFuncion,
             weight_mask = args.ifWeightMask,
             type_weight_temperature = args.type_weight_temperature,
+            type_score_weight= args.type_score_weight,
             )
 
 if args.checkpoint:
@@ -611,6 +614,9 @@ if args.training_loop != 'lcwa':
 
 if args.IfUsePreTrainTypeEmb:
     pipeline_result.configuration['pre_trained_type_name'] = args.IfUsePreTrainTypeEmb
+
+if args.model_index in [51, 52]:
+    pipeline_result.configuration['type_score_weight'] = args.type_score_weight
 
 pipeline_result.configuration['type_weight_temperature'] = args.type_weight_temperature
 
