@@ -82,7 +82,6 @@ class CatRSETC(RSETC):
         h_rel = (h_type_weight * r_h_type_weight).sum(-1)
         t_rel = (t_type_weight * r_t_type_weight).sum(-1)
         type_rel = torch.stack([h_rel, t_rel], dim=-1)
-        # type_rel = 2*functional.sigmoid(type_rel) - 1
         
         h, r, t = self._get_representations(h=h_index, r=r_index, t=t_index, mode=mode)
         head_type_emb, tail_type_emb, h_assig, t_assig = self._get_enttype_representations(h=h_index, r_h=r_index, r_t=r_index, t=t_index, mode=mode)

@@ -2,7 +2,7 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2023-07-16 15:42:35
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-07-19 12:26:45
+LastEditTime: 2023-07-23 15:16:35
 FilePath: /ESETC/code/Custom/CustomLoss.py
 Description: 新的损失函数
 
@@ -51,7 +51,7 @@ class SoftTypeawareNegativeSmapling(NSSALoss):
         assert negative_scores.ndimension() == 2
         weights = negative_scores.detach().mul(self.inverse_softmax_temperature).softmax(dim=-1)
 
-        type_relatedness = 2 * F.sigmoid(type_relatedness.data) -1 # scaled to [0,1]
+        type_relatedness = 2 * F.sigmoid(type_relatedness.data) -1 # scaled to [0,1], no grad
         STNS_weights = injective_confidence * type_relatedness + (1 - injective_confidence) * (1 - type_relatedness)
 
         STNS_weights = STNS_weights.view(*negative_scores.shape)
