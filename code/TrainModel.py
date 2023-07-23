@@ -108,6 +108,7 @@ import torch
 from Custom.CustomLoss import SoftTypeawareNegativeSmapling
 from Custom.HAKE import HAKEModel
 from Custom.OriginRotatE import FloatRotatE
+from Custom.TypeModels.ablation_model import AMwithRotatE, AMwithTransE
 from Custom.TypeModels.CatESETC import CatESETCwithRotate, CatESETCwithTransE
 from Custom.TypeModels.CatRSETC import CatRSETCwithRotate, CatRSETCwithTransE
 from Custom.TypeModels.ESETCwithComplEx import (DistMult, ESETCwithComplEx,
@@ -160,6 +161,7 @@ if args.ifSearchHyperParameters:
 
 if args.ifOneType:
     args.description+='OneType'
+
 
 soft_loss = SoftTypeawareNegativeSmapling(
                 reduction='mean',
@@ -550,6 +552,50 @@ elif args.model_index == 52:
             type_weight_temperature = args.type_weight_temperature,
             type_score_weight= args.type_score_weight,
             )
+    
+elif args.model_index == 61:
+    
+    model = AMwithTransE(
+            triples_factory=training_data,
+            ent_dim=args.model_ent_dim,
+            rel_dim=args.model_rel_dim,
+            type_dim=args.model_type_dim,
+            freeze_matrix = args.ifFreezeWeights,
+            freeze_type_emb = args.ifFreezeTypeEmb,
+            add_ent_type = not args.ifNotAddEntType,
+            loss=soft_loss,
+            usepretrained = args.IfUsePreTrainTypeEmb,
+            activation_weight = not args.ifNoActivationFuncion,
+            weight_mask = args.ifWeightMask,
+            type_weight_temperature = args.type_weight_temperature,
+            type_score_weight= args.type_score_weight,
+            )
+    
+elif args.model_index == 62:
+    model = AMwithRotatE(
+            triples_factory=training_data,
+            dropout=args.dropout,
+            ent_dtype = torch.float,
+            rel_dtype = torch.cfloat,
+            type_dtype = torch.float,
+            bias = args.project_with_bias,
+            ent_dim=args.model_ent_dim,
+            rel_dim=args.model_rel_dim // 2, # relation的数据类型的cfloat
+            type_dim=args.model_type_dim,
+            freeze_matrix = args.ifFreezeWeights,
+            freeze_type_emb = args.ifFreezeTypeEmb,
+            add_ent_type = not args.ifNotAddEntType,
+            type_initializer='xavier_uniform_',
+            entity_initializer='uniform',
+            relation_initializer='init_phases',
+            relation_constrainer= 'complex_normalize',
+            loss=soft_loss,
+            usepretrained = args.IfUsePreTrainTypeEmb,
+            activation_weight = not args.ifNoActivationFuncion,
+            weight_mask = args.ifWeightMask,
+            type_weight_temperature = args.type_weight_temperature,
+            type_score_weight= args.type_score_weight,
+            )
 
 if args.checkpoint:
     checkpoint = torch.load(PYKEEN_CHECKPOINTS.joinpath(args.checkpoint))
@@ -561,7 +607,7 @@ if torch.cuda.is_available() and args.device == 'cuda':
 else:
     model.to('cpu')
 
-if args.model_index in [41, 42, 51, 52]:
+if args.model_index in [41, 42, 51, 52, 61, 62]:
     pipeline_config['training_loop'] = TypeSLCWATrainingLoop
 
     if args.negative_sampler == 'type':
