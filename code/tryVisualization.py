@@ -2,7 +2,7 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2023-02-10 13:37:11
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-07-15 13:59:56
+LastEditTime: 2023-07-25 15:38:05
 FilePath: /ESETC/code/tryVisualization.py
 Description: 输出对于特定实体的类型权重，以及对于特定关系的类型权重
 
@@ -47,6 +47,16 @@ def draw_heatmap(data, title, save_path, vmax=None, vmin=None, format='png'):
     save_path = save_path + '.' + format
     plt.savefig(save_path, format=format)
 
+def calculate_kurtosis(vector):
+    vector = torch.tensor(vector).detach()
+    vector *= 100
+    mean = torch.mean(vector)
+    std = torch.std(vector) #样本标准差
+    print(std)
+    fourth_moment = torch.mean((vector - mean) ** 4) #四阶样本中心矩
+    return fourth_moment / (std ** 4) - 3
+
+
 def draw_example(data, save_path, format='png'):
     
     x = np.arange(0, len(data))
@@ -75,12 +85,15 @@ def find_k_relevant_type(data, id, string2id, type2id, path, mode = 'rel', flag 
         else:
             example_path_h = os.path.join(figure_floder, 'rel_type_weight_afterTraining_h_%s'%(str(id)+rev+de))
             example_path_t = os.path.join(figure_floder, 'rel_type_weight_afterTraining_t_%s'%(str(id)+rev+de))
-        print('for head')
-        print('for relation %s, the most relevant type is: '%(string[id]+rev), types[np.argsort(-data[0, id, :])[:k]], 'with weight: ', data[0, id, :][np.argsort(-data[0, id, :])[:k]])
-        print('for relation %s, the most irrelevant type is: '%(string[id]+rev), types[np.argsort(data[0, id, :])[:k]], 'with weight: ', data[0, id, :][np.argsort(data[0, id, :])[:k]])
-        print('for tail')
-        print('for relation %s, the most relevant type is: '%(string[id]+rev), types[np.argsort(-data[1, id, :])[:k]], 'with weight: ', data[1, id, :][np.argsort(-data[1, id, :])[:k]])
-        print('for relation %s, the most irrelevant type is: '%(string[id]+rev), types[np.argsort(data[1, id, :])[:k]], 'with weight: ', data[1, id, :][np.argsort(data[1, id, :])[:k]])
+        
+        print('for head ++++++++++++')
+        print('for relation %s, the most relevant type is: '%(string[id]+rev), types[np.argsort(-data[0, id, :])[:k]], 'with weight: ', data[0, id, :][np.argsort(-data[0, id, :])[:k]], 'kurtosis: ', calculate_kurtosis(data[1, id, :]))
+        print('for relation %s, the most irrelevant type is: '%(string[id]+rev), types[np.argsort(data[0, id, :])[:k]], 'with weight: ', data[0, id, :][np.argsort(data[0, id, :])[:k]], 'kurtosis: ', calculate_kurtosis(data[0, id, :][np.argsort(data[0, id, :])[:k]]))
+        
+        print('for tail +++++++++++')
+        print('for relation %s, the most relevant type is: '%(string[id]+rev), types[np.argsort(-data[1, id, :])[:k]], 'with weight: ', data[1, id, :][np.argsort(-data[1, id, :])[:k]], 'kurtosis: ', calculate_kurtosis(data[1, id, :]))
+        print('for relation %s, the most irrelevant type is: '%(string[id]+rev), types[np.argsort(data[1, id, :])[:k]], 'with weight: ', data[1, id, :][np.argsort(data[1, id, :])[:k]], 'kurtosis: ', calculate_kurtosis(data[1, id, :][np.argsort(data[1, id, :])[:k]]))
+        
         draw_example(data[0, id, :], example_path_h, format='svg')
         draw_example(data[1, id, :], example_path_t, format='svg')
     else:
@@ -105,11 +118,11 @@ if __name__ == '__main__':
 
 
     # de = 'PreTrainTypeEmb'
-    de = 'noDescriptionActivationFuncionWeightMask'
+    de = 'STNS-UsingSoftMaxOneType'
     # date = '20230225-001357'
-    m_name = 'CatRSETCwithRotate'
-    # m_name = 'CatESETCwithTransE'
-    date = '20230713-121052'
+    # m_name = 'CatRSETCwithRotate'
+    m_name = 'NNYwithTransE'
+    date = '20230720-142135'
 
     dataset = args.dataset
     model_path = os.path.join('../models/', dataset, de, m_name, date)
@@ -137,18 +150,20 @@ if __name__ == '__main__':
     heatmap_after_save_path_rel_h = os.path.join(vis_path, 'rel_type_weight_afterTraining_h')
     heatmap_after_save_path_rel_t = os.path.join(vis_path, 'rel_type_weight_afterTraining_t')
 
-    rel_types_after_training = model.rels_types.data.cpu().numpy()
+    rel_types_h_after_training = model.rel_type_h_weights[0]._embeddings.weight.data.cpu().numpy()
+    rel_types_t_after_training = model.rel_type_t_weights[0]._embeddings.weight.data.cpu().numpy()
 
-    draw_heatmap(rel_types_after_training[0], 'relation head type weight after training', heatmap_after_save_path_rel_h)
-    draw_heatmap(rel_types_after_training[1], 'relation tail type weight after training', heatmap_after_save_path_rel_t)
+    draw_heatmap(rel_types_h_after_training, 'relation head type weight after training', heatmap_after_save_path_rel_h)
+    draw_heatmap(rel_types_h_after_training, 'relation tail type weight after training', heatmap_after_save_path_rel_t)
 
-    rel_label = ['worksAt', 'hasGender']
+    rel_label = ['hasWonPrize', 'diedIn']
     for rel in rel_label:
         example_id = training_data.relation_to_id[rel]
-        print('before training')
+        print('before training-------------------------------------------')
+        print('rel: ', rel , 'injective confidence: ', training_data.rels_inj_conf[example_id])
         find_k_relevant_type(training_data.rels_types, example_id, training_data.relation_to_id, training_data.types_to_id, path=vis_path, mode='rel', de=de, k=5, flag='before')
-        print('after training')
-        find_k_relevant_type(rel_types_after_training, example_id, training_data.relation_to_id, training_data.types_to_id, path=vis_path, mode='rel', de=de, k=5, flag='after')
+        print('after training--------------------------------------------')
+        find_k_relevant_type(np.array([rel_types_h_after_training, rel_types_t_after_training]), example_id, training_data.relation_to_id, training_data.types_to_id, path=vis_path, mode='rel', de=de, k=5, flag='after')
 
 
 

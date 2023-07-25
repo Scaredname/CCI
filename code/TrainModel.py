@@ -35,7 +35,7 @@ parser.add_argument('-tsm', '--type_smoothing', type=float, default=0.0)
 parser.add_argument('-pb', '--project_with_bias', action='store_true', default=False)
 parser.add_argument('-drop', '--dropout', type=float, default=0.0)
 
-parser.add_argument('-de', '--description', type=str, default='noDescription')
+parser.add_argument('-de', '--description', type=str, default='final')
 parser.add_argument('-ch', '--checkpoint', type=str, default=None)
 parser.add_argument('-reverse', '--CreateInverseTriples', action='store_true', default=False)
 parser.add_argument('-t', '--IfUseTypeLike', action='store_true', default=False)
@@ -123,7 +123,7 @@ from pykeen.models import ComplEx, DistMultLiteral, RotatE, TransE
 from pykeen.nn.init import xavier_uniform_
 from pykeen.nn.modules import RotatEInteraction, TransEInteraction
 
-if args.model_index in [41, 42, 51, 52] and args.description == 'noDescription':
+if args.model_index in [41, 42, 51, 52] and args.description == 'final':
     args.description = 'STNS-'
 
 if args.IfUsePreTrainTypeEmb:

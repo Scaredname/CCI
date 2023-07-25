@@ -98,7 +98,7 @@ def create_relation_injective_confidence(mapped_triples: Collection[Tuple[int, i
     injective_confidence = list()
     df = pd.DataFrame(data=mapped_triples, columns=COLUMN_LABELS)
     for relation, group in df.groupby(by=LABEL_RELATION):
-        injective_confidence.append((calculate_injective_confidence(df=group, source=LABEL_HEAD, target=LABEL_TAIL), calculate_injective_confidence(df=group, source=LABEL_TAIL, target=LABEL_HEAD)))
+        injective_confidence.append((calculate_injective_confidence(df=group, source=LABEL_TAIL, target=LABEL_HEAD), calculate_injective_confidence(df=group, source=LABEL_HEAD, target=LABEL_TAIL)))
 
     return np.array(injective_confidence)
         
