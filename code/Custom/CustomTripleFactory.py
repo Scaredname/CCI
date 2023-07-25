@@ -272,6 +272,7 @@ class TriplesTypesFactory(TriplesFactory):
         type_position: int = 0,
         use_random_weights: bool = False,
         select_one_type: bool = False,
+        strict_confidence: bool = False,
         **kwargs,
     ) -> "TriplesTypesFactory":
         if type_triples is None:
@@ -287,7 +288,10 @@ class TriplesTypesFactory(TriplesFactory):
 
         rel_related_ent = crate_rel_type_related_ent(ents_types = ents_types, rels_types = rels_types)
 
+        
         relation_injective_confidence = create_relation_injective_confidence(base.mapped_triples)
+        if strict_confidence:
+            relation_injective_confidence[relation_injective_confidence < 1] = 0
 
         return cls(
             entity_to_id=base.entity_to_id,

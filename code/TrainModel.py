@@ -48,6 +48,7 @@ parser.add_argument('-tat', '--ifTypeAsTrain', action='store_true', default=Fals
 parser.add_argument('-fw', '--ifFreezeWeights', action='store_true', default=False)
 parser.add_argument('-shp', '--ifSearchHyperParameters', action='store_true', default=False)
 parser.add_argument('-fte', '--ifFreezeTypeEmb', action='store_true', default=False, help='If freeze type embeddings, default is False')
+parser.add_argument('-src', '--ifStrictRelationCardinality', action='store_true', default=False, help='if strict relation cardinality, default is False')
 parser.add_argument('-randw', '--ifRandomWeight', action='store_true', default=False, help='If use random weight, default is False')
 parser.add_argument('-naf', '--ifNoActivationFuncion', action='store_true', default=False, help='If use ActivationFuncion for type weight')
 parser.add_argument('-wm', '--ifWeightMask', action='store_true', default=False, help='If use entity types constrains for type weight')
@@ -101,7 +102,7 @@ pipeline_config = dict(
 
 
 dataset = args.dataset
-training_data, validation, testing = load_dataset(dataset=dataset, IfUseTypeLike=args.IfUseTypeLike, CreateInverseTriples=args.CreateInverseTriples, type_smoothing=args.type_smoothing, ifHasNoneType=args.ifHasNoneType, ifTypeAsTrain=args.ifTypeAsTrain, use_random_weights=args.ifRandomWeight, select_one_type=args.ifOneType)
+training_data, validation, testing = load_dataset(dataset=dataset, IfUseTypeLike=args.IfUseTypeLike, CreateInverseTriples=args.CreateInverseTriples, type_smoothing=args.type_smoothing, ifHasNoneType=args.ifHasNoneType, ifTypeAsTrain=args.ifTypeAsTrain, use_random_weights=args.ifRandomWeight, select_one_type=args.ifOneType, strict_confidence=args.ifStrictRelationCardinality)
 
 
 import torch
@@ -161,6 +162,9 @@ if args.ifSearchHyperParameters:
 
 if args.ifOneType:
     args.description+='OneType'
+
+if args.ifStrictRelationCardinality:
+    args.description+='StrictRelationCardinality'
 
 
 soft_loss = SoftTypeawareNegativeSmapling(

@@ -2,7 +2,7 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2022-12-22 12:02:34
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-07-07 12:58:53
+LastEditTime: 2023-07-25 16:07:56
 FilePath: /ESETC/code/utilities.py
 Description: 
 
@@ -98,7 +98,7 @@ def get_white_list_relation(dataset, type_position = 0):
 
         return white_list_rel, rel_need              
 
-def readTypeData(data_name, data_pro_func, create_inverse_triples=False, type_position=0, hasNoneType=False, type_smoothing=0.0, use_random_weights = False, select_one_type=False):
+def readTypeData(data_name, data_pro_func, create_inverse_triples=False, type_position=0, hasNoneType=False, type_smoothing=0.0, use_random_weights = False, select_one_type=False, strict_confidence = False):
         """
         @Params: data_name, data_pro_func, create_inverse_triples, type_position
         @Return: Train, Test, Valid
@@ -117,7 +117,7 @@ def readTypeData(data_name, data_pro_func, create_inverse_triples=False, type_po
             create_inverse_triples=create_inverse_triples,)
 
         training_triples, training_type_triples, _, _ = data_pro_func(training, type_position=type_position)
-        training_data = TriplesTypesFactory.from_labeled_triples(triples=training_triples, type_triples=training_type_triples, type_position=type_position, create_inverse_triples=create_inverse_triples, type_smoothing=type_smoothing, use_random_weights=use_random_weights, select_one_type=select_one_type)
+        training_data = TriplesTypesFactory.from_labeled_triples(triples=training_triples, type_triples=training_type_triples, type_position=type_position, create_inverse_triples=create_inverse_triples, type_smoothing=type_smoothing, use_random_weights=use_random_weights, select_one_type=select_one_type, strict_confidence=strict_confidence)
 
         validation = TriplesFactory.from_path(
             valid_path, 
@@ -165,14 +165,14 @@ def splitTypeData(data:TriplesFactory, type_position = 0):
         unlike_type_rel, like_type_rel = get_white_list_relation(data, type_position=type_position)
         return data.label_triples(data.new_with_restriction(relations=unlike_type_rel).mapped_triples), data.label_triples(data.new_with_restriction(relations=like_type_rel).mapped_triples), unlike_type_rel, like_type_rel
 
-def load_dataset(dataset, ifTypeAsTrain = False, IfUseTypeLike = False, CreateInverseTriples = False, ifHasNoneType = False, type_smoothing = 0.0, use_random_weights = False, select_one_type = False):
+def load_dataset(dataset, ifTypeAsTrain = False, IfUseTypeLike = False, CreateInverseTriples = False, ifHasNoneType = False, type_smoothing = 0.0, use_random_weights = False, select_one_type = False, strict_confidence = False):
         if ifTypeAsTrain:
                 training_data, validation, testing = readTypeAsTrainData(dataset,create_inverse_triples=CreateInverseTriples)
         else:
                 if dataset == 'fb15k-237-type':
-                        training_data, validation, testing = readTypeData(dataset, data_pro_func=splitTypeData, type_position=HEAD, create_inverse_triples=CreateInverseTriples, hasNoneType=ifHasNoneType, type_smoothing=type_smoothing, use_random_weights=use_random_weights, select_one_type=select_one_type)
+                        training_data, validation, testing = readTypeData(dataset, data_pro_func=splitTypeData, type_position=HEAD, create_inverse_triples=CreateInverseTriples, hasNoneType=ifHasNoneType, type_smoothing=type_smoothing, use_random_weights=use_random_weights, select_one_type=select_one_type, strict_confidence=strict_confidence)
                 elif 'CAKE' in dataset or 'yago5k' in dataset:
-                        training_data, validation, testing = readTypeData(dataset, data_pro_func=splitTypeData, type_position=TAIL, create_inverse_triples=CreateInverseTriples, hasNoneType=ifHasNoneType, type_smoothing=type_smoothing, use_random_weights=use_random_weights, select_one_type=select_one_type)
+                        training_data, validation, testing = readTypeData(dataset, data_pro_func=splitTypeData, type_position=TAIL, create_inverse_triples=CreateInverseTriples, hasNoneType=ifHasNoneType, type_smoothing=type_smoothing, use_random_weights=use_random_weights, select_one_type=select_one_type, strict_confidence=strict_confidence)
                 else:
                         # 这里是之前考虑的从原数据集中分离出一些比较像type的关系。
                         if dataset == 'FB15k237':
