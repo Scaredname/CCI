@@ -124,8 +124,8 @@ from pykeen.models import ComplEx, DistMultLiteral, RotatE, TransE
 from pykeen.nn.init import xavier_uniform_
 from pykeen.nn.modules import RotatEInteraction, TransEInteraction
 
-if args.model_index in [41, 42, 51, 52] and args.description == 'final':
-    args.description = 'STNS-'
+# if args.model_index in [41, 42, 51, 52] and args.description == 'final':
+#     args.description = 'STNS-'
 
 if args.IfUsePreTrainTypeEmb:
     args.description+='PreTrainTypeEmb'
