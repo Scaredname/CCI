@@ -4,9 +4,10 @@ import datetime
 import json
 import os
 
+from pykeen.constants import PYKEEN_CHECKPOINTS
+
 from Custom.CustomSampler import TypeNegativeSampler
 from Custom.CustomTrain import TypeSLCWATrainingLoop
-from pykeen.constants import PYKEEN_CHECKPOINTS
 from utilities import load_dataset
 
 parser = argparse.ArgumentParser()
@@ -22,6 +23,7 @@ parser.add_argument('-mw', '--modulus_weight', type=float, default=1.0)
 parser.add_argument('-pw', '--phase_weight', type=float, default=1.0)
 parser.add_argument('-b', '--batch_size', type=int, default=256)
 parser.add_argument('-e', '--epochs', type=int, default=1000)
+parser.add_argument('-esf', '--early_stop_frequency', type=int, default=50)
 parser.add_argument('-train', '--training_loop', type=str, default='lcwa')
 parser.add_argument('-neg', '--negative_sampler', type=str, default=None)
 parser.add_argument('-nen', '--num_negs_per_pos', type=int, default=None)
@@ -64,7 +66,7 @@ if args.ifTestEarlyStop:
 elif args.ifSearchHyperParameters:
     frequency = 5
 else:
-    frequency = 50
+    frequency = args.early_stop_frequency
 
 
 training_setting = dict(
@@ -106,6 +108,12 @@ training_data, validation, testing = load_dataset(dataset=dataset, IfUseTypeLike
 
 
 import torch
+# Pick a model
+# from Custom.CustomModel import EETCRLwithRotate
+from pykeen.models import ComplEx, DistMultLiteral, RotatE, TransE
+from pykeen.nn.init import xavier_uniform_
+from pykeen.nn.modules import RotatEInteraction, TransEInteraction
+
 from Custom.CustomLoss import SoftTypeawareNegativeSmapling
 from Custom.HAKE import HAKEModel
 from Custom.OriginRotatE import FloatRotatE
@@ -118,11 +126,6 @@ from Custom.TypeModels.ESETCwithRotate import ESETCwithRotate, ESETCwithTransE
 from Custom.TypeModels.ESETCwithTuckER import ESETCwithTuckER
 from Custom.TypeModels.no_name import NNYwithRotatE, NNYwithTransE
 from Custom.TypeModels.RSETC import RSETCwithTransE
-# Pick a model
-# from Custom.CustomModel import EETCRLwithRotate
-from pykeen.models import ComplEx, DistMultLiteral, RotatE, TransE
-from pykeen.nn.init import xavier_uniform_
-from pykeen.nn.modules import RotatEInteraction, TransEInteraction
 
 # if args.model_index in [41, 42, 51, 52] and args.description == 'final':
 #     args.description = 'STNS-'
