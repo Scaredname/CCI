@@ -24,6 +24,7 @@ parser.add_argument('-pw', '--phase_weight', type=float, default=1.0)
 parser.add_argument('-b', '--batch_size', type=int, default=256)
 parser.add_argument('-e', '--epochs', type=int, default=1000)
 parser.add_argument('-esf', '--early_stop_frequency', type=int, default=50)
+parser.add_argument('-esp', '--early_stop_patience', type=int, default=3)
 parser.add_argument('-train', '--training_loop', type=str, default='lcwa')
 parser.add_argument('-neg', '--negative_sampler', type=str, default=None)
 parser.add_argument('-nen', '--num_negs_per_pos', type=int, default=None)
@@ -94,7 +95,7 @@ pipeline_config = dict(
     stopper=args.stopper,
     stopper_kwargs=dict(
         frequency=frequency,
-        patience=3,
+        patience=args.early_stop_patience,
         relative_delta=0.0001,
         metric='mean_reciprocal_rank',
         evaluation_batch_size=args.evaluator_batch_size,
