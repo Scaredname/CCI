@@ -2,8 +2,8 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2023-02-10 13:37:11
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-07-25 15:38:05
-FilePath: /ESETC/code/tryVisualization.py
+LastEditTime: 2023-07-30 16:56:03
+FilePath: /code/tryVisualization.py
 Description: 输出对于特定实体的类型权重，以及对于特定关系的类型权重
 
 Copyright (c) 2023 by Ni Runyu ni-runyu@ed.tmu.ac.jp, All Rights Reserved. 
@@ -21,12 +21,13 @@ import pandas as pd
 import pykeen
 import seaborn as sns
 import torch
-from Custom.CustomTripleFactory import TriplesTypesFactory
 from matplotlib import cm
 from pykeen.datasets import YAGO310, FB15k237
 from pykeen.datasets import analysis as data_analysis
 from pykeen.evaluation import RankBasedEvaluator
 from pykeen.triples import TriplesFactory
+
+from Custom.CustomTripleFactory import TriplesTypesFactory
 from utilities import load_dataset
 
 HEAD = 0
@@ -128,7 +129,7 @@ if __name__ == '__main__':
     model_path = os.path.join('../models/', dataset, de, m_name, date)
     model = torch.load(model_path+'/trained_model.pkl')
 
-    training_data, validation, testing = load_dataset(dataset)
+    training_data, validation, testing = load_dataset(dataset, strict_confidence=True)
 
     if args.IfUseTypeLike:
         dataset = dataset + '-TypeLike'
@@ -150,7 +151,7 @@ if __name__ == '__main__':
     heatmap_after_save_path_rel_h = os.path.join(vis_path, 'rel_type_weight_afterTraining_h')
     heatmap_after_save_path_rel_t = os.path.join(vis_path, 'rel_type_weight_afterTraining_t')
 
-    rel_types_h_after_training = model.rel_type_h_weights[0]._embeddings.weight.data.cpu().numpy()
+    rel_types_h_after_training = torch.nn.functional.normalize(model.rel_type_h_weights[0]._embeddings.weight.data, p=1, dim=1).cpu().numpy()
     rel_types_t_after_training = model.rel_type_t_weights[0]._embeddings.weight.data.cpu().numpy()
 
     draw_heatmap(rel_types_h_after_training, 'relation head type weight after training', heatmap_after_save_path_rel_h)
@@ -159,11 +160,43 @@ if __name__ == '__main__':
     rel_label = ['hasWonPrize', 'diedIn']
     for rel in rel_label:
         example_id = training_data.relation_to_id[rel]
+        
+
+        print(f'{rel}_h_before: ', training_data.rels_types[0][example_id])
+        print(f'{rel}_h_after: ', rel_types_h_after_training[example_id] / np.linalg.norm(rel_types_h_after_training[example_id], ord=1))
+
+        norm_rel_types_h_after_training = rel_types_h_after_training[example_id] / np.linalg.norm(rel_types_h_after_training[example_id], ord=1)
+        norm_rel_types_t_after_training = rel_types_t_after_training[example_id] / np.linalg.norm(rel_types_t_after_training[example_id], ord=1)
+
+        types = ['person', 'artist', 'award', 'election']
+        for t in types:
+            typeid = training_data.types_to_id[t]
+            print(f'{t}: ')
+            print(f'{rel}_h_before: ', training_data.rels_types[0][example_id][typeid])
+            print(f'{rel}_h_after: ', norm_rel_types_h_after_training[typeid])
+            print(f'{rel}_t_before: ', training_data.rels_types[1][example_id][typeid])
+            print(f'{rel}_t_after: ', norm_rel_types_t_after_training[typeid])
+
+
+            
+
+        sub_result = training_data.rels_types[0][example_id].cpu().numpy() - rel_types_h_after_training[example_id] /np.linalg.norm(rel_types_h_after_training[example_id], ord=1)
+        indices = (training_data.rels_types[0][example_id] > 0)
+        print(training_data.rels_types[0][example_id][indices])
+        print(rel_types_h_after_training[example_id][indices])
+
+
+        breakpoint()
         print('before training-------------------------------------------')
         print('rel: ', rel , 'injective confidence: ', training_data.rels_inj_conf[example_id])
         find_k_relevant_type(training_data.rels_types, example_id, training_data.relation_to_id, training_data.types_to_id, path=vis_path, mode='rel', de=de, k=5, flag='before')
         print('after training--------------------------------------------')
         find_k_relevant_type(np.array([rel_types_h_after_training, rel_types_t_after_training]), example_id, training_data.relation_to_id, training_data.types_to_id, path=vis_path, mode='rel', de=de, k=5, flag='after')
+
+    ent_label = ['Henry_Mancini']
+    for ent in ent_label:
+        e_id = training_data.entity_to_id[ent]
+        print(f'{ent}: ', training_data.ents_types[e_id])
 
 
 
@@ -179,4 +212,4 @@ if __name__ == '__main__':
         # ents_types = model.ents_types.data.cpu().numpy()
         # draw_heatmap(ents_types, 'entity type weight after training', os.path.join(model_path, 'ent_type_weight_afterTraining'))
 
-        # find_k_relevant_type(ents_types, example_id, training_data.entity_to_id, training_data.types_to_id, mode='ent', flag='after', de=de, k=5)
+        # find_k_relevant_type(ents_types, example_id, training_data.entity_to_id, training_data.types_to_id, mode='ent', flag='after', de=de, k=5) 
