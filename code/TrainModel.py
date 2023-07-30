@@ -131,6 +131,9 @@ from Custom.TypeModels.RSETC import RSETCwithTransE
 # if args.model_index in [41, 42, 51, 52] and args.description == 'final':
 #     args.description = 'STNS-'
 
+if args.epochs == 1000:
+    args.description += '1000'
+
 if args.IfUsePreTrainTypeEmb:
     args.description+='PreTrainTypeEmb'
 
