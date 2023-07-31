@@ -672,7 +672,7 @@ if args.training_loop != 'lcwa':
 if args.IfUsePreTrainTypeEmb:
     pipeline_result.configuration['pre_trained_type_name'] = args.IfUsePreTrainTypeEmb
 
-if args.model_index in [51, 52]:
+if args.model_index in [51, 52, 61, 62]:
     pipeline_result.configuration['type_score_weight'] = args.type_score_weight
 
 pipeline_result.configuration['type_weight_temperature'] = args.type_weight_temperature
