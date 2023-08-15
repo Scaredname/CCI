@@ -4,10 +4,9 @@ import datetime
 import json
 import os
 
-from pykeen.constants import PYKEEN_CHECKPOINTS
-
 from Custom.CustomSampler import TypeNegativeSampler
 from Custom.CustomTrain import TypeSLCWATrainingLoop
+from pykeen.constants import PYKEEN_CHECKPOINTS
 from utilities import load_dataset
 
 parser = argparse.ArgumentParser()
@@ -38,7 +37,7 @@ parser.add_argument('-tsm', '--type_smoothing', type=float, default=0.0)
 parser.add_argument('-pb', '--project_with_bias', action='store_true', default=False)
 parser.add_argument('-drop', '--dropout', type=float, default=0.0)
 
-parser.add_argument('-de', '--description', type=str, default='final')
+parser.add_argument('-de', '--description', type=str, default='final-alldata-cardinality-')
 parser.add_argument('-ch', '--checkpoint', type=str, default=None)
 parser.add_argument('-reverse', '--CreateInverseTriples', action='store_true', default=False)
 parser.add_argument('-t', '--IfUseTypeLike', action='store_true', default=False)
@@ -109,12 +108,6 @@ training_data, validation, testing = load_dataset(dataset=dataset, IfUseTypeLike
 
 
 import torch
-# Pick a model
-# from Custom.CustomModel import EETCRLwithRotate
-from pykeen.models import ComplEx, DistMultLiteral, RotatE, TransE
-from pykeen.nn.init import xavier_uniform_
-from pykeen.nn.modules import RotatEInteraction, TransEInteraction
-
 from Custom.CustomLoss import SoftTypeawareNegativeSmapling
 from Custom.HAKE import HAKEModel
 from Custom.OriginRotatE import FloatRotatE
@@ -127,6 +120,11 @@ from Custom.TypeModels.ESETCwithRotate import ESETCwithRotate, ESETCwithTransE
 from Custom.TypeModels.ESETCwithTuckER import ESETCwithTuckER
 from Custom.TypeModels.no_name import NNYwithRotatE, NNYwithTransE
 from Custom.TypeModels.RSETC import RSETCwithTransE
+# Pick a model
+# from Custom.CustomModel import EETCRLwithRotate
+from pykeen.models import ComplEx, DistMultLiteral, RotatE, TransE
+from pykeen.nn.init import xavier_uniform_
+from pykeen.nn.modules import RotatEInteraction, TransEInteraction
 
 # if args.model_index in [41, 42, 51, 52] and args.description == 'final':
 #     args.description = 'STNS-'

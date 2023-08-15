@@ -2,7 +2,7 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2022-12-22 12:02:34
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-07-25 16:07:56
+LastEditTime: 2023-08-15 16:09:54
 FilePath: /ESETC/code/utilities.py
 Description: 
 
@@ -11,6 +11,7 @@ Copyright (c) 2023 by Ni Runyu ni-runyu@ed.tmu.ac.jp, All Rights Reserved.
 import os
 from collections import defaultdict
 
+import torch
 from Custom.CustomTripleFactory import TriplesTypesFactory
 from pykeen.datasets import YAGO310, FB15k237, Nations, get_dataset
 from pykeen.triples import TriplesFactory, TriplesNumericLiteralsFactory
@@ -129,6 +130,11 @@ def readTypeData(data_name, data_pro_func, create_inverse_triples=False, type_po
                 entity_to_id=training_data.entity_to_id, 
                 relation_to_id=training_data.relation_to_id,
                 create_inverse_triples=create_inverse_triples,)
+        
+        
+        all_triples = torch.cat([training_data.mapped_triples, validation.mapped_triples, testing.mapped_triples], dim=0)
+
+        training_data.calculate_injective_confidence(all_triples, stricit=strict_confidence)
 
         return training_data, validation, testing
 
