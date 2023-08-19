@@ -308,7 +308,7 @@ class TriplesTypesFactory(TriplesFactory):
             rel_related_ent = rel_related_ent
         )
     
-    def calculate_injective_confidence(self, mapped_triples, stricit = False):
+    def class_calculate_injective_confidence(self, mapped_triples, stricit = False):
         # 这里额外用一个函数来方便我们使用所有数据来判断cardinality.
         self.rels_inj_conf = create_relation_injective_confidence(mapped_triples)
         if stricit:
