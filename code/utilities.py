@@ -2,8 +2,8 @@
 Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
 Date: 2022-12-22 12:02:34
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-08-19 15:03:34
-FilePath: /undefined/home/ni/code/ESETC/code/utilities.py
+LastEditTime: 2023-08-20 14:26:17
+FilePath: /ESETC/code/utilities.py
 Description: 
 
 Copyright (c) 2023 by Ni Runyu ni-runyu@ed.tmu.ac.jp, All Rights Reserved. 
@@ -104,14 +104,15 @@ def readTypeData(data_name, data_pro_func, create_inverse_triples=False, type_po
         @Params: data_name, data_pro_func, create_inverse_triples, type_position
         @Return: Train, Test, Valid
         """
+        data_path = '/home/ni/code/ESETC/data/'
         if 'CAKE' in data_name:
                 data_name = 'data_concept/' + data_name.replace('CAKE-', '')
 
-        train_path = os.path.join('../data/%s/'%(data_name), 'train_type.txt')
+        train_path = os.path.join(data_path, '%s/'%(data_name), 'train_type.txt')
         if hasNoneType:
-                train_path = os.path.join('../data/%s/'%(data_name), 'train_type_a.txt')
-        valid_path = os.path.join('../data/%s/'%(data_name), 'valid.txt') 
-        test_path = os.path.join('../data/%s/'%(data_name), 'test.txt')
+                train_path = os.path.join(data_path, '%s/'%(data_name), 'train_type_a.txt')
+        valid_path = os.path.join(data_path, '%s/'%(data_name), 'valid.txt') 
+        test_path = os.path.join(data_path, '%s/'%(data_name), 'test.txt')
 
         training = TriplesFactory.from_path(
             train_path,
@@ -135,7 +136,7 @@ def readTypeData(data_name, data_pro_func, create_inverse_triples=False, type_po
         all_triples = torch.cat([training_data.mapped_triples, validation.mapped_triples, testing.mapped_triples], dim=0)
 
         # 使用所有数据来判断injective confidence
-        training_data.class_calculate_injective_confidence(all_triples, stricit=strict_confidence)
+        # training_data.class_calculate_injective_confidence(all_triples, stricit=strict_confidence)
 
         return training_data, validation, testing
 
