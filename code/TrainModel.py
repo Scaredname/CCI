@@ -37,7 +37,7 @@ parser.add_argument('-tsm', '--type_smoothing', type=float, default=0.0)
 parser.add_argument('-pb', '--project_with_bias', action='store_true', default=False)
 parser.add_argument('-drop', '--dropout', type=float, default=0.0)
 
-parser.add_argument('-de', '--description', type=str, default='final-alldata-cardinality-')
+parser.add_argument('-de', '--description', type=str, default='finalV2-all-')
 parser.add_argument('-ch', '--checkpoint', type=str, default=None)
 parser.add_argument('-reverse', '--CreateInverseTriples', action='store_true', default=False)
 parser.add_argument('-t', '--IfUseTypeLike', action='store_true', default=False)
@@ -114,12 +114,16 @@ from Custom.OriginRotatE import FloatRotatE
 from Custom.TypeModels.ablation_model import AMwithRotatE, AMwithTransE
 from Custom.TypeModels.CatESETC import CatESETCwithRotate, CatESETCwithTransE
 from Custom.TypeModels.CatRSETC import CatRSETCwithRotate, CatRSETCwithTransE
-from Custom.TypeModels.ESETCwithComplEx import (DistMult, ESETCwithComplEx,
-                                                ESETCwithDistMult)
+from Custom.TypeModels.ESETCwithComplEx import (
+    DistMult,
+    ESETCwithComplEx,
+    ESETCwithDistMult,
+)
 from Custom.TypeModels.ESETCwithRotate import ESETCwithRotate, ESETCwithTransE
 from Custom.TypeModels.ESETCwithTuckER import ESETCwithTuckER
 from Custom.TypeModels.no_name import NNYwithRotatE, NNYwithTransE
 from Custom.TypeModels.RSETC import RSETCwithTransE
+
 # Pick a model
 # from Custom.CustomModel import EETCRLwithRotate
 from pykeen.models import ComplEx, DistMultLiteral, RotatE, TransE

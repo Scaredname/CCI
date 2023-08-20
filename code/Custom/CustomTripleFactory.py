@@ -1,3 +1,13 @@
+'''
+Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
+Date: 2023-07-28 17:05:45
+LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
+LastEditTime: 2023-08-20 14:05:54
+FilePath: /ESETC/code/Custom/CustomTripleFactory.py
+Description: 
+
+Copyright (c) 2023 by ${git_name_email}, All Rights Reserved. 
+'''
 import logging
 import pathlib
 from typing import (Any, ClassVar, Collection, Dict, Iterable, Mapping,
@@ -16,13 +26,33 @@ from pykeen.typing import (COLUMN_HEAD, COLUMN_RELATION, COLUMN_TAIL,
 
 logger = logging.getLogger(__name__)
 
+def maximum_reciprocal(
+    df: pd.DataFrame,
+    source: str,
+    target: str,
+) -> Tuple[int, float]:
+    '''
+    description: 
+        calculate the reciprocal of maximum of target per source
+    param df:
+        The dataframe.
+    param source:
+        The source column.
+    param target:
+        The target column.
+    return {*}
+    '''
+    grouped = df.groupby(by=source)
+    n_unique = grouped.agg({target: "nunique"})[target]  
+    return (1 / n_unique.max() ** 3)  
+
 def calculate_injective_confidence(
     df: pd.DataFrame,
     source: str,
     target: str,
 ) -> Tuple[int, float]:
     """
-    Calcualte the confidence of wheter there is an injective mapping from source to target.
+    Calcualte the confidence of wheter there is injective mapping from source to target.
 
     :param df:
         The dataframe.
@@ -98,7 +128,39 @@ def create_relation_injective_confidence(mapped_triples: Collection[Tuple[int, i
     injective_confidence = list()
     df = pd.DataFrame(data=mapped_triples, columns=COLUMN_LABELS)
     for relation, group in df.groupby(by=LABEL_RELATION):
-        injective_confidence.append((calculate_injective_confidence(df=group, source=LABEL_TAIL, target=LABEL_HEAD), calculate_injective_confidence(df=group, source=LABEL_HEAD, target=LABEL_TAIL)))
+        
+        h_IJC = calculate_injective_confidence(
+            df=group, 
+            source=LABEL_TAIL, 
+            target=LABEL_HEAD
+            )
+        t_IJC = calculate_injective_confidence(
+            df=group, 
+            source=LABEL_HEAD, 
+            target=LABEL_TAIL
+            )
+        
+        h_RMT = maximum_reciprocal(
+            df=group, 
+            source=LABEL_TAIL, 
+            target=LABEL_HEAD
+            )
+        t_RMT = maximum_reciprocal(
+            df=group, 
+            source=LABEL_HEAD, 
+            target=LABEL_TAIL
+            )
+        
+        if h_IJC > (1- h_RMT):
+            h_confi = h_IJC
+        else:
+            h_confi = min(h_IJC, h_RMT)
+        if t_IJC > (1- t_RMT):
+            t_confi = t_IJC
+        else:
+            t_confi = min(t_IJC, t_RMT)
+         
+        injective_confidence.append((h_confi, t_confi))
 
     return np.array(injective_confidence)
         
