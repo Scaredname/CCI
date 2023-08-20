@@ -12,10 +12,9 @@ import os
 from collections import defaultdict
 
 import torch
+from Custom.CustomTripleFactory import TriplesTypesFactory
 from pykeen.datasets import YAGO310, FB15k237
 from pykeen.triples import TriplesFactory
-
-from Custom.CustomTripleFactory import TriplesTypesFactory
 
 HEAD = 0
 TAIL = 2
@@ -124,7 +123,7 @@ def readTypeData(
     @Params: data_name, data_pro_func, create_inverse_triples, type_position
     @Return: Train, Test, Valid
     """
-    data_path = os.environ.get("HOME") + "code/ESETC/data/"
+    data_path = os.environ.get("HOME") + "/code/ESETC/data/"
     if "CAKE" in data_name:
         data_name = "data_concept/" + data_name.replace("CAKE-", "")
 
