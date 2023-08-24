@@ -28,6 +28,7 @@ parser.add_argument(
     default="fb15k-237-type",
 )
 parser.add_argument("-o", "--optimizer", type=str, default="adam")
+parser.add_argument("-cpu", "--num_workers", type=int, default=1)
 parser.add_argument("-lr", "--learning_rate", type=float, default=0.001)
 parser.add_argument("-lm", "--loss_margin", type=float, default=9.0)
 parser.add_argument("-at", "--adversarial_temperature", type=float, default=1.0)
@@ -138,12 +139,14 @@ elif args.ifSearchHyperParameters:
 else:
     frequency = args.early_stop_frequency
 
+print("----------------------------max cpu workers: ", os.cpu_count())
+print("----------------------------used cpu workers: ", args.num_workers)
 
 training_setting = dict(
     num_epochs=args.epochs,
     batch_size=args.batch_size,
     checkpoint_on_failure=True,
-    num_workers=os.cpu_count(),
+    num_workers=args.num_workers,
 )
 
 pipeline_config = dict(
