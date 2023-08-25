@@ -72,24 +72,44 @@ for file_name in os.listdir(result_path):
 
                     if "stopper" in results:
                         results_dict["valid-mrr"].append(
-                            results["stopper"]["best_metric"]
+                            round(
+                                float(
+                                    results["stopper"]["best_metric"]
+                                    ), 3)
                         )
                     else:
                         results_dict["valid-mrr"].append("-")
 
                     results_dict["test-mrr"].append(
-                        results["metrics"]["both"]["realistic"][
+
+                        round(
+                                float(
+                                    results["metrics"]["both"]["realistic"][
                             "inverse_harmonic_mean_rank"
                         ]
+                                    ), 
+                                    3)
+                        
                     )
                     results_dict["hits@1"].append(
-                        results["metrics"]["both"]["realistic"]["hits_at_1"]
+                        round(
+                                float(
+                                    results["metrics"]["both"]["realistic"]["hits_at_1"]
+                                    ), 3)
+                        
                     )
                     results_dict["hits@3"].append(
-                        results["metrics"]["both"]["realistic"]["hits_at_3"]
+                        round(
+                                float(
+                                    results["metrics"]["both"]["realistic"]["hits_at_3"]
+                                    ), 3)
+                        
                     )
                     results_dict["hits@10"].append(
-                        results["metrics"]["both"]["realistic"]["hits_at_10"]
+                        round(
+                                float(
+                                    results["metrics"]["both"]["realistic"]["hits_at_10"]
+                                    ), 3)
                     )
 
                     results_dict["learning-rate"].append(
