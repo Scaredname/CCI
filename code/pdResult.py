@@ -185,12 +185,12 @@ for file_name in os.listdir(result_path):
                     )
                     results_dict["train-loop"].append(config["training_loop"])
                     results_dict["optimizer"].append(config["optimizer"])
-                    if "SLCWATrainingLoop" == config["training_loop"]:
-                        results_dict["negative_sampler"].append(
-                            config["negative_sampler"]
-                        )
-                    else:
-                        results_dict["negative_sampler"].append("-")
+                    # if "SLCWATrainingLoop" == config["training_loop"]:
+                    #     results_dict["negative_sampler"].append(
+                    #         config["negative_sampler"]
+                    #     )
+                    # else:
+                    #     results_dict["negative_sampler"].append("-")
                     if "PreTrain" in file_name:
                         if "pre_trained_type_name" in config:
                             results_dict["pre_trained_type_name"].append(
