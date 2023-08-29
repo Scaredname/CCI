@@ -396,9 +396,9 @@ class TriplesTypesFactory(TriplesFactory):
         relation_injective_confidence, see_confindence = create_relation_injective_confidence(base.mapped_triples)
 
         
-        see_confindence.insert(see_confindence.shape[1], 'r', list(base.relation_to_id.keys()))
         # 为了展示使用的数据
-        see_confindence.to_csv('/home/ni/confi_examples.csv', index = False)
+        # see_confindence.insert(see_confindence.shape[1], 'r', list(base.relation_to_id.keys()))
+        # see_confindence.to_csv('/home/ni/confi_examples.csv', index = False)
 
         if strict_confidence:
             relation_injective_confidence[relation_injective_confidence < 1] = 0
