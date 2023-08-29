@@ -78,7 +78,7 @@ for file_name in os.listdir(result_path):
                                     ), 3)
                         )
                     else:
-                        results_dict["valid-mrr"].append("-")
+                        results_dict["valid-mrr"].append(0)
 
                     results_dict["test-mrr"].append(
 
@@ -129,27 +129,27 @@ for file_name in os.listdir(result_path):
                             int(model_dims[2].split(",")[1].strip())
                         )
                     except:
-                        results_dict["type-dim"].append("-")
+                        results_dict["type-dim"].append(-1)
 
                     if "num_negs_per_pos" in config:
                         results_dict["num_negs_per_pos"].append(
                             config["num_negs_per_pos"]
                         )
                     else:
-                        results_dict["num_negs_per_pos"].append("-")
+                        results_dict["num_negs_per_pos"].append(-1)
 
                     results_dict["batch-size"].append(config["batch_size"])
                     if "type_smoothing" in config:
                         results_dict["type-smoothing"].append(config["type_smoothing"])
                     else:
-                        results_dict["type-smoothing"].append("-")
+                        results_dict["type-smoothing"].append(-1)
                     if "margin" in config["loss_kwargs"]:
                         margin = re.search(
                             r"'margin':\s*([\d\.]+)", config["loss_kwargs"]
                         ).group(1)
                         results_dict["margin"].append(margin)
                     else:
-                        results_dict["margin"].append("-")
+                        results_dict["margin"].append(-1)
 
                     # {'training': False, '_parameters': OrderedDict(), '_buffers': OrderedDict(), '_non_persistent_buffers_set': set(), '_backward_pre_hooks': OrderedDict(), '_backward_hooks': OrderedDict(), '_is_full_backward_hook': None, '_forward_hooks': OrderedDict(), '_forward_hooks_with_kwargs': OrderedDict(), '_forward_pre_hooks': OrderedDict(), '_forward_pre_hooks_with_kwargs': OrderedDict(), '_state_dict_hooks': OrderedDict(), '_state_dict_pre_hooks': OrderedDict(), '_load_state_dict_pre_hooks': OrderedDict(), '_load_state_dict_post_hooks': OrderedDict(), '_modules': OrderedDict(), 'reduction': 'mean', '_reduction_method': <built-in method mean of type object at 0x7f2261842540>, 'inverse_softmax_temperature': 1.0, 'factor': 0.5, 'margin': 8.0}
                     if "ETC" in model_name or "NNY" in model_name:
@@ -160,7 +160,7 @@ for file_name in os.listdir(result_path):
                         else:
                             results_dict["type_weight_temperature"].append(str(1.0))
                     else:
-                        results_dict["type_weight_temperature"].append("-")
+                        results_dict["type_weight_temperature"].append(-1)
                     if "inverse_softmax_temperature" in config["loss_kwargs"]:
                         adversarial_temperature = re.search(
                             r"'inverse_softmax_temperature':\s*([\d\.]+)",
@@ -170,13 +170,13 @@ for file_name in os.listdir(result_path):
                             adversarial_temperature
                         )
                     else:
-                        results_dict["adversarial-temperature"].append("-")
+                        results_dict["adversarial-temperature"].append(-1)
                     if "type_score_weight" in config:
                         results_dict["type_score_weight"].append(
                             config["type_score_weight"]
                         )
                     else:
-                        results_dict["type_score_weight"].append("-")
+                        results_dict["type_score_weight"].append(-1)
 
                     results_dict["description"].append(file_name)
                     results_dict["dataset"].append(dataset)
