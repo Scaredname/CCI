@@ -24,12 +24,15 @@ from pykeen.typing import (COLUMN_HEAD, COLUMN_RELATION, COLUMN_TAIL,
                            EntityMapping, LabeledTriples, MappedTriples,
                            RelationMapping)
 
+from collections import defaultdict
+
 logger = logging.getLogger(__name__)
 
 def maximum_reciprocal(
     df: pd.DataFrame,
     source: str,
     target: str,
+    mu: int = 3, 
 ) -> Tuple[int, float]:
     '''
     description: 
@@ -44,7 +47,28 @@ def maximum_reciprocal(
     '''
     grouped = df.groupby(by=source)
     n_unique = grouped.agg({target: "nunique"})[target]  
-    return (1 / n_unique.max() ** 3)  
+    return (1 / n_unique.max() ** mu)
+
+def average_target(
+    df: pd.DataFrame,
+    source: str,
+    target: str,
+    mu: int = 3, 
+) -> Tuple[int, float]:
+    '''
+    description: 
+        calculate the reciprocal of maximum of target per source
+    param df:
+        The dataframe.
+    param source:
+        The source column.
+    param target:
+        The target column.
+    return {*}
+    '''
+    grouped = df.groupby(by=source)
+    n_unique = grouped.agg({target: "nunique"})[target]  
+    return (n_unique.mean())    
 
 def calculate_injective_confidence(
     df: pd.DataFrame,
@@ -127,6 +151,7 @@ def create_relation_injective_confidence(mapped_triples: Collection[Tuple[int, i
     '''
     injective_confidence = list()
     df = pd.DataFrame(data=mapped_triples, columns=COLUMN_LABELS)
+    see_df = defaultdict(list)
     for relation, group in df.groupby(by=LABEL_RELATION):
         
         h_IJC = calculate_injective_confidence(
@@ -150,6 +175,16 @@ def create_relation_injective_confidence(mapped_triples: Collection[Tuple[int, i
             source=LABEL_HEAD, 
             target=LABEL_TAIL
             )
+        h_AT = average_target(
+            df=group, 
+            source=LABEL_TAIL, 
+            target=LABEL_HEAD
+        )
+        t_AT = average_target(
+            df=group, 
+            source=LABEL_HEAD, 
+            target=LABEL_TAIL
+        )
         
         if h_IJC > (1- h_RMT):
             h_confi = h_IJC
@@ -161,8 +196,15 @@ def create_relation_injective_confidence(mapped_triples: Collection[Tuple[int, i
             t_confi = min(t_IJC, t_RMT)
          
         injective_confidence.append((h_confi, t_confi))
+        see_df['h_IJC'].append(h_IJC)
+        see_df['h_AT'].append(h_AT)
+        see_df['h_confi'].append(h_confi)
+        see_df['t_IJC'].append(t_IJC)
+        see_df['t_AT'].append(t_AT)
+        see_df['t_confi'].append(t_confi)
+    
 
-    return np.array(injective_confidence)
+    return np.array(injective_confidence), pd.DataFrame(see_df)
         
 
 def create_matrix_of_types(
@@ -351,7 +393,13 @@ class TriplesTypesFactory(TriplesFactory):
         rel_related_ent = crate_rel_type_related_ent(ents_types = ents_types, rels_types = rels_types)
 
         
-        relation_injective_confidence = create_relation_injective_confidence(base.mapped_triples)
+        relation_injective_confidence, see_confindence = create_relation_injective_confidence(base.mapped_triples)
+
+        
+        see_confindence.insert(see_confindence.shape[1], 'r', list(base.relation_to_id.keys()))
+        # 为了展示使用的数据
+        see_confindence.to_csv('/home/ni/confi_examples.csv', index = False)
+
         if strict_confidence:
             relation_injective_confidence[relation_injective_confidence < 1] = 0
 
