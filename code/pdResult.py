@@ -178,7 +178,28 @@ for file_name in os.listdir(result_path):
                     else:
                         results_dict["type_score_weight"].append(-1)
 
-                    results_dict["description"].append(file_name)
+                    # 为了方便合并，对description进行分割。
+                    # 当描述的首字母不是大写时，进行分割
+                    # 第一个大写字母之前全部放到tuning列中
+                    # 是大写时，直接放到option中
+                    if not file_name[0].isupper():
+                        split_word = re.findall(r'[A-Z][^A-Z]*', file_name)
+                        if len(split_word):
+                            tuning = file_name.split(split_word[0])[0]
+                            option = split_word[0] + ''.join(file_name.split(split_word[0])[1:])
+                        else:
+                            tuning = file_name
+                            option = '-'
+                    else:
+                        option = file_name
+                        tuning = '-'
+
+                    # print(tuning, option)
+
+                    results_dict['tuning'].append(tuning)
+                    results_dict['option'].append(option)
+                        
+                    # results_dict["description"].append(file_name)
                     results_dict["dataset"].append(dataset)
                     results_dict["model-size"].append(
                         float(config["num_parameter_bytes"][:-2]) * 0.125 * 0.25
