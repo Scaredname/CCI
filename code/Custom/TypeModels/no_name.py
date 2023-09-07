@@ -145,7 +145,7 @@ class NoNameYet(CatRSETC):
         if self.strong_constraint and not self.training:
             self.ents_types_mask = self.ents_types_mask.to(self.device)
             self.rels_types_mask = self.rels_types_mask.to(self.device)
-            # *100确保和其他实体的得分显著区分
+            # *100确保和其他实体的得分显著区分，不同的训练方式下可能需要改变
             constraint_score = 100 * (
                 (
                     self.ents_types_mask[tails]
