@@ -79,11 +79,11 @@ class NoNameYet(CatRSETC):
                     self.ents_types_mask[t_index] * self.rels_types_mask[1][r_index]
                 ).sum(-1)
             )
-        else:
-            constraint_score = 0
+
+            type_score += constraint_score
 
         return (
-            self.interaction.score_hrt(h=h, r=r, t=t) + type_score + constraint_score,
+            self.interaction.score_hrt(h=h, r=r, t=t) + type_score,
             injective_confidence,
             type_rel,
         )
@@ -152,8 +152,8 @@ class NoNameYet(CatRSETC):
                     * self.rels_types_mask[1][hr_batch[..., 1]]
                 ).sum(-1)
             )
-        else:
-            constraint_score = 0
+
+            type_score += constraint_score
 
         # unsqueeze if necessary
         if tails is None or tails.ndimension() == 1:
@@ -164,10 +164,7 @@ class NoNameYet(CatRSETC):
             scores=self.interaction.score(
                 h=h, r=r, t=t, slice_size=slice_size, slice_dim=1
             ).view(-1, self.num_entities)
-            + type_score.view(-1, self.num_entities)
-            + constraint_score.view(
-                -1, self.num_entities
-            ),  # 会出现测试批度为1的特例，所以调整一下score的shape
+            + type_score.view(-1, self.num_entities),  # 会出现测试批度为1的特例，所以调整一下score的shape
             representations=self.entity_representations,
             num=self._get_entity_len(mode=mode) if tails is None else tails.shape[-1],
         )
@@ -236,8 +233,8 @@ class NoNameYet(CatRSETC):
                     * self.rels_types_mask[0][rt_batch[..., 0]]
                 ).sum(-1)
             )
-        else:
-            constraint_score = 0
+
+            type_score += constraint_score
 
         # unsqueeze if necessary
         if heads is None or heads.ndimension() == 1:
@@ -247,10 +244,7 @@ class NoNameYet(CatRSETC):
             scores=self.interaction.score(
                 h=h, r=r, t=t, slice_size=slice_size, slice_dim=1
             ).view(-1, self.num_entities)
-            + type_score.view(-1, self.num_entities)
-            + constraint_score.view(
-                -1, self.num_entities
-            ),  # 会出现测试批度为1的特例，所以调整一下score的shape
+            + type_score.view(-1, self.num_entities),  # 会出现测试批度为1的特例，所以调整一下score的shape
             representations=self.entity_representations,
             num=self._get_entity_len(mode=mode) if heads is None else heads.shape[-1],
         )
