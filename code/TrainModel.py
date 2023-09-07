@@ -225,6 +225,10 @@ from pykeen.nn.modules import RotatEInteraction, TransEInteraction
 if args.epochs == 1000:
     args.description += "1000"
 
+
+if args.strong_constraint:
+    args.description += "StrongConstraint"
+
 if args.IfUsePreTrainTypeEmb:
     args.description += "PreTrainTypeEmb"
 
