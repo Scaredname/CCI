@@ -205,6 +205,66 @@ class NoNameYet(CatRSETC):
         )
 
 
+class MatchModel(NoNameYet):
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+
+    def _get_enttype_representations(
+        self,
+        h: Optional[torch.LongTensor],
+        r_h: Optional[torch.LongTensor],
+        r_t: Optional[torch.LongTensor],
+        t: Optional[torch.LongTensor],
+        *,
+        mode: Optional[InductiveMode],
+    ):
+        """Get representations for head ent type emb and tail ent type emb."""
+
+        assignments = self.triples_factory.assignments.to(self.device)
+        self.rels_types_mask = self.rels_types_mask.to(self.device)
+        # type_emb = self.type_representations[0]._embeddings.weight.to(self.device)
+        type_emb = self.type_representations[0](
+            indices=torch.arange(self.triples_factory.ents_types.shape[1])
+            .long()
+            .to(self.device)
+        )  # 取出所有的type embedding
+
+        # self.rels_types.data = functional.relu(self.rels_types.data)
+        # self.rels_types.data = torch.clamp(self.rels_types.data, min=0) # 因为使用了权重mask,所以需要确保权重始终为正
+
+        # 通过邻接矩阵与类型嵌入矩阵的矩阵乘法可以快速每个实体对应的类型嵌入，如果是多个类型则是多个类型嵌入的加权和，权重为邻接矩阵中的值。如果值都为1则相当于sum操作，为平均值则是mean操作。
+        rels_types_h = self.rel_type_h_weights[0]._embeddings.weight
+        rels_types_t = self.rel_type_t_weights[0]._embeddings.weight
+        ents_types = self.ents_types_weight
+
+        if self.weight_mask:
+            rels_types_h = rels_types_h * self.rels_types_mask[0]
+            rels_types_t = rels_types_t * self.rels_types_mask[1]
+
+        head_type_emb_tensor = torch.matmul(
+            self.activation_function(
+                self.type_weight_temperature * (ents_types[h] * rels_types_h[r_h])
+            ),
+            type_emb,
+        )
+        tail_type_emb_tensor = torch.matmul(
+            self.activation_function(
+                self.type_weight_temperature * (ents_types[t] * rels_types_t[r_t])
+            ),
+            type_emb,
+        )
+
+        h_assignments = assignments[h]
+        t_assignments = assignments[t]
+
+        return (
+            torch.squeeze(head_type_emb_tensor),
+            torch.squeeze(tail_type_emb_tensor),
+            torch.squeeze(h_assignments),
+            torch.squeeze(t_assignments),
+        )
+
+
 class NNYwithTransE(NoNameYet):
     loss_default: ClassVar[Type[Loss]] = NSSALoss
     hpo_default: ClassVar[Mapping[str, Any]] = dict()
@@ -258,6 +318,113 @@ class NNYwithTransE(NoNameYet):
 
 
 class NNYwithRotatE(NoNameYet):
+    loss_default: ClassVar[Type[Loss]] = NSSALoss
+    hpo_default: ClassVar[Mapping[str, Any]] = dict()
+
+    def __init__(
+        self,
+        *,
+        ent_dim: int = 50,
+        rel_dim: int = 50,
+        type_dim: int = 20,
+        entity_initializer: Hint[Initializer] = xavier_uniform_,
+        type_initializer: Hint[Initializer] = xavier_uniform_,
+        relation_initializer: Hint[Initializer] = init_phases,
+        relation_constrainer: Hint[Constrainer] = complex_normalize,
+        regularizer: HintOrType[Regularizer] = None,
+        regularizer_kwargs: OptionalKwargs = None,
+        bias=False,
+        ent_dtype=torch.float,
+        rel_dtype=torch.float,
+        type_dtype=torch.float,
+        dropout=0.3,
+        type_score_weight=1.0,
+        **kwargs,
+    ) -> None:
+        super().__init__(
+            dropout=dropout,
+            bias=bias,
+            ent_dim=ent_dim,
+            rel_dim=rel_dim,
+            type_dim=type_dim,
+            data_type=ent_dtype,
+            type_score_weight=type_score_weight,
+            interaction=RotatEInteraction,
+            entity_representations_kwargs=dict(
+                shape=ent_dim,
+                initializer=entity_initializer,
+                regularizer=regularizer,
+                regularizer_kwargs=regularizer_kwargs,
+                dtype=ent_dtype,
+            ),
+            relation_representations_kwargs=dict(
+                shape=rel_dim,
+                initializer=relation_initializer,
+                constrainer=relation_constrainer,
+                dtype=rel_dtype,
+            ),
+            type_representations_kwargs=dict(
+                shape=type_dim,
+                initializer=type_initializer,
+                dtype=type_dtype,
+            ),
+            **kwargs,
+        )
+
+
+class MMwithTransE(MatchModel):
+    loss_default: ClassVar[Type[Loss]] = NSSALoss
+    hpo_default: ClassVar[Mapping[str, Any]] = dict()
+
+    def __init__(
+        self,
+        *,
+        ent_dim: int = 50,
+        rel_dim: int = 50,
+        type_dim: int = 20,
+        scoring_fct_norm: int = 1,
+        entity_initializer: Hint[Initializer] = xavier_uniform_,
+        entity_constrainer: Hint[Constrainer] = functional.normalize,
+        relation_initializer: Hint[Initializer] = xavier_uniform_norm_,
+        relation_constrainer: Hint[Constrainer] = None,
+        type_initializer: Hint[Initializer] = xavier_uniform_,
+        regularizer: HintOrType[Regularizer] = None,
+        regularizer_kwargs: OptionalKwargs = None,
+        bias=False,
+        dropout=0.3,
+        type_score_weight=1.0,
+        **kwargs,
+    ) -> None:
+        super().__init__(
+            dropout=dropout,
+            bias=bias,
+            ent_dim=ent_dim,
+            rel_dim=rel_dim,
+            type_dim=type_dim,
+            data_type=torch.float,
+            type_score_weight=type_score_weight,
+            interaction=TransEInteraction,
+            interaction_kwargs=dict(p=scoring_fct_norm),
+            entity_representations_kwargs=dict(
+                shape=ent_dim,
+                initializer=entity_initializer,
+                regularizer=regularizer,
+                regularizer_kwargs=regularizer_kwargs,
+            ),
+            relation_representations_kwargs=dict(
+                shape=rel_dim,
+                initializer=relation_initializer,
+                constrainer=relation_constrainer,
+            ),
+            type_representations_kwargs=dict(
+                shape=type_dim,
+                initializer=type_initializer,
+            ),
+            **kwargs,
+        )
+
+
+class MMwithRotatE(MatchModel):
     loss_default: ClassVar[Type[Loss]] = NSSALoss
     hpo_default: ClassVar[Mapping[str, Any]] = dict()
 
