@@ -51,6 +51,7 @@ parser.add_argument("-mtd", "--model_type_dim", type=int, default=100)
 parser.add_argument("-tsm", "--type_smoothing", type=float, default=0.0)
 
 parser.add_argument("-pb", "--project_with_bias", action="store_true", default=False)
+parser.add_argument("-sc", "--strong_constraint", action="store_true", default=False)
 parser.add_argument("-drop", "--dropout", type=float, default=0.0)
 
 parser.add_argument("-de", "--description", type=str, default="finalV2-all-")
@@ -616,6 +617,7 @@ elif args.model_index == 51:
         freeze_matrix=args.ifFreezeWeights,
         freeze_type_emb=args.ifFreezeTypeEmb,
         add_ent_type=not args.ifNotAddEntType,
+        strong_constraint=args.strong_constraint,
         loss=soft_loss,
         usepretrained=args.IfUsePreTrainTypeEmb,
         activation_weight=not args.ifNoActivationFuncion,
@@ -642,6 +644,7 @@ elif args.model_index == 52:
         entity_initializer="uniform",
         relation_initializer="init_phases",
         relation_constrainer="complex_normalize",
+        strong_constraint=args.strong_constraint,
         loss=soft_loss,
         usepretrained=args.IfUsePreTrainTypeEmb,
         activation_weight=not args.ifNoActivationFuncion,
@@ -702,6 +705,7 @@ elif args.model_index == 71:
         freeze_matrix=args.ifFreezeWeights,
         freeze_type_emb=args.ifFreezeTypeEmb,
         add_ent_type=not args.ifNotAddEntType,
+        strong_constraint=args.strong_constraint,
         loss=soft_loss,
         usepretrained=args.IfUsePreTrainTypeEmb,
         activation_weight=not args.ifNoActivationFuncion,
@@ -718,6 +722,7 @@ elif args.model_index == 72:
         rel_dtype=torch.cfloat,
         type_dtype=torch.float,
         bias=args.project_with_bias,
+        strong_constraint=args.strong_constraint,
         ent_dim=args.model_ent_dim,
         rel_dim=args.model_rel_dim // 2,  # relation的数据类型的cfloat
         type_dim=args.model_type_dim,

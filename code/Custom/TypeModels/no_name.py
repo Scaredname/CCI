@@ -15,11 +15,12 @@ from .ESETC import repeat_if_necessary
 
 
 class NoNameYet(CatRSETC):
-    def __init__(self, type_score_weight, **kwargs) -> None:
+    def __init__(self, type_score_weight, strong_constraint, **kwargs) -> None:
         super().__init__(**kwargs)
         self.rels_types_h = self.rel_type_h_weights[0]._embeddings.weight
         self.rels_types_t = self.rel_type_t_weights[0]._embeddings.weight
         self.type_score_weight = type_score_weight
+        self.strong_constraint = strong_constraint
 
     def score_hrt(
         self, hrt_batch: torch.LongTensor, *, mode: Optional[InductiveMode] = None
@@ -65,8 +66,24 @@ class NoNameYet(CatRSETC):
             r_h_type_score.unsqueeze(dim=-1) + r_t_type_score.unsqueeze(dim=-1)
         )
 
+        # 类型强约束, 是在不训练的时候使用
+        if self.strong_constraint and not self.training:
+            self.ents_types_mask = self.ents_types_mask.to(self.device)
+            self.rels_types_mask = self.rels_types_mask.to(self.device)
+            # *100确保和其他实体的得分显著区分
+            constraint_score = 100 * (
+                (self.ents_types_mask[h_index] * self.rels_types_mask[0][r_index]).sum(
+                    -1
+                )
+                + (
+                    self.ents_types_mask[t_index] * self.rels_types_mask[1][r_index]
+                ).sum(-1)
+            )
+        else:
+            constraint_score = 0
+
         return (
-            self.interaction.score_hrt(h=h, r=r, t=t) + type_score,
+            self.interaction.score_hrt(h=h, r=r, t=t) + type_score + constraint_score,
             injective_confidence,
             type_rel,
         )
@@ -124,6 +141,20 @@ class NoNameYet(CatRSETC):
         t = t_s_type_emb
 
         type_score = self.type_score_weight * (r_t_type_score.unsqueeze(dim=-1))
+
+        if self.strong_constraint and not self.training:
+            self.ents_types_mask = self.ents_types_mask.to(self.device)
+            self.rels_types_mask = self.rels_types_mask.to(self.device)
+            # *100确保和其他实体的得分显著区分
+            constraint_score = 100 * (
+                (
+                    self.ents_types_mask[tails]
+                    * self.rels_types_mask[1][hr_batch[..., 1]]
+                ).sum(-1)
+            )
+        else:
+            constraint_score = 0
+
         # unsqueeze if necessary
         if tails is None or tails.ndimension() == 1:
             if not len(t.shape) > 2:
@@ -133,7 +164,10 @@ class NoNameYet(CatRSETC):
             scores=self.interaction.score(
                 h=h, r=r, t=t, slice_size=slice_size, slice_dim=1
             ).view(-1, self.num_entities)
-            + type_score.view(-1, self.num_entities),  # 会出现测试批度为1的特例，所以调整一下score的shape
+            + type_score.view(-1, self.num_entities)
+            + constraint_score.view(
+                -1, self.num_entities
+            ),  # 会出现测试批度为1的特例，所以调整一下score的shape
             representations=self.entity_representations,
             num=self._get_entity_len(mode=mode) if tails is None else tails.shape[-1],
         )
@@ -191,6 +225,20 @@ class NoNameYet(CatRSETC):
         t = t_s_type_emb
 
         type_score = self.type_score_weight * (r_h_type_score.unsqueeze(dim=-1))
+
+        if self.strong_constraint and not self.training:
+            self.ents_types_mask = self.ents_types_mask.to(self.device)
+            self.rels_types_mask = self.rels_types_mask.to(self.device)
+            # *100确保和其他实体的得分显著区分
+            constraint_score = 100 * (
+                (
+                    self.ents_types_mask[heads]
+                    * self.rels_types_mask[0][rt_batch[..., 0]]
+                ).sum(-1)
+            )
+        else:
+            constraint_score = 0
+
         # unsqueeze if necessary
         if heads is None or heads.ndimension() == 1:
             h = parallel_unsqueeze(h, dim=0)
@@ -199,7 +247,10 @@ class NoNameYet(CatRSETC):
             scores=self.interaction.score(
                 h=h, r=r, t=t, slice_size=slice_size, slice_dim=1
             ).view(-1, self.num_entities)
-            + type_score.view(-1, self.num_entities),  # 会出现测试批度为1的特例，所以调整一下score的shape
+            + type_score.view(-1, self.num_entities)
+            + constraint_score.view(
+                -1, self.num_entities
+            ),  # 会出现测试批度为1的特例，所以调整一下score的shape
             representations=self.entity_representations,
             num=self._get_entity_len(mode=mode) if heads is None else heads.shape[-1],
         )
