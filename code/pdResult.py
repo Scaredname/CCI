@@ -72,44 +72,40 @@ for file_name in os.listdir(result_path):
 
                     if "stopper" in results:
                         results_dict["valid-mrr"].append(
-                            round(
-                                float(
-                                    results["stopper"]["best_metric"]
-                                    ), 3)
+                            round(float(results["stopper"]["best_metric"]), 3)
                         )
                     else:
                         results_dict["valid-mrr"].append(0)
 
                     results_dict["test-mrr"].append(
-
                         round(
-                                float(
-                                    results["metrics"]["both"]["realistic"][
-                            "inverse_harmonic_mean_rank"
-                        ]
-                                    ), 
-                                    3)
-                        
+                            float(
+                                results["metrics"]["both"]["realistic"][
+                                    "inverse_harmonic_mean_rank"
+                                ]
+                            ),
+                            3,
+                        )
                     )
                     results_dict["hits@1"].append(
                         round(
-                                float(
-                                    results["metrics"]["both"]["realistic"]["hits_at_1"]
-                                    ), 3)
-                        
+                            float(results["metrics"]["both"]["realistic"]["hits_at_1"]),
+                            3,
+                        )
                     )
                     results_dict["hits@3"].append(
                         round(
-                                float(
-                                    results["metrics"]["both"]["realistic"]["hits_at_3"]
-                                    ), 3)
-                        
+                            float(results["metrics"]["both"]["realistic"]["hits_at_3"]),
+                            3,
+                        )
                     )
                     results_dict["hits@10"].append(
                         round(
-                                float(
-                                    results["metrics"]["both"]["realistic"]["hits_at_10"]
-                                    ), 3)
+                            float(
+                                results["metrics"]["both"]["realistic"]["hits_at_10"]
+                            ),
+                            3,
+                        )
                     )
 
                     results_dict["learning-rate"].append(
@@ -152,7 +148,7 @@ for file_name in os.listdir(result_path):
                         results_dict["margin"].append(-1)
 
                     # {'training': False, '_parameters': OrderedDict(), '_buffers': OrderedDict(), '_non_persistent_buffers_set': set(), '_backward_pre_hooks': OrderedDict(), '_backward_hooks': OrderedDict(), '_is_full_backward_hook': None, '_forward_hooks': OrderedDict(), '_forward_hooks_with_kwargs': OrderedDict(), '_forward_pre_hooks': OrderedDict(), '_forward_pre_hooks_with_kwargs': OrderedDict(), '_state_dict_hooks': OrderedDict(), '_state_dict_pre_hooks': OrderedDict(), '_load_state_dict_pre_hooks': OrderedDict(), '_load_state_dict_post_hooks': OrderedDict(), '_modules': OrderedDict(), 'reduction': 'mean', '_reduction_method': <built-in method mean of type object at 0x7f2261842540>, 'inverse_softmax_temperature': 1.0, 'factor': 0.5, 'margin': 8.0}
-                    if "ETC" in model_name or "NNY" in model_name:
+                    if "ETC" in model_name or "NNY" in model_name or "MM" in model_name:
                         if "type_weight_temperature" in config:
                             results_dict["type_weight_temperature"].append(
                                 config["type_weight_temperature"]
@@ -183,22 +179,24 @@ for file_name in os.listdir(result_path):
                     # 第一个大写字母之前全部放到tuning列中
                     # 是大写时，直接放到option中
                     if not file_name[0].isupper():
-                        split_word = re.findall(r'[A-Z][^A-Z]*', file_name)
+                        split_word = re.findall(r"[A-Z][^A-Z]*", file_name)
                         if len(split_word):
                             tuning = file_name.split(split_word[0])[0]
-                            option = split_word[0] + ''.join(file_name.split(split_word[0])[1:])
+                            option = split_word[0] + "".join(
+                                file_name.split(split_word[0])[1:]
+                            )
                         else:
                             tuning = file_name
-                            option = '-'
+                            option = "-"
                     else:
                         option = file_name
-                        tuning = '-'
+                        tuning = "-"
 
                     # print(tuning, option)
 
-                    results_dict['tuning'].append(tuning)
-                    results_dict['option'].append(option)
-                        
+                    results_dict["tuning"].append(tuning)
+                    results_dict["option"].append(option)
+
                     # results_dict["description"].append(file_name)
                     results_dict["dataset"].append(dataset)
                     results_dict["model-size"].append(
