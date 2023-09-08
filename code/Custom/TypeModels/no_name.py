@@ -151,7 +151,7 @@ class NoNameYet(CatRSETC):
                     self.ents_types_mask[tails]
                     * self.rels_types_mask[1][hr_batch[..., 1]]
                 ).sum(-1)
-            )
+            ).unsqueeze(dim=-1)
 
             type_score += constraint_score
 
@@ -222,6 +222,7 @@ class NoNameYet(CatRSETC):
         t = t_s_type_emb
 
         type_score = self.type_score_weight * (r_h_type_score.unsqueeze(dim=-1))
+        # print(type_score.shape) # [16, 5498, 1]
 
         if self.strong_constraint and not self.training:
             self.ents_types_mask = self.ents_types_mask.to(self.device)
@@ -232,8 +233,7 @@ class NoNameYet(CatRSETC):
                     self.ents_types_mask[heads]
                     * self.rels_types_mask[0][rt_batch[..., 0]]
                 ).sum(-1)
-            )
-
+            ).unsqueeze(dim=-1)
             type_score += constraint_score
 
         # unsqueeze if necessary
