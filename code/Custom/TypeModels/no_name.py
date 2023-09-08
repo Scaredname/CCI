@@ -146,11 +146,14 @@ class NoNameYet(CatRSETC):
             self.ents_types_mask = self.ents_types_mask.to(self.device)
             self.rels_types_mask = self.rels_types_mask.to(self.device)
             # *100确保和其他实体的得分显著区分，不同的训练方式下可能需要改变
+            # 使用clamp，只要符合约束获得平等加分。
             constraint_score = 100 * (
                 (
                     self.ents_types_mask[tails]
                     * self.rels_types_mask[1][hr_batch[..., 1]]
-                ).sum(-1)
+                )
+                .sum(-1)
+                .clamp(0, 1)
             ).unsqueeze(dim=-1)
 
             type_score += constraint_score
@@ -232,7 +235,9 @@ class NoNameYet(CatRSETC):
                 (
                     self.ents_types_mask[heads]
                     * self.rels_types_mask[0][rt_batch[..., 0]]
-                ).sum(-1)
+                )
+                .sum(-1)
+                .clamp(0, 1)
             ).unsqueeze(dim=-1)
             type_score += constraint_score
 
