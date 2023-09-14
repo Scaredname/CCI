@@ -51,6 +51,9 @@ parser.add_argument("-mtd", "--model_type_dim", type=int, default=100)
 parser.add_argument("-tsm", "--type_smoothing", type=float, default=0.0)
 
 parser.add_argument("-pb", "--project_with_bias", action="store_true", default=False)
+parser.add_argument(
+    "-nstal", "--not_soft_type_aware_loss", action="store_true", default=False
+)
 parser.add_argument("-ipo", "--init_preference_one", action="store_true", default=False)
 parser.add_argument("-sc", "--strong_constraint", action="store_true", default=False)
 parser.add_argument("-let", "--learn_ents_types", action="store_true", default=False)
@@ -214,6 +217,7 @@ from Custom.TypeModels.no_name import (
     NNYwithTransE,
 )
 from Custom.TypeModels.RSETC import RSETCwithTransE
+from pykeen.losses import NSSALoss
 
 # Pick a model
 # from Custom.CustomModel import EETCRLwithRotate
@@ -271,11 +275,18 @@ if args.ifStrictRelationCardinality:
     args.description += "StrictRelationCardinality"
 
 
-soft_loss = SoftTypeawareNegativeSmapling(
-    reduction="mean",
-    adversarial_temperature=args.adversarial_temperature,
-    margin=args.loss_margin,
-)
+if not args.not_soft_type_aware_loss:
+    soft_loss = SoftTypeawareNegativeSmapling(
+        reduction="mean",
+        adversarial_temperature=args.adversarial_temperature,
+        margin=args.loss_margin,
+    )
+else:
+    soft_loss = NSSALoss(
+        reduction="mean",
+        adversarial_temperature=args.adversarial_temperature,
+        margin=args.loss_margin,
+    )
 
 if args.model_index == 0:
     model = ESETCwithTransE(
@@ -769,7 +780,10 @@ if torch.cuda.is_available() and args.device == "cuda":
 else:
     model.to("cpu")
 
-if args.model_index in [41, 42, 51, 52, 61, 62, 71, 72]:
+if (
+    args.model_index in [41, 42, 51, 52, 61, 62, 71, 72]
+    and not args.not_soft_type_aware_loss
+):
     pipeline_config["training_loop"] = TypeSLCWATrainingLoop
 
     if args.negative_sampler == "type":

@@ -81,12 +81,14 @@ class NoNameYet(CatRSETC):
             )
 
             type_score += constraint_score
-
-        return (
-            self.interaction.score_hrt(h=h, r=r, t=t) + type_score,
-            injective_confidence,
-            type_rel,
-        )
+        if type(self.loss).__name__ != "SoftTypeawareNegativeSmapling":
+            return self.interaction.score_hrt(h=h, r=r, t=t) + type_score
+        else:
+            return (
+                self.interaction.score_hrt(h=h, r=r, t=t) + type_score,
+                injective_confidence,
+                type_rel,
+            )
 
     def score_t(
         self,
