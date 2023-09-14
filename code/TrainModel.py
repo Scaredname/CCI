@@ -51,7 +51,9 @@ parser.add_argument("-mtd", "--model_type_dim", type=int, default=100)
 parser.add_argument("-tsm", "--type_smoothing", type=float, default=0.0)
 
 parser.add_argument("-pb", "--project_with_bias", action="store_true", default=False)
+parser.add_argument("-ipo", "--init_preference_one", action="store_true", default=False)
 parser.add_argument("-sc", "--strong_constraint", action="store_true", default=False)
+parser.add_argument("-let", "--learn_ents_types", action="store_true", default=False)
 parser.add_argument("-drop", "--dropout", type=float, default=0.0)
 
 parser.add_argument("-de", "--description", type=str, default="finalV2-all-")
@@ -628,6 +630,8 @@ elif args.model_index == 51:
         weight_mask=args.ifWeightMask,
         type_weight_temperature=args.type_weight_temperature,
         type_score_weight=args.type_score_weight,
+        init_preference_one=args.init_preference_one,
+        learn_ents_types=args.learn_ents_types,
     )
 
 elif args.model_index == 52:
@@ -655,6 +659,8 @@ elif args.model_index == 52:
         weight_mask=args.ifWeightMask,
         type_weight_temperature=args.type_weight_temperature,
         type_score_weight=args.type_score_weight,
+        init_preference_one=args.init_preference_one,
+        learn_ents_types=args.learn_ents_types,
     )
 
 elif args.model_index == 61:
@@ -672,6 +678,8 @@ elif args.model_index == 61:
         weight_mask=args.ifWeightMask,
         type_weight_temperature=args.type_weight_temperature,
         type_score_weight=args.type_score_weight,
+        init_preference_one=args.init_preference_one,
+        learn_ents_types=args.learn_ents_types,
     )
 
 elif args.model_index == 62:
@@ -698,6 +706,8 @@ elif args.model_index == 62:
         weight_mask=args.ifWeightMask,
         type_weight_temperature=args.type_weight_temperature,
         type_score_weight=args.type_score_weight,
+        init_preference_one=args.init_preference_one,
+        learn_ents_types=args.learn_ents_types,
     )
 
 elif args.model_index == 71:
@@ -716,6 +726,8 @@ elif args.model_index == 71:
         weight_mask=args.ifWeightMask,
         type_weight_temperature=args.type_weight_temperature,
         type_score_weight=args.type_score_weight,
+        init_preference_one=args.init_preference_one,
+        learn_ents_types=args.learn_ents_types,
     )
 
 elif args.model_index == 72:
@@ -743,6 +755,8 @@ elif args.model_index == 72:
         weight_mask=args.ifWeightMask,
         type_weight_temperature=args.type_weight_temperature,
         type_score_weight=args.type_score_weight,
+        init_preference_one=args.init_preference_one,
+        learn_ents_types=args.learn_ents_types,
     )
 
 if args.checkpoint:
