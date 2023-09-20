@@ -154,6 +154,8 @@ if __name__ == "__main__":
 
     results_paths_list = walk_folder_tree(all_result_path)
 
+    test_batch_size = 2
+
     # 删除补充结果
 
     # for path in results_paths_list:
@@ -179,7 +181,9 @@ if __name__ == "__main__":
                     ):
                         os.makedirs(nosc_path, exist_ok=True)
                         test_model(
-                            read_path=path, save_path=nosc_path, test_batch_size=2
+                            read_path=path,
+                            save_path=nosc_path,
+                            test_batch_size=test_batch_size,
                         )
                         shutil.copy(
                             os.path.join(path, "config.json"),
@@ -200,7 +204,11 @@ if __name__ == "__main__":
 
                     if not os.path.exists(sc_path) or (len(os.listdir(sc_path)) <= 1):
                         os.makedirs(sc_path, exist_ok=True)
-                        test_model(read_path=path, save_path=sc_path, test_batch_size=2)
+                        test_model(
+                            read_path=path,
+                            save_path=sc_path,
+                            test_batch_size=test_batch_size,
+                        )
                         shutil.copy(
                             os.path.join(path, "config.json"),
                             sc_path,
