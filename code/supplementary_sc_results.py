@@ -83,8 +83,7 @@ def test_model(
 
     trained_model = torch.load(os.path.join(read_path, "trained_model.pkl"))
 
-    trained_model.strong_constraint = True
-
+    trained_model.strong_constraint = False
     valid_results = evaluator.evaluate(
         model=trained_model,
         mapped_triples=validation.mapped_triples,
@@ -95,6 +94,9 @@ def test_model(
         ],
         batch_size=test_batch_size,
     )
+
+    # 测试验证集时不使用
+    trained_model.strong_constraint = True
 
     results = evaluator.evaluate(
         model=trained_model,
@@ -151,6 +153,13 @@ if __name__ == "__main__":
     # print(date)
 
     results_paths_list = walk_folder_tree(all_result_path)
+
+    # 删除补充结果
+
+    for path in results_paths_list:
+        if len(os.listdir(path)) < 2:
+            shutil.rmtree(path)
+
     for path in results_paths_list:
         try:
             dataset, description, model, date = path.split("/")[-4:]
