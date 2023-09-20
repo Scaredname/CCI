@@ -83,20 +83,17 @@ def test_model(
 
     trained_model = torch.load(os.path.join(read_path, "trained_model.pkl"))
 
-    trained_model.strong_constraint = False
+    trained_model.strong_constraint = True
+
     valid_results = evaluator.evaluate(
         model=trained_model,
         mapped_triples=validation.mapped_triples,
         additional_filter_triples=[
             training_data.mapped_triples,
             validation.mapped_triples,
-            testing.mapped_triples,
         ],
         batch_size=test_batch_size,
     )
-
-    # 测试验证集时不使用
-    trained_model.strong_constraint = True
 
     results = evaluator.evaluate(
         model=trained_model,
