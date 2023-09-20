@@ -156,9 +156,9 @@ if __name__ == "__main__":
 
     # 删除补充结果
 
-    for path in results_paths_list:
-        if len(os.listdir(path)) < 2:
-            shutil.rmtree(path)
+    # for path in results_paths_list:
+    #     if len(os.listdir(path)) < 3:
+    #         shutil.rmtree(path)
 
     for path in results_paths_list:
         try:
