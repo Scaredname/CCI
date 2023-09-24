@@ -165,7 +165,7 @@ if __name__ == "__main__":
             prefix = path.split("/")[:-4]
         except:
             print(path)
-        if "NNY" in model or "MM" in model:
+        if "NNY" in model or "MM" in model or "AM":
             if int(date.split("-")[0]) > 20230908:
                 if "StrongConstraint" in description:
                     nosc_de = description.replace("StrongConstraint", "")
