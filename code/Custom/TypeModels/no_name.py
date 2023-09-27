@@ -80,7 +80,7 @@ class NoNameYet(CatRSETC):
                 ).sum(-1)
             )
 
-            type_score += constraint_score
+            type_score += constraint_score.unsqueeze(dim=-1)
         if type(self.loss).__name__ != "SoftTypeawareNegativeSmapling":
             return self.interaction.score_hrt(h=h, r=r, t=t) + type_score
         else:
