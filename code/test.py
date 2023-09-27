@@ -275,7 +275,7 @@ if __name__ == "__main__":
     scores_str = str(round(scores[0][0], 3)) + " & "
     for score in scores[1:-1]:
         scores_str += str(round(score[0], 3)) + " & "
-    scores_str += str(round(scores[-1][0], 3)) + " \\"
+    scores_str += str(round(scores[-1][0], 3)) + " \\\\"
     print(scores_str)
     for pair in zip(examples_yago, scores):
         print(pair[0], ": ", round(pair[1][0], 3))
