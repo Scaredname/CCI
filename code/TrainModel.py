@@ -22,8 +22,11 @@ parser.add_argument(
         "CAKE-FB15K237",
         "CAKE-FB15K",
         "CAKE-NELL-995",
+        "CAKE-NELL-995_new",
         "CAKE-DBpedia-242",
+        "CAKE-DBpedia-242_new",
         "yago5k-106",
+        "yago_new",
     ],
     default="fb15k-237-type",
 )

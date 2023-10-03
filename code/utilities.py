@@ -258,7 +258,7 @@ def load_dataset(
                 select_one_type=select_one_type,
                 strict_confidence=strict_confidence,
             )
-        elif "CAKE" in dataset or "yago5k" in dataset:
+        elif "CAKE" in dataset or "yago" in dataset:
             training_data, validation, testing = readTypeData(
                 dataset,
                 data_pro_func=splitTypeData,
