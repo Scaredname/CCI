@@ -339,6 +339,7 @@ if __name__ == "__main__":
         model_kwargs_ranges=model_kwargs_range,
         loss=soft_loss,
         loss_kwargs=loss_kwargs,
+        loss_kwargs_ranges=loss_kwargs_ranges,
         device=args.device,
         result_tracker="tensorboard",
         result_tracker_kwargs=dict(
