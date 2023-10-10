@@ -260,6 +260,7 @@ def create_matrix_of_types(
                 for rel_id in np.where(ents_rels[1, entity_to_id[ent], :] == 1)[0]:
                     rels_types[1, rel_id, data_type_to_id[typ]] += 1
             except KeyError:
+                # 注意：存在只拥有实体类型却没有出现在训练数据的实体
                 # logger.info(f"There is entity {ent} not in train triple")
                 continue
     elif type_position == 2:
@@ -274,6 +275,7 @@ def create_matrix_of_types(
                 for rel_id in np.where(ents_rels[0, entity_to_id[ent], :] == 1)[0]:
                     rels_types[0, rel_id, data_type_to_id[typ]] += 1
             except KeyError:
+                # 存在只拥有实体类型却没有出现在训练数据的实体
                 # logger.info(f"There is entity {ent} not in train triple")
                 continue
 
