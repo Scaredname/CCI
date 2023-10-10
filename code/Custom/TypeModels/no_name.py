@@ -387,12 +387,14 @@ class NNYwithRotatE(NoNameYet):
         regularizer_kwargs: OptionalKwargs = None,
         bias=False,
         ent_dtype=torch.float,
-        rel_dtype=torch.float,
+        rel_dtype=torch.cfloat,
         type_dtype=torch.float,
         dropout=0.3,
         type_score_weight=1.0,
+        strong_constraint=False,
         **kwargs,
     ) -> None:
+        rel_dim = int((ent_dim + type_dim) / 2)
         super().__init__(
             dropout=dropout,
             bias=bias,
@@ -401,6 +403,7 @@ class NNYwithRotatE(NoNameYet):
             type_dim=type_dim,
             data_type=ent_dtype,
             type_score_weight=type_score_weight,
+            strong_constraint=strong_constraint,
             interaction=RotatEInteraction,
             entity_representations_kwargs=dict(
                 shape=ent_dim,
@@ -494,12 +497,13 @@ class MMwithRotatE(MatchModel):
         regularizer_kwargs: OptionalKwargs = None,
         bias=False,
         ent_dtype=torch.float,
-        rel_dtype=torch.float,
+        rel_dtype=torch.cfloat,
         type_dtype=torch.float,
         dropout=0.3,
         type_score_weight=1.0,
         **kwargs,
     ) -> None:
+        rel_dim = int((ent_dim + type_dim) / 2)
         super().__init__(
             dropout=dropout,
             bias=bias,
