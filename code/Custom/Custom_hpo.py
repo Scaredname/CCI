@@ -25,6 +25,7 @@ from typing import (
 
 import torch
 from class_resolver.contrib.optuna import pruner_resolver, sampler_resolver
+from Custom.Custom_api import pipeline, replicate_pipeline_from_config
 from optuna import Study, Trial, TrialPruned, create_study
 from optuna.pruners import BasePruner
 from optuna.samplers import BaseSampler
@@ -42,7 +43,6 @@ from pykeen.lr_schedulers import (
 )
 from pykeen.models import Model, model_resolver
 from pykeen.optimizers import Optimizer, optimizer_resolver, optimizers_hpo_defaults
-from pykeen.pipeline import pipeline, replicate_pipeline_from_config
 from pykeen.regularizers import Regularizer, regularizer_resolver
 from pykeen.sampling import NegativeSampler, negative_sampler_resolver
 from pykeen.stoppers import EarlyStopper, Stopper, stopper_resolver
