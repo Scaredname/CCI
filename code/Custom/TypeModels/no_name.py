@@ -394,6 +394,11 @@ class NNYwithRotatE(NoNameYet):
         strong_constraint=False,
         **kwargs,
     ) -> None:
+        # print(kwargs["usepretrained"])
+        if kwargs["usepretrained"] == "bert-base-uncased":
+            type_dim = 768
+        elif kwargs["usepretrained"] == "bert-large-uncased":
+            type_dim = 1024
         rel_dim = int((ent_dim + type_dim) / 2)
         super().__init__(
             dropout=dropout,
@@ -503,6 +508,11 @@ class MMwithRotatE(MatchModel):
         type_score_weight=1.0,
         **kwargs,
     ) -> None:
+        # print(kwargs["usepretrained"])
+        if kwargs["usepretrained"] == "bert-base-uncased":
+            type_dim = 768
+        elif kwargs["usepretrained"] == "bert-large-uncased":
+            type_dim = 1024
         rel_dim = int((ent_dim + type_dim) / 2)
         super().__init__(
             dropout=dropout,
