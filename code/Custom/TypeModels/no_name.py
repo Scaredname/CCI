@@ -395,10 +395,13 @@ class NNYwithRotatE(NoNameYet):
         **kwargs,
     ) -> None:
         # print(kwargs["usepretrained"])
-        if kwargs["usepretrained"] == "bert-base-uncased":
-            type_dim = 768
-        elif kwargs["usepretrained"] == "bert-large-uncased":
-            type_dim = 1024
+        try:
+            if kwargs["usepretrained"] == "bert-base-uncased":
+                type_dim = 768
+            elif kwargs["usepretrained"] == "bert-large-uncased":
+                type_dim = 1024
+        except:
+            print("usepretrained not assign")
         rel_dim = int((ent_dim + type_dim) / 2)
         super().__init__(
             dropout=dropout,
