@@ -47,6 +47,14 @@ from pykeen.typing import (
 logger = logging.getLogger(__name__)
 
 
+def cal_propor(data):
+    """Calculate the proportion of each type."""
+    for i in range(data.shape[0]):
+        if np.sum(data[i], dtype=np.float32) > 0:
+            data[i] = data[i] / np.sum(data[i], dtype=np.float32)
+    return data
+
+
 def maximum_reciprocal(
     df: pd.DataFrame,
     source: str,
@@ -372,10 +380,6 @@ class TriplesTypesFactory(TriplesFactory):
         self.assignments = self._get_assignment(ents_types)
         self.rels_inj_conf = rels_inj_conf
         self.rel_related_ent = rel_related_ent
-        # Calculate the proportion of each type.
-        self.ents_types = self._cal_propor(self.ents_types)
-        self.rels_types[0] = self._cal_propor(self.rels_types[0])
-        self.rels_types[1] = self._cal_propor(self.rels_types[1])
 
         if type_smoothing:
             self.ents_types = apply_label_smoothing(
@@ -479,6 +483,11 @@ class TriplesTypesFactory(TriplesFactory):
         if strict_confidence:
             relation_injective_confidence[relation_injective_confidence < 1] = 0
 
+        # Calculate the proportion of each type.
+        ents_types = cal_propor(ents_types)
+        rels_types[0] = cal_propor(rels_types[0])
+        rels_types[1] = cal_propor(rels_types[1])
+
         return cls(
             entity_to_id=base.entity_to_id,
             relation_to_id=base.relation_to_id,
@@ -506,13 +515,6 @@ class TriplesTypesFactory(TriplesFactory):
         """Return the shape of the types."""
         return self.ents_types.shape[1:]
 
-    def _cal_propor(self, data):
-        """Calculate the proportion of each type."""
-        for i in range(data.shape[0]):
-            if np.sum(data[i], dtype=np.float32) > 0:
-                data[i] = data[i] / np.sum(data[i], dtype=np.float32)
-        return data
-
     @property
     def num_types(self) -> int:
         """Return the number of types."""
@@ -532,3 +534,47 @@ class TriplesTypesFactory(TriplesFactory):
         # self.ents_types = torch.as_tensor(self.ents_types, dtype=torch.cfloat)
 
         return torch.as_tensor(np.array(assignment_list))
+
+    def clone_and_exchange_triples(
+        self,
+        mapped_triples: MappedTriples,
+        extra_metadata: Optional[Dict[str, Any]] = None,
+        keep_metadata: bool = True,
+        create_inverse_triples: Optional[bool] = None,
+    ):
+        """
+        Create a new triples factory sharing everything except the triples.
+
+        .. note ::
+            We use shallow copies.
+
+        :param mapped_triples:
+            The new mapped triples.
+        :param extra_metadata:
+            Extra metadata to include in the new triples factory. If ``keep_metadata`` is true,
+            the dictionaries will be unioned with precedence taken on keys from ``extra_metadata``.
+        :param keep_metadata:
+            Pass the current factory's metadata to the new triples factory
+        :param create_inverse_triples:
+            Change inverse triple creation flag. If None, use flag from this factory.
+
+        :return:
+            The new factory.
+        """
+        if create_inverse_triples is None:
+            create_inverse_triples = self.create_inverse_triples
+        return TriplesTypesFactory(
+            entity_to_id=self.entity_to_id,
+            relation_to_id=self.relation_to_id,
+            mapped_triples=mapped_triples,
+            ents_types=self.ents_types.numpy(),
+            rels_types=self.rels_types.numpy(),
+            rels_inj_conf=self.rels_inj_conf,
+            rel_related_ent=self.rel_related_ent,
+            create_inverse_triples=create_inverse_triples,
+            types_to_id=self.types_to_id,
+            metadata={
+                **(extra_metadata or {}),
+                **(self.metadata if keep_metadata else {}),  # type: ignore
+            },
+        )
