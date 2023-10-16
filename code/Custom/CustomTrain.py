@@ -11,18 +11,19 @@ from pykeen.triples.instances import SLCWABatch
 from pykeen.typing import InductiveMode
 
 
-def get_negatives_direction(num_negs_per_pos):
+def get_negatives_direction(num_negs_per_pos, shape):
     """
     :param num_negs_per_pos:
     :return: list of direction of negative sampling. 0 represents tail to head. 1 represents head to tail.
     """
-    negs_dire = np.zeros(num_negs_per_pos)
-    corruption_indices = [0, 1]  # 0: head2tail, 1: tail2head
-    split_idx = int(math.ceil(num_negs_per_pos / len(corruption_indices)))
-    for index, start in zip(corruption_indices, range(0, num_negs_per_pos, split_idx)):
-        stop = min(start + split_idx, num_negs_per_pos)
+    negs_dire = np.zeros(shape)
+    corruption_indices = [0, 1] * (
+        shape // num_negs_per_pos
+    )  # 0: head2tail, 1: tail2head
+    split_idx = int(math.ceil(shape / len(corruption_indices)))
+    for index, start in zip(corruption_indices, range(0, shape, split_idx)):
+        stop = min(start + split_idx, shape)
         negs_dire[start:stop] = index
-
     return negs_dire
 
 
@@ -53,7 +54,6 @@ class TypeSLCWATrainingLoop(SLCWATrainingLoop):
         # split batch
         positive_batch, negative_batch, positive_filter = batch
         num_negs_per_pos = negative_batch.shape[1]
-        negs_dire = torch.LongTensor(get_negatives_direction(num_negs_per_pos))
 
         # send to device
         positive_batch = positive_batch[start:stop].to(device=model.device)
@@ -77,15 +77,15 @@ class TypeSLCWATrainingLoop(SLCWATrainingLoop):
         )
         negative_scores = negative_scores.view(negative_score_shape)
         # print(injective_confidence.shape[0])
-        negs_direction = (
-            negs_dire.repeat(injective_confidence.shape[0] // negs_dire.shape[0])
-            .clone()
-            .detach()
+        # 负例方向，头到尾还是尾到头。
+        negs_dire = torch.LongTensor(
+            get_negatives_direction(num_negs_per_pos, injective_confidence.shape[0])
         )
+        # negs_direction = negs_dire.detach()
 
-        row_id = torch.arange(len(negs_direction))
-        injective_conf = injective_confidence[row_id, negs_direction]
-        type_r = type_relatedness[row_id, negs_direction]
+        row_id = torch.LongTensor(range(len(negs_dire)))
+        injective_conf = injective_confidence[row_id, negs_dire]
+        type_r = type_relatedness[row_id, negs_dire]
 
         return (
             loss.process_slcwa_scores(
