@@ -189,7 +189,8 @@ if __name__ == "__main__":
     )
 
     optimizer_kwargs = dict(
-        lr=args.learning_rate,  # 手动设置
+        # lr=args.learning_rate,  # 手动设置
+        lr=0.001
     )
     negative_sampler_kwargs = dict(
         num_negs_per_pos=args.num_negs_per_pos,
@@ -206,9 +207,9 @@ if __name__ == "__main__":
         ),
         stopper=args.stopper,
         stopper_kwargs=dict(
-            frequency=5,
+            frequency=10,
             patience=3,
-            relative_delta=0.001,
+            relative_delta=0.0001,
             metric="mean_reciprocal_rank",
             evaluation_batch_size=args.evaluator_batch_size,
             evaluation_triples_factory=small_validation,
@@ -296,16 +297,19 @@ if __name__ == "__main__":
     # 设置需要优化的超参数
     model_kwargs_range = dict(
         # type_dim=dict(type=int, scale="power", base=2, low=4, high=10),
-        # ent_dim=dict(type=int, scale="power_two", low=6, high=10),
+        embedding_dim=dict(type=int, scale="power_two", low=7, high=9),
     )
-    loss_kwargs_ranges = dict()
+    loss_kwargs_ranges = dict(
+        # margin=dict(type=int, low=8, high=10),
+        # adversarial_temperature=dict(type=float, low=0.5, high=1.5, q=0.1),
+    )
     # regularizer_kwargs_ranges = dict()
     optimizer_kwargs_ranges = dict(
-        lr=dict(type=float, low=0.0001, high=0.0009, step=0.0001)
+        lr=dict(type="categorical", choices=[0.001, 0.0005, 0.0001, 0.00005, 0.00001])
     )
     # lr_scheduler_kwargs_ranges = dict()
     negative_sampler_kwargs_ranges = dict(
-        num_negs_per_pos=dict(type=int, scale="power_two", low=1, high=9)
+        # num_negs_per_pos=dict(type=int, scale="power_two", low=7, high=9)
     )
     # training_kwargs_ranges = dict()
 
@@ -324,13 +328,16 @@ if __name__ == "__main__":
             negative_sampler_kwargs.pop(kwarg)
 
     from Custom.Custom_hpo import hpo_pipeline
-    from optuna.samplers import RandomSampler
+    from optuna.samplers import RandomSampler, TPESampler
     from pykeen.sampling.basic_negative_sampler import BasicNegativeSampler
 
     # loss 和 模型应该分别初始化
     pipeline_result = hpo_pipeline(
-        sampler=RandomSampler,
-        n_trials=60,
+        # sampler=RandomSampler,
+        sampler=TPESampler,
+        sampler_kwargs=dict(multivariate=True, group=True),
+        n_trials=100,
+        # timeout=3600,
         training=training_data,
         validation=validation,
         testing=testing,
