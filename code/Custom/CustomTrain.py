@@ -36,6 +36,8 @@ class TypeSLCWATrainingLoop(SLCWATrainingLoop):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+        self.indices = torch.LongTensor(0)
+
     @staticmethod
     def _process_batch_static(
         model: Model,
@@ -44,6 +46,7 @@ class TypeSLCWATrainingLoop(SLCWATrainingLoop):
         batch: SLCWABatch,
         start: Optional[int],
         stop: Optional[int],
+        indices: torch.LongTensor,
         label_smoothing: float = 0.0,
         slice_size: Optional[int] = None,
     ) -> torch.FloatTensor:
@@ -83,7 +86,7 @@ class TypeSLCWATrainingLoop(SLCWATrainingLoop):
         )
         # negs_direction = negs_dire.detach()
 
-        row_id = torch.LongTensor(range(len(negs_dire)))
+        row_id = indices
         injective_conf = injective_confidence[row_id, negs_dire]
         type_r = type_relatedness[row_id, negs_dire]
 
@@ -98,4 +101,29 @@ class TypeSLCWATrainingLoop(SLCWATrainingLoop):
                 num_entities=model._get_entity_len(mode=mode),
             )
             + model.collect_regularization_term()
+        )
+
+    def _process_batch(
+        self,
+        batch: SLCWABatch,
+        start: int,
+        stop: int,
+        label_smoothing: float = 0.0,
+        slice_size: Optional[int] = None,
+    ) -> torch.FloatTensor:  # noqa: D102
+        positive_batch, negative_batch, positive_filter = batch
+        index_num = negative_batch.shape[0] * negative_batch.shape[1]
+        if index_num != self.indices.shape[0]:
+            self.index_length = index_num
+            self.indices = torch.LongTensor(range(index_num))
+        return self._process_batch_static(
+            model=self.model,
+            loss=self.loss,
+            mode=self.mode,
+            batch=batch,
+            start=start,
+            stop=stop,
+            label_smoothing=label_smoothing,
+            slice_size=slice_size,
+            indices=self.indices,
         )
