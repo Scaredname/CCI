@@ -162,6 +162,7 @@ if __name__ == "__main__":
     #     ],
 
     args = parser.parse_args()
+    args.ifFreezeWeights = True
     # load data
     dataset = args.dataset
     training_data, validation, testing = load_dataset(
@@ -177,10 +178,10 @@ if __name__ == "__main__":
     )
 
     # todo: the wired logger of _split_triples
-    big_validation, small_validation = validation.split(0.9)
+    # big_validation, small_validation = validation.split(0.9)
 
-    # _, small_training_data = training_data.split(0.8)
-    # small_training, small_validation = small_training_data.split(0.8)
+    _, small_training_data = training_data.split(0.8)
+    small_training, small_validation = small_training_data.split(0.9)
     # setting pipeline
 
     training_setting = dict(
@@ -261,8 +262,8 @@ if __name__ == "__main__":
     from pykeen.losses import NSSALoss
 
     # 每次调参前决定使用什么loss和训练方式
-    # soft_loss = SoftTypeawareNegativeSmapling()
-    soft_loss = NewSoftTypeawareNegativeSmapling()
+    soft_loss = SoftTypeawareNegativeSmapling()
+    # soft_loss = NewSoftTypeawareNegativeSmapling()
     pipeline_config["training_loop"] = TypeSLCWATrainingLoop
     #     soft_loss = NSSALoss()
 
@@ -276,7 +277,8 @@ if __name__ == "__main__":
     from Custom.TypeModels.ablation_model import AMwithRotatE, AMwithTransE
 
     model = AMwithRotatE(
-        triples_factory=training_data,
+        # triples_factory=training_data,
+        triples_factory=small_training,
     )
     model_kwargs = dict(
         ent_dtype=torch.float,
@@ -321,19 +323,30 @@ if __name__ == "__main__":
     model_kwargs_range = dict(
         # type_dim=dict(type=int, scale="power", base=2, low=4, high=10),
         # embedding_dim=dict(type=int, scale="power_two", low=7, high=9),
-        # ent_dim=dict(type=int, scale="power_two", low=7, high=9),
+        ent_dim=dict(type=int, scale="power_two", low=6, high=10),
+        init_preference_one=dict(type="bool"),
     )
     loss_kwargs_ranges = dict(
-        # margin=dict(type=int, low=8, high=10),
-        # adversarial_temperature=dict(type=float, low=0.5, high=1.5, q=0.1),
+        margin=dict(type=int, low=2, high=30, q=2),
+        adversarial_temperature=dict(type=float, low=0.5, high=3, q=0.5),
     )
     # regularizer_kwargs_ranges = dict()
     optimizer_kwargs_ranges = dict(
-        lr=dict(type="categorical", choices=[0.001, 0.0005, 0.0001, 0.00005, 0.00001])
+        lr=dict(
+            type="categorical",
+            choices=[
+                0.01,
+                # 0.005,
+                # 0.002,
+                0.001,
+                0.0001,
+                0.00001,
+            ],
+        )
     )
     # lr_scheduler_kwargs_ranges = dict()
     negative_sampler_kwargs_ranges = dict(
-        # num_negs_per_pos=dict(type=int, scale="power_two", low=7, high=9)
+        num_negs_per_pos=dict(type=int, scale="power_two", low=1, high=9)
     )
     # training_kwargs_ranges = dict()
 
@@ -358,9 +371,13 @@ if __name__ == "__main__":
     # loss 和 模型应该分别初始化
     pipeline_result = hpo_pipeline(
         sampler=TPESampler,
-        n_trials=100,
-        training=training_data,
-        validation=validation,
+        sampler_kwargs=dict(multivariate=True, group=True),
+        n_trials=500,
+        pruner="nop",
+        # training=training_data,
+        # validation=validation,
+        training=small_training,
+        validation=small_validation,
         testing=testing,
         model=model,
         model_kwargs=model_kwargs,
@@ -377,7 +394,7 @@ if __name__ == "__main__":
             + date_time,
         ),
         study_name=args.description + date_time,
-        storage="sqlite:///../models/{}.db".format(dataset),
+        storage="sqlite:///../models/{}.db".format(dataset + "_loss"),
         load_if_exists=True,
         optimizer_kwargs=optimizer_kwargs,
         optimizer_kwargs_ranges=optimizer_kwargs_ranges,
