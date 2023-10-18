@@ -16,8 +16,15 @@ def get_negatives_direction(num_negs_per_pos, shape):
     :param num_negs_per_pos:
     :return: list of direction of negative sampling. 0 represents tail to head. 1 represents head to tail.
     """
-    negs_dire = np.zeros(shape)
-    corruption_indices = [0, 1] * (
+    negs_dire = np.zeros((shape, 2))
+    # corruption_indices = [0, 1] * (
+    #     shape // num_negs_per_pos
+    # )  # 0: head2tail, 1: tail2head
+    # split_idx = int(math.ceil(shape / len(corruption_indices)))
+    # for index, start in zip(corruption_indices, range(0, shape, split_idx)):
+    #     stop = min(start + split_idx, shape)
+    #     negs_dire[start:stop] = index
+    corruption_indices = [(1, 0), (0, 1)] * (
         shape // num_negs_per_pos
     )  # 0: head2tail, 1: tail2head
     split_idx = int(math.ceil(shape / len(corruption_indices)))
@@ -36,7 +43,8 @@ class TypeSLCWATrainingLoop(SLCWATrainingLoop):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.indices = torch.LongTensor(0)
+        self.index_num = 0
+        self.negs_dire = None
 
     @staticmethod
     def _process_batch_static(
@@ -46,7 +54,7 @@ class TypeSLCWATrainingLoop(SLCWATrainingLoop):
         batch: SLCWABatch,
         start: Optional[int],
         stop: Optional[int],
-        indices: torch.LongTensor,
+        negs_dire: torch.Tensor,
         label_smoothing: float = 0.0,
         slice_size: Optional[int] = None,
     ) -> torch.FloatTensor:
@@ -56,7 +64,6 @@ class TypeSLCWATrainingLoop(SLCWATrainingLoop):
 
         # split batch
         positive_batch, negative_batch, positive_filter = batch
-        num_negs_per_pos = negative_batch.shape[1]
 
         # send to device
         positive_batch = positive_batch[start:stop].to(device=model.device)
@@ -65,6 +72,7 @@ class TypeSLCWATrainingLoop(SLCWATrainingLoop):
             positive_filter = positive_filter[start:stop]
             negative_batch = negative_batch[positive_filter]
             positive_filter = positive_filter.to(model.device)
+
         # Make it negative batch broadcastable (required for num_negs_per_pos > 1).
         negative_score_shape = negative_batch.shape[:-1]
         negative_batch = negative_batch.view(-1, 3)
@@ -75,21 +83,19 @@ class TypeSLCWATrainingLoop(SLCWATrainingLoop):
 
         # Compute negative and positive scores
         positive_scores, _, _ = model.score_hrt(positive_batch, mode=mode)
+
         negative_scores, injective_confidence, type_relatedness = model.score_hrt(
             negative_batch, mode=mode
         )
+
         negative_scores = negative_scores.view(negative_score_shape)
-        # print(injective_confidence.shape[0])
         # 负例方向，头到尾还是尾到头。
-        negs_dire = torch.LongTensor(
-            get_negatives_direction(num_negs_per_pos, injective_confidence.shape[0])
-        )
+
+        # type_r = type_relatedness[indices, negs_dire]
+        type_r = (type_relatedness * negs_dire).sum(-1)
         # negs_direction = negs_dire.detach()
-
-        row_id = indices
-        injective_conf = injective_confidence[row_id, negs_dire]
-        type_r = type_relatedness[row_id, negs_dire]
-
+        # injective_conf = injective_confidence[indices, negs_dire]
+        injective_conf = (injective_confidence * negs_dire).sum(-1)
         return (
             loss.process_slcwa_scores(
                 positive_scores=positive_scores,
@@ -112,10 +118,16 @@ class TypeSLCWATrainingLoop(SLCWATrainingLoop):
         slice_size: Optional[int] = None,
     ) -> torch.FloatTensor:  # noqa: D102
         positive_batch, negative_batch, positive_filter = batch
-        index_num = negative_batch.shape[0] * negative_batch.shape[1]
-        if index_num != self.indices.shape[0]:
-            self.index_length = index_num
-            self.indices = torch.LongTensor(range(index_num))
+        index_num = (stop - start) * negative_batch.shape[1]
+        # num_negs_per_pos = negative_batch.shape[1] injective_confidence.shape[0] = (stop - start) * negative_batch.shape[1]
+        if index_num != self.index_num:
+            self.negs_dire = torch.tensor(
+                get_negatives_direction(
+                    negative_batch.shape[1],
+                    (stop - start) * negative_batch.shape[1],
+                )
+            ).to(self.model.device)
+            self.index_num = index_num
         return self._process_batch_static(
             model=self.model,
             loss=self.loss,
@@ -125,5 +137,5 @@ class TypeSLCWATrainingLoop(SLCWATrainingLoop):
             stop=stop,
             label_smoothing=label_smoothing,
             slice_size=slice_size,
-            indices=self.indices,
+            negs_dire=self.negs_dire,
         )

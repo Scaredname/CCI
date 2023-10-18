@@ -44,9 +44,14 @@ class NewSoftTypeawareNegativeSmapling(NSSALoss):
         if label_smoothing:
             raise UnsupportedLabelSmoothingError(self)
 
-        type_relatedness = (
-            2 * F.sigmoid(type_relatedness.data) - 1
-        )  # scaled to [0,1], no grad
+        # type_relatedness = (
+        #     2 * F.sigmoid(type_relatedness.data) - 1
+        # )  # scaled to [0,1], no grad
+
+        type_relatedness = torch.where(
+            type_relatedness.data > 0.05, torch.tensor(1), torch.tensor(0)
+        )
+
         STNS_weights = injective_confidence * type_relatedness + (
             1 - injective_confidence
         ) * (1 - type_relatedness)
@@ -58,8 +63,14 @@ class NewSoftTypeawareNegativeSmapling(NSSALoss):
             no_inf_rows=True,
         )
 
-        STNS_weights = STNS_weights.view(*negative_scores.shape)
-        negative_scores = negative_scores * STNS_weights.detach()
+        STNS_weights = (
+            torch.max(F.sigmoid(2 * STNS_weights), STNS_weights)
+            .view(*negative_scores.shape)
+            .detach()
+        )
+
+        # negative_scores 都是负数, 直接乘0.5反而增大了得分, 所以用除法
+        negative_scores = negative_scores / STNS_weights
 
         # compute weights (without gradient tracking)
         assert negative_scores.ndimension() == 2
