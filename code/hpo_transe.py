@@ -301,17 +301,17 @@ if __name__ == "__main__":
         # margin=dict(type=int, low=9, high=11),
         # margin=dict(type="categorical", choices=[6, 9, 12]),
         # adversarial_temperature=dict(type=float, low=0.5, high=1.5, q=0.1),
-        # adversarial_temperature=dict(type="categorical", choices=[0.5, 1, 2, 3]),
+        adversarial_temperature=dict(type="categorical", choices=[1, 0.5, 0.2, 0.1]),
     )
     # regularizer_kwargs_ranges = dict()
     optimizer_kwargs_ranges = dict(
-        # lr=dict(type="categorical", choices=[0.0001, 0.00005, 0.00002, 0.00001]),
-        lr=dict(type="float", low=0.0003, high=0.0005, q=0.0001),
+        lr=dict(type="categorical", choices=[0.0001, 0.0002, 0.0005, 0.001]),
+        # lr=dict(type="float", low=0.0001, high=0.0005, q=0.0001),
     )
     # lr_scheduler_kwargs_ranges = dict()
     negative_sampler_kwargs_ranges = dict(
         # num_negs_per_pos=dict(type=int, scale="power_two", low=6, high=7),
-        num_negs_per_pos=dict(type="categorical", choices=[128, 256, 512]),
+        # num_negs_per_pos=dict(type="categorical", choices=[128, 256, 512]), # 128
     )
     # training_kwargs_ranges = dict()
 
@@ -338,7 +338,9 @@ if __name__ == "__main__":
         # sampler=RandomSampler,
         sampler=TPESampler,
         sampler_kwargs=dict(multivariate=True, group=True),
-        n_trials=100,
+        n_trials=500,
+        # pruner="nop",
+        pruner_kwargs=dict(n_startup_trials=5, n_warmup_steps=500, interval_steps=10),
         # timeout=43200,  # seconds
         training=training_data,
         validation=validation,
@@ -358,7 +360,7 @@ if __name__ == "__main__":
             + date_time,
         ),
         study_name=args.description + date_time,
-        storage="sqlite:///../models/{}.db".format(dataset),
+        storage="sqlite:///../models/{}.db".format(dataset + "_transe"),
         load_if_exists=True,
         optimizer_kwargs=optimizer_kwargs,
         optimizer_kwargs_ranges=optimizer_kwargs_ranges,
