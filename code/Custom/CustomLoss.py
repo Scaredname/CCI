@@ -26,8 +26,9 @@ class SoftTypeawareNegativeSmapling(NSSALoss):
     Calculate the weight by injective confidence and type relatedness.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, lower_bound=0.2, **kwargs):
         super().__init__(**kwargs)
+        self.lower_bound = torch.tensor(lower_bound)
 
     def process_slcwa_scores(
         self,
@@ -68,8 +69,9 @@ class SoftTypeawareNegativeSmapling(NSSALoss):
         ) * (1 - type_relatedness)
 
         # STNS_weights = STNS_weights.view(*negative_scores.shape)
+        # 对类型权重设定一个下限
         STNS_weights = (
-            torch.max(F.sigmoid(2 * STNS_weights), STNS_weights)
+            torch.max(self.lower_bound, STNS_weights)
             .view(*negative_scores.shape)
             .detach()
         )

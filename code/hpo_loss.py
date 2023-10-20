@@ -178,10 +178,10 @@ if __name__ == "__main__":
     )
 
     # todo: the wired logger of _split_triples
-    # big_validation, small_validation = validation.split(0.9)
+    big_validation, small_validation = validation.split(0.9)
 
-    _, small_training_data = training_data.split(0.8)
-    small_training, small_validation = small_training_data.split(0.9)
+    # _, small_training_data = training_data.split(0.8)
+    # small_training, small_validation = small_training_data.split(0.8)
     # setting pipeline
 
     training_setting = dict(
@@ -271,14 +271,14 @@ if __name__ == "__main__":
         reduction="mean",
         adversarial_temperature=args.adversarial_temperature,
         margin=args.loss_margin,
+        lower_bound=0.2,
     )
 
     import torch
     from Custom.TypeModels.ablation_model import AMwithRotatE, AMwithTransE
 
     model = AMwithRotatE(
-        # triples_factory=training_data,
-        triples_factory=small_training,
+        triples_factory=training_data,
     )
     model_kwargs = dict(
         ent_dtype=torch.float,
@@ -327,20 +327,19 @@ if __name__ == "__main__":
         init_preference_one=dict(type="bool"),
     )
     loss_kwargs_ranges = dict(
-        margin=dict(type=int, low=2, high=30, q=2),
-        adversarial_temperature=dict(type=float, low=0.5, high=3, q=0.5),
+        margin=dict(type=int, low=2, high=12, q=2),
+        adversarial_temperature=dict(type=float, low=1, high=5, q=0.5),
+        lower_bound=dict(type=float, low=0.1, high=0.8, q=0.1),
     )
     # regularizer_kwargs_ranges = dict()
     optimizer_kwargs_ranges = dict(
         lr=dict(
             type="categorical",
             choices=[
-                0.01,
-                # 0.005,
-                # 0.002,
+                0.005,
+                0.002,
                 0.001,
-                0.0001,
-                0.00001,
+                0.0005,
             ],
         )
     )
@@ -374,10 +373,8 @@ if __name__ == "__main__":
         sampler_kwargs=dict(multivariate=True, group=True),
         n_trials=500,
         pruner="nop",
-        # training=training_data,
-        # validation=validation,
-        training=small_training,
-        validation=small_validation,
+        training=training_data,
+        validation=validation,
         testing=testing,
         model=model,
         model_kwargs=model_kwargs,
