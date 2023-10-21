@@ -11,15 +11,85 @@ Copyright (c) 2023 by ${git_name_email}, All Rights Reserved.
 import os
 from collections import defaultdict
 
+import numpy as np
 import pandas as pd
 import pykeen
 import torch
+from Custom.CustomTripleFactory import TriplesTypesFactory, TypesConstraintTestFactory
 from Custom.ir_evaluation import IRRankBasedEvaluator
+from Custom.type_constraint_evaluation import TypeConstraintEvaluator
 from pykeen.datasets import FB15k237
 from pykeen.datasets import analysis as ana
 from pykeen.datasets import get_dataset
 from pykeen.evaluation import RankBasedEvaluator
-from utilities import load_dataset
+from pykeen.triples import TriplesFactory
+from utilities import get_white_list_relation, load_dataset, splitTypeData
+
+
+def read_constraint_type_test_data(
+    data_name,
+    data_pro_func,
+    create_inverse_triples=False,
+    type_position=0,
+    type_completed=False,
+):
+    """
+    @Params: data_name, data_pro_func, create_inverse_triples, type_position
+    @Return: Train, Test, Valid
+    """
+
+    data_path = os.environ.get("HOME") + "/code/ESETC/data/"
+    if "CAKE" in data_name:
+        data_name = "data_concept/" + data_name.replace("CAKE-", "")
+
+    train_path = os.path.join(data_path, "%s/" % (data_name), "train_type.txt")
+    train_type_completed_path = os.path.join(
+        data_path, "%s/" % (data_name), "train_type_completed.txt"
+    )
+    valid_path = os.path.join(data_path, "%s/" % (data_name), "valid.txt")
+    test_path = os.path.join(data_path, "%s/" % (data_name), "test.txt")
+
+    training = TriplesFactory.from_path(
+        train_path,
+        create_inverse_triples=create_inverse_triples,
+    )
+
+    training_triples, training_type_triples, _, _ = data_pro_func(
+        training, type_position=type_position
+    )
+
+    if type_completed:
+        train_type_completed = TriplesFactory.from_path(
+            train_type_completed_path,
+            create_inverse_triples=create_inverse_triples,
+        )
+        print(training_type_triples.shape, train_type_completed.triples.shape)
+        training_type_triples = np.vstack(
+            (training_type_triples, train_type_completed.triples)
+        )
+        print(training_type_triples.shape)
+
+    training_data = TypesConstraintTestFactory.from_labeled_triples(
+        triples=training_triples,
+        type_triples=training_type_triples,
+        type_position=type_position,
+        create_inverse_triples=create_inverse_triples,
+    )
+
+    validation = TriplesFactory.from_path(
+        valid_path,
+        entity_to_id=training_data.entity_to_id,
+        relation_to_id=training_data.relation_to_id,
+        create_inverse_triples=create_inverse_triples,
+    )
+    testing = TriplesFactory.from_path(
+        test_path,
+        entity_to_id=training_data.entity_to_id,
+        relation_to_id=training_data.relation_to_id,
+        create_inverse_triples=create_inverse_triples,
+    )
+
+    return training_data, validation, testing
 
 
 def get_relation_cardinality_dict(dataset: pykeen.datasets):
@@ -206,17 +276,25 @@ if __name__ == "__main__":
     # dataset_name = 'CAKE-FB15K237'
     # dataset_name = "CAKE-NELL-995"
     dataset_name = "yago5k-106"
-    description = "scStrongConstraintPreTrainTypeEmbUsingSoftMaxWeightMask"
-    model_name = "NNYwithRotatE"
-    model_date = "20230910-013742"
+    description = "noDescriptionUsingSoftMax"
+    # model_name = "NNYwithRotatE"
+    model_name = "TransE"
+    model_date = "20230718-095323"
 
     if "TypeAsTrain" in description:
         type_as_train = True
     else:
         type_as_train = False
 
-    training_data, validation, testing = load_dataset(
-        dataset=dataset_name, ifTypeAsTrain=type_as_train
+    # training_data, validation, testing = load_dataset(
+    #     dataset=dataset_name, ifTypeAsTrain=type_as_train
+    # )
+    training_data, validation, testing = read_constraint_type_test_data(
+        data_name=dataset_name,
+        data_pro_func=splitTypeData,
+        type_position=2,
+        # type_completed=True,
+        type_completed=False,
     )
 
     # example_str_yago = "Henry_Mancini | diedIn | Los_Angeles | \
@@ -279,12 +357,14 @@ if __name__ == "__main__":
     print(scores_str)
     for pair in zip(examples_yago, scores):
         print(pair[0], ": ", round(pair[1][0], 3))
-    breakpoint()
 
     # 统计每种类别的关系的数据量。
 
     evaluator = RankBasedEvaluator()
     ir_evaluator = IRRankBasedEvaluator()
+    type_constraint_evaluator = TypeConstraintEvaluator(
+        training_data.ents_types, rels_types=training_data.rels_types
+    )
     r = evaluator.evaluate(
         model=trained_model,
         mapped_triples=dataset.testing.mapped_triples,
@@ -293,7 +373,7 @@ if __name__ == "__main__":
             dataset.validation.mapped_triples,
             dataset.testing.mapped_triples,
         ],
-        batch_size=2,
+        batch_size=4,
     )
 
     print(r.to_dict()["both"]["realistic"]["inverse_harmonic_mean_rank"])

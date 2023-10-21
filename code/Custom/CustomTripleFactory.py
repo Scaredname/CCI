@@ -350,6 +350,95 @@ def crate_rel_type_related_ent(ents_types, rels_types):
     return rels_related_h_ents, rels_related_t_ents
 
 
+class TypesConstraintTestFactory(TriplesFactory):
+    def __init__(
+        self,
+        *,
+        ents_types: np.ndarray,
+        rels_types: np.ndarray,
+        # rels_inj_conf: np.ndarray,
+        # rel_related_ent: list[torch.tensor, torch.tensor],
+        types_to_id: Mapping[str, int],
+        **kwargs,
+    ) -> None:
+        super().__init__(**kwargs)
+        self.rels_types = rels_types
+        self.ents_types = ents_types
+        self.types_to_id = types_to_id
+
+    @property
+    def type_shape(self) -> Tuple[int, ...]:
+        """Return the shape of the types."""
+        return self.ents_types.shape[1:]
+
+    @property
+    def num_types(self) -> int:
+        """Return the number of types."""
+        return self.ents_types.shape[1]
+
+    @classmethod
+    def from_labeled_triples(
+        cls,
+        triples: LabeledTriples,
+        create_inverse_triples=False,
+        *,
+        type_triples: LabeledTriples = None,
+        type_position: int = 0,
+        **kwargs,
+    ) -> "TriplesTypesFactory":
+        if type_triples is None:
+            raise ValueError(f"{cls.__name__} requires type_triples.")
+        base = TriplesFactory.from_labeled_triples(
+            triples=triples, create_inverse_triples=create_inverse_triples, **kwargs
+        )
+
+        # get entity and relation adjacence matrix
+        ents_rels_adj = create_adjacency_matrix(
+            triples=triples,
+            entity_to_id=base.entity_to_id,
+            relation_to_id=base.relation_to_id,
+            if_reverse=create_inverse_triples,
+        )
+
+        ents_types, rels_types, types_to_id = create_matrix_of_types(
+            type_triples=type_triples,
+            entity_to_id=base.entity_to_id,
+            relation_to_id=base.relation_to_id,
+            type_position=type_position,
+            ents_rels=ents_rels_adj,
+            if_reverse=create_inverse_triples,
+        )
+
+        rel_related_ent = crate_rel_type_related_ent(
+            ents_types=ents_types, rels_types=rels_types
+        )
+
+        (
+            relation_injective_confidence,
+            see_confindence,
+        ) = create_relation_injective_confidence(base.mapped_triples)
+
+        # Calculate the proportion of each type.
+        ents_types = torch.where(
+            torch.tensor(ents_types) != 0, torch.tensor(1), torch.tensor(0)
+        )
+        rels_types = torch.where(
+            torch.tensor(rels_types) != 0, torch.tensor(1), torch.tensor(0)
+        )
+
+        return cls(
+            entity_to_id=base.entity_to_id,
+            relation_to_id=base.relation_to_id,
+            mapped_triples=base.mapped_triples,
+            create_inverse_triples=base.create_inverse_triples,
+            ents_types=ents_types,
+            rels_types=rels_types,
+            types_to_id=types_to_id,
+            # rels_inj_conf=relation_injective_confidence,
+            # rel_related_ent=rel_related_ent,
+        )
+
+
 class TriplesTypesFactory(TriplesFactory):
     file_name_type_to_id: ClassVar[str] = "type_to_id"
     file_name_types: ClassVar[str] = "types"
