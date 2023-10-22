@@ -23,6 +23,7 @@ import torch
 from pykeen.constants import COLUMN_LABELS, TARGET_TO_KEY_LABELS, TARGET_TO_KEYS
 from pykeen.evaluation import MacroRankBasedEvaluator, RankBasedEvaluator
 from pykeen.evaluation.rank_based_evaluator import RankBasedMetricResults
+from pykeen.evaluation.ranks import Ranks
 from pykeen.typing import (
     LABEL_HEAD,
     LABEL_TAIL,
@@ -50,7 +51,13 @@ class TypeConstraintEvaluator(RankBasedEvaluator):
 
     weights: MutableMapping[Target, List[np.ndarray]]
 
-    def __init__(self, ents_types: torch.Tensor, rels_types: torch.Tensor, **kwargs):
+    def __init__(
+        self,
+        ents_types: torch.Tensor,
+        rels_types: torch.Tensor,
+        entity_match: bool = False,
+        **kwargs,
+    ):
         """
         Initialize the evaluator.
 
@@ -60,6 +67,8 @@ class TypeConstraintEvaluator(RankBasedEvaluator):
         super().__init__(**kwargs)
         self.ents_types = torch.tensor(ents_types)
         self.rels_types = torch.tensor(rels_types)
+        self.batch_ranks = defaultdict(list)
+        self.entity_match = entity_match
 
     def process_scores_(
         self,
@@ -74,22 +83,43 @@ class TypeConstraintEvaluator(RankBasedEvaluator):
         r = hrt_batch[:, 1]
         t = hrt_batch[:, 2]
 
-        if target == "head":
-            constraint_score = 100 * (
-                self.ents_types[None] * self.rels_types[0][r].unsqueeze(dim=1)
-            ).sum(-1).clamp(0, 1)
-        elif target == "tail":
-            constraint_score = 100 * (
-                self.ents_types[None].squeeze() * self.rels_types[1][r].unsqueeze(dim=1)
-            ).sum(-1).clamp(0, 1)
+        if self.entity_match:
+            if target == "head":
+                constraint_score = 100 * (
+                    self.ents_types[None] * self.ents_types[t].unsqueeze(dim=1)
+                ).sum(-1).clamp(0, 1)
+            elif target == "tail":
+                constraint_score = 100 * (
+                    self.ents_types[None] * self.ents_types[h].unsqueeze(dim=1)
+                ).sum(-1).clamp(0, 1)
+
+        else:
+            if target == "head":
+                constraint_score = 100 * (
+                    self.ents_types[None] * self.rels_types[0][r].unsqueeze(dim=1)
+                ).sum(-1).clamp(0, 1)
+            elif target == "tail":
+                constraint_score = 100 * (
+                    self.ents_types[None] * self.rels_types[1][r].unsqueeze(dim=1)
+                ).sum(-1).clamp(0, 1)
         constraint_score = constraint_score.to(scores.device)
 
         scores += constraint_score
         true_scores += 100
-        super().process_scores_(
-            hrt_batch=hrt_batch,
-            target=target,
-            scores=scores,
-            true_scores=true_scores,
-            dense_positive_mask=dense_positive_mask,
+        if true_scores is None:
+            raise ValueError(f"{self.__class__.__name__} needs the true scores!")
+        batch_ranks = Ranks.from_scores(
+            true_score=true_scores,
+            all_scores=scores,
+        )
+        self.num_entities = scores.shape[1]
+        for rank_type, v in batch_ranks.items():
+            ranks_np = v.detach().cpu().numpy()
+            self.ranks[target, rank_type].append(ranks_np)
+            for i in range(len(ranks_np)):
+                self.batch_ranks[target, rank_type].append(
+                    (hrt_batch.numpy()[i], ranks_np[i])
+                )
+        self.num_candidates[target].append(
+            batch_ranks.number_of_options.detach().cpu().numpy()
         )

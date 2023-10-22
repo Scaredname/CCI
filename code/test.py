@@ -8,6 +8,7 @@ Description: 测试1-1，1-n，n-1，n-n的结果。测试不同种类关系的�
 
 Copyright (c) 2023 by ${git_name_email}, All Rights Reserved. 
 """
+import json
 import os
 from collections import defaultdict
 
@@ -286,16 +287,16 @@ if __name__ == "__main__":
     else:
         type_as_train = False
 
-    # training_data, validation, testing = load_dataset(
-    #     dataset=dataset_name, ifTypeAsTrain=type_as_train
-    # )
-    training_data, validation, testing = read_constraint_type_test_data(
-        data_name=dataset_name,
-        data_pro_func=splitTypeData,
-        type_position=2,
-        # type_completed=True,
-        type_completed=False,
+    training_data, validation, testing = load_dataset(
+        dataset=dataset_name, ifTypeAsTrain=type_as_train
     )
+    # training_data, validation, testing = read_constraint_type_test_data(
+    #     data_name=dataset_name,
+    #     data_pro_func=splitTypeData,
+    #     type_position=2,
+    #     # type_completed=True,
+    #     type_completed=False,
+    # )
 
     # example_str_yago = "Henry_Mancini | diedIn | Los_Angeles | \
     # Om_Puri | diedIn | Los_Angeles |\
@@ -360,12 +361,14 @@ if __name__ == "__main__":
 
     # 统计每种类别的关系的数据量。
 
-    evaluator = RankBasedEvaluator()
+    evaluator = RankBasedEvaluator(clear_on_finalize=False)
     ir_evaluator = IRRankBasedEvaluator()
     type_constraint_evaluator = TypeConstraintEvaluator(
-        training_data.ents_types, rels_types=training_data.rels_types
+        training_data.ents_types,
+        rels_types=training_data.rels_types,
+        entity_match=True,
     )
-    r = evaluator.evaluate(
+    r = type_constraint_evaluator.evaluate(
         model=trained_model,
         mapped_triples=dataset.testing.mapped_triples,
         additional_filter_triples=[
@@ -375,9 +378,27 @@ if __name__ == "__main__":
         ],
         batch_size=4,
     )
-
     print(r.to_dict()["both"]["realistic"]["inverse_harmonic_mean_rank"])
 
+    ranks_path = "../result/ranks/"
+    os.makedirs(ranks_path, exist_ok=True)
+
+    # ranks_path = os.path.join(ranks_path, "type_constraint_ranks")
+    # base_name = "type_constraint_ranks"
+    base_name = "completed_type_constraint_ranks"
+
+    for target, rank_type in type_constraint_evaluator.batch_ranks:
+        if rank_type == "realistic":
+            save_path = os.path.join(ranks_path, base_name + "_" + target + ".txt")
+            with open(save_path, "w", encoding="utf-8") as f:
+                f.write(
+                    "\n".join(
+                        str(rank)
+                        for rank in type_constraint_evaluator.batch_ranks[
+                            target, rank_type
+                        ]
+                    )
+                )
     # result_dic = get_result_dict(
     #     trained_model, evaluator, relation_set, dataset, ir_evaluator=ir_evaluator
     # )
