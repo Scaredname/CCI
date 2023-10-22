@@ -506,7 +506,6 @@ elif args.model_index == 16:
     model = HAKEModel(
         triples_factory=training_data,
         embedding_dim=args.model_ent_dim,
-        lm=args.loss_margin,
         loss="NSSALoss",
         loss_kwargs=dict(
             reduction="mean",

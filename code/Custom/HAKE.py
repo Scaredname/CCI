@@ -8,6 +8,7 @@ Description: 基于pykeen实现HAKE
 
 Copyright (c) 2023 by ${git_name_email}, All Rights Reserved. 
 """
+import math
 from typing import Any, ClassVar, Mapping, MutableMapping
 
 import numpy as np
@@ -21,13 +22,22 @@ from pykeen.typing import Constrainer, Hint, Initializer
 from pykeen.utils import estimate_cost_of_sequence
 
 
-def HAKE_entity_initialize(tensor, bound):
+def HAKE_entity_initialize(tensor, gain=1.0):
+    fan_out = np.prod(tensor.shape[1:])
+    std = gain * math.sqrt(2.0 / float(fan_out))
+    bound = math.sqrt(3.0) * std  # Calculate uniform bounds from standard deviation
     torch.nn.init.uniform_(tensor, -bound, bound)
     return tensor
 
 
-def HAKE_relation_initialize(tensor, bound):
-    torch.nn.init.uniform_(tensor, -bound, bound)
+def HAKE_relation_initialize(x):
+    if x.shape[-1] != 2:
+        new_shape = (*x.shape[:-1], -1, 2)
+        x = x.view(*new_shape)
+    phases = 2 * np.pi * torch.rand_like(torch.view_as_complex(x).real)
+    tensor = torch.view_as_real(
+        torch.complex(real=phases.cos(), imag=phases.sin())
+    ).detach()
 
     try:
         dim = tensor.shape[1] // 3
@@ -42,7 +52,7 @@ def hake_interaction(
     h: torch.FloatTensor,
     r: torch.FloatTensor,
     t: torch.FloatTensor,
-    bound: torch.FloatTensor,
+    # bound: torch.FloatTensor,
     phase_weight: torch.FloatTensor,
     modulus_weight: torch.FloatTensor,
 ) -> torch.FloatTensor:
@@ -69,9 +79,9 @@ def hake_interaction(
     phase_relation, mod_relation, bias_relation = torch.chunk(r, 3, dim=-1)
     phase_tail, mod_tail = torch.chunk(t, 2, dim=-1)
 
-    phase_head = phase_head / (bound / pi)
-    phase_relation = phase_relation / (bound / pi)
-    phase_tail = phase_tail / (bound / pi)
+    # phase_head = phase_head / (bound / pi)
+    # phase_relation = phase_relation / (bound / pi)
+    # phase_tail = phase_tail / (bound / pi)
 
     # 适配1-N测试方法的shape
     if len(phase_head.shape) > 2:
@@ -106,15 +116,14 @@ class HAKEInteraction(
 ):
     func = hake_interaction
 
-    def __init__(self, bound, phase_weight, modulus_weight):
+    def __init__(self, phase_weight, modulus_weight):
         super().__init__()
-        self.bound = torch.tensor(bound)
+        # self.bound = torch.tensor(bound)
         self.phase_weight = torch.tensor(phase_weight)
         self.modulus_weight = torch.tensor(modulus_weight)
 
     def _prepare_state_for_functional(self) -> MutableMapping[str, Any]:
         return dict(
-            bound=self.bound,
             phase_weight=self.phase_weight,
             modulus_weight=self.modulus_weight,
         )
@@ -128,7 +137,6 @@ class HAKEModel(ERModel):
     def __init__(
         self,
         *,
-        loss=None,
         embedding_dim: int = 200,
         entity_initializer: Hint[Initializer] = HAKE_entity_initialize,
         relation_initializer: Hint[Initializer] = HAKE_relation_initialize,
@@ -156,23 +164,14 @@ class HAKEModel(ERModel):
         :param kwargs:
             additional keyword-based parameters passed to :meth:`ERModel.__init__`
         """
-        try:
-            lm = loss.margin
-        except:
-            print("Loss error: we need loss function with margin")
-            lm = 9.0
-
-        self.epsilon = 2.0
-        bound = (lm + self.epsilon) / embedding_dim
-        phase_weight = phase_weight * bound
         super().__init__(
             interaction=HAKEInteraction(
-                bound=bound, phase_weight=phase_weight, modulus_weight=modulus_weight
+                phase_weight=phase_weight, modulus_weight=modulus_weight
             ),
             entity_representations_kwargs=dict(
                 shape=embedding_dim * 2,
                 initializer=entity_initializer,
-                initializer_kwargs=dict(bound=bound),
+                # initializer_kwargs=dict(bound=bound),
                 regularizer=regularizer,
                 regularizer_kwargs=regularizer_kwargs,
                 dtype=torch.float,
@@ -180,7 +179,7 @@ class HAKEModel(ERModel):
             relation_representations_kwargs=dict(
                 shape=embedding_dim * 3,
                 initializer=relation_initializer,
-                initializer_kwargs=dict(bound=bound),
+                # initializer_kwargs=dict(bound=bound),
                 dtype=torch.float,
             ),
             **kwargs,
