@@ -20,11 +20,10 @@ class AblationModel(CatRSETC):
     用来测试实体嵌入包含类型嵌入的有效性.
     """
 
-    def __init__(self, type_score_weight, **kwargs) -> None:
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.rels_types_h = self.rel_type_h_weights[0]._embeddings.weight
         self.rels_types_t = self.rel_type_t_weights[0]._embeddings.weight
-        self.type_score_weight = type_score_weight
 
     def score_hrt(
         self, hrt_batch: torch.LongTensor, *, mode: Optional[InductiveMode] = None
@@ -49,12 +48,8 @@ class AblationModel(CatRSETC):
 
         h, r, t = self._get_representations(h=h_index, r=r_index, t=t_index, mode=mode)
 
-        type_score = self.type_score_weight * (
-            r_h_type_score.unsqueeze(dim=-1) + r_t_type_score.unsqueeze(dim=-1)
-        )
-
         return (
-            self.interaction.score_hrt(h=h, r=r, t=t) + type_score,
+            self.interaction.score_hrt(h=h, r=r, t=t),
             injective_confidence,
             type_rel,
         )

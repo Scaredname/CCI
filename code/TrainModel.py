@@ -201,6 +201,7 @@ training_data, validation, testing = load_dataset(
 
 import torch
 from Custom.CustomLoss import SoftTypeawareNegativeSmapling
+from Custom.CustomLoss_new import TypeawareMarginNegativeSmapling
 from Custom.HAKE import HAKEModel
 from Custom.OriginRotatE import FloatRotatE
 from Custom.TypeModels.ablation_model import AMwithRotatE, AMwithTransE
@@ -284,6 +285,11 @@ if not args.not_soft_type_aware_loss:
         adversarial_temperature=args.adversarial_temperature,
         margin=args.loss_margin,
     )
+    # soft_loss = TypeawareMarginNegativeSmapling(
+    #     reduction="mean",
+    #     adversarial_temperature=args.adversarial_temperature,
+    #     margin=args.loss_margin,
+    # )
 else:
     soft_loss = NSSALoss(
         reduction="mean",
@@ -682,7 +688,7 @@ elif args.model_index == 61:
         ent_dim=args.model_ent_dim,
         rel_dim=args.model_rel_dim,
         type_dim=args.model_type_dim,
-        freeze_matrix=args.ifFreezeWeights,
+        freeze_matrix=True,
         freeze_type_emb=args.ifFreezeTypeEmb,
         add_ent_type=not args.ifNotAddEntType,
         loss=soft_loss,
@@ -690,7 +696,6 @@ elif args.model_index == 61:
         activation_weight=not args.ifNoActivationFuncion,
         weight_mask=args.ifWeightMask,
         type_weight_temperature=args.type_weight_temperature,
-        type_score_weight=args.type_score_weight,
         init_preference_one=args.init_preference_one,
         learn_ents_types=args.learn_ents_types,
     )
@@ -706,7 +711,7 @@ elif args.model_index == 62:
         ent_dim=args.model_ent_dim,
         rel_dim=args.model_rel_dim // 2,  # relation的数据类型的cfloat
         type_dim=args.model_type_dim,
-        freeze_matrix=args.ifFreezeWeights,
+        freeze_matrix=True,
         freeze_type_emb=args.ifFreezeTypeEmb,
         add_ent_type=not args.ifNotAddEntType,
         type_initializer="xavier_uniform_",
@@ -718,7 +723,6 @@ elif args.model_index == 62:
         activation_weight=not args.ifNoActivationFuncion,
         weight_mask=args.ifWeightMask,
         type_weight_temperature=args.type_weight_temperature,
-        type_score_weight=args.type_score_weight,
         init_preference_one=args.init_preference_one,
         learn_ents_types=args.learn_ents_types,
     )
