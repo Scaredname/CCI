@@ -79,9 +79,6 @@ class AblationModel(CatRSETC):
         r_h_type_score = (r_h_type_weight * h_type_weight).sum(-1)
         r_t_type_score = (r_t_type_weight * t_type_weight).sum(-1)
 
-        type_score = self.type_score_weight * (
-            r_h_type_score.unsqueeze(dim=-1) + r_t_type_score.unsqueeze(dim=-1)
-        )
         # unsqueeze if necessary
         if tails is None or tails.ndimension() == 1:
             if not len(t.shape) > 2:
@@ -90,8 +87,9 @@ class AblationModel(CatRSETC):
             # score shape: (batch_size, num_entities)
             scores=self.interaction.score(
                 h=h, r=r, t=t, slice_size=slice_size, slice_dim=1
-            ).view(-1, self.num_entities)
-            + type_score.view(-1, self.num_entities),  # 会出现测试批度为1的特例，所以调整一下score的shape
+            ).view(
+                -1, self.num_entities
+            ),  # 会出现测试批度为1的特例，所以调整一下score的shape
             representations=self.entity_representations,
             num=self._get_entity_len(mode=mode) if tails is None else tails.shape[-1],
         )
@@ -121,9 +119,6 @@ class AblationModel(CatRSETC):
         r_h_type_score = (r_h_type_weight * h_type_weight).sum(-1)
         r_t_type_score = (r_t_type_weight * t_type_weight).sum(-1)
 
-        type_score = self.type_score_weight * (
-            r_h_type_score.unsqueeze(dim=-1) + r_t_type_score.unsqueeze(dim=-1)
-        )
         # unsqueeze if necessary
         if heads is None or heads.ndimension() == 1:
             h = parallel_unsqueeze(h, dim=0)
@@ -131,8 +126,9 @@ class AblationModel(CatRSETC):
         return repeat_if_necessary(
             scores=self.interaction.score(
                 h=h, r=r, t=t, slice_size=slice_size, slice_dim=1
-            ).view(-1, self.num_entities)
-            + type_score.view(-1, self.num_entities),  # 会出现测试批度为1的特例，所以调整一下score的shape
+            ).view(
+                -1, self.num_entities
+            ),  # 会出现测试批度为1的特例，所以调整一下score的shape
             representations=self.entity_representations,
             num=self._get_entity_len(mode=mode) if heads is None else heads.shape[-1],
         )
@@ -158,7 +154,6 @@ class AMwithTransE(AblationModel):
         regularizer_kwargs: OptionalKwargs = None,
         bias=False,
         dropout=0.3,
-        type_score_weight=1.0,
         **kwargs,
     ) -> None:
         rel_dim = ent_dim
@@ -170,7 +165,6 @@ class AMwithTransE(AblationModel):
             rel_dim=rel_dim,
             type_dim=type_dim,
             data_type=torch.float,
-            type_score_weight=type_score_weight,
             interaction=TransEInteraction,
             interaction_kwargs=dict(p=scoring_fct_norm),
             entity_representations_kwargs=dict(
@@ -213,7 +207,6 @@ class AMwithRotatE(AblationModel):
         rel_dtype=torch.float,
         type_dtype=torch.float,
         dropout=0.3,
-        type_score_weight=1.0,
         **kwargs,
     ) -> None:
         rel_dim = int(ent_dim / 2)
@@ -225,7 +218,6 @@ class AMwithRotatE(AblationModel):
             rel_dim=rel_dim,
             type_dim=type_dim,
             data_type=ent_dtype,
-            type_score_weight=type_score_weight,
             interaction=RotatEInteraction,
             entity_representations_kwargs=dict(
                 shape=ent_dim,
