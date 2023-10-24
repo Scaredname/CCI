@@ -34,6 +34,7 @@ parser.add_argument("-o", "--optimizer", type=str, default="adam")
 parser.add_argument("-cpu", "--num_workers", type=int, default=1)
 parser.add_argument("-lr", "--learning_rate", type=float, default=0.001)
 parser.add_argument("-lm", "--loss_margin", type=float, default=9.0)
+parser.add_argument("-llb", "--loss_lower_bound", type=float, default=0.2)
 parser.add_argument("-at", "--adversarial_temperature", type=float, default=1.0)
 parser.add_argument("-twt", "--type_weight_temperature", type=float, default=1.0)
 parser.add_argument("-tsw", "--type_score_weight", type=float, default=1.0)
@@ -284,6 +285,7 @@ if not args.not_soft_type_aware_loss:
         reduction="mean",
         adversarial_temperature=args.adversarial_temperature,
         margin=args.loss_margin,
+        lower_bound=args.loss_lower_bound,
     )
     # soft_loss = TypeawareMarginNegativeSmapling(
     #     reduction="mean",
