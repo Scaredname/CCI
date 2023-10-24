@@ -274,7 +274,7 @@ if __name__ == "__main__":
         reduction="mean",
         adversarial_temperature=args.adversarial_temperature,
         margin=args.loss_margin,
-        lower_bound=0.2,
+        delta_margin=1,
     )
 
     import torch
@@ -331,7 +331,7 @@ if __name__ == "__main__":
     loss_kwargs_ranges = dict(
         margin=dict(type=int, low=0, high=30, q=2),
         adversarial_temperature=dict(type=float, low=1, high=5, q=0.5),
-        delat_margin=dict(type=int, low=0, high=10, q=2),
+        delta_margin=dict(type=int, low=0, high=10, q=2),
     )
     # regularizer_kwargs_ranges = dict()
     optimizer_kwargs_ranges = dict(
