@@ -10,7 +10,10 @@ Copyright (c) 2023 by ${git_name_email}, All Rights Reserved.
 """
 import json
 import os
+import sys
 from collections import defaultdict
+
+sys.path.append("..")
 
 import numpy as np
 import pandas as pd
@@ -202,7 +205,7 @@ def load_model(
     print("The date of this model is: ", model_date)
 
     model_path = (
-        "../models/"
+        "../../models/"
         + dataset_name
         + "/"
         + description
@@ -380,7 +383,7 @@ if __name__ == "__main__":
     )
     print(r.to_dict()["both"]["realistic"]["inverse_harmonic_mean_rank"])
 
-    ranks_path = "../result/ranks/"
+    ranks_path = "../../result/ranks/"
     os.makedirs(ranks_path, exist_ok=True)
 
     # ranks_path = os.path.join(ranks_path, "type_constraint_ranks")
@@ -404,7 +407,7 @@ if __name__ == "__main__":
     # )
     # result_df = pd.DataFrame(result_dic)
 
-    # save_path = "../result/cardinality/"
+    # save_path = "../../result/cardinality/"
     # if not os.path.exists(save_path):
     #     os.makedirs(save_path)
     # result_df.to_csv(

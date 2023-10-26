@@ -3,6 +3,9 @@ import argparse
 import datetime
 import json
 import os
+import sys
+
+sys.path.append("..")
 
 from Custom.CustomTrain import TypeSLCWATrainingLoop
 from pykeen.constants import PYKEEN_CHECKPOINTS
@@ -162,6 +165,7 @@ if __name__ == "__main__":
     #     ],
 
     args = parser.parse_args()
+    args.ifFreezeWeights = True
     # load data
     dataset = args.dataset
     training_data, validation, testing = load_dataset(
@@ -179,6 +183,8 @@ if __name__ == "__main__":
     # todo: the wired logger of _split_triples
     big_validation, small_validation = validation.split(0.9)
 
+    # _, small_training_data = training_data.split(0.8)
+    # small_training, small_validation = small_training_data.split(0.8)
     # setting pipeline
 
     training_setting = dict(
@@ -214,6 +220,9 @@ if __name__ == "__main__":
             evaluation_triples_factory=small_validation,
         ),
     )
+
+    # if args.model_index in [41, 42, 51, 52] and args.description == 'final':
+    #     args.description = 'STNS-'
 
     if args.strong_constraint:
         args.description += "StrongConstraint"
@@ -252,29 +261,34 @@ if __name__ == "__main__":
         args.description += "StrictRelationCardinality"
 
     from Custom.CustomLoss import SoftTypeawareNegativeSmapling
+    from Custom.CustomLoss_new import NewSoftTypeawareNegativeSmapling
     from pykeen.losses import NSSALoss
 
     # 每次调参前决定使用什么loss和训练方式
-    # soft_loss = SoftTypeawareNegativeSmapling()
-    # pipeline_config["training_loop"] = TypeSLCWATrainingLoop
-    soft_loss = NSSALoss()
+    soft_loss = SoftTypeawareNegativeSmapling()
+    # soft_loss = NewSoftTypeawareNegativeSmapling()
+    pipeline_config["training_loop"] = TypeSLCWATrainingLoop
+    #     soft_loss = NSSALoss()
 
     loss_kwargs = dict(
         reduction="mean",
         adversarial_temperature=args.adversarial_temperature,
         margin=args.loss_margin,
+        lower_bound=0.2,
     )
 
     import torch
-    from pykeen.models.unimodal import TransE
+    from Custom.TypeModels.ablation_model import AMwithRotatE, AMwithTransE
 
-    model = TransE(
+    model = AMwithTransE(
         triples_factory=training_data,
     )
     model_kwargs = dict(
-        # embedding_dim=args.model_ent_dim,
-        embedding_dim=512,
-        scoring_fct_norm=1,
+        ent_dim=args.model_ent_dim,  # relation的数据类型的cfloat
+        freeze_matrix=True,
+        weight_mask=args.ifWeightMask,
+        init_preference_one=args.init_preference_one,
+        learn_ents_types=args.learn_ents_types,
     )
 
     from torch.optim import Adam
@@ -295,23 +309,31 @@ if __name__ == "__main__":
     # 设置需要优化的超参数
     model_kwargs_range = dict(
         # type_dim=dict(type=int, scale="power", base=2, low=4, high=10),
-        # embedding_dim=dict(type=int, scale="power_two", low=8, high=9),
+        # embedding_dim=dict(type=int, scale="power_two", low=7, high=9),
+        ent_dim=dict(type=int, scale="power_two", low=8, high=10),
+        init_preference_one=dict(type="bool"),
     )
     loss_kwargs_ranges = dict(
-        # margin=dict(type=int, low=9, high=11),
-        # margin=dict(type="categorical", choices=[6, 9, 12]),
-        # adversarial_temperature=dict(type=float, low=0.5, high=1.5, q=0.1),
-        adversarial_temperature=dict(type="categorical", choices=[1, 0.5, 0.2, 0.1]),
+        margin=dict(type=int, low=8, high=12, q=1),
+        adversarial_temperature=dict(type=float, low=0.5, high=4, q=0.5),
+        lower_bound=dict(type=float, low=0, high=1.0, q=0.1),
     )
     # regularizer_kwargs_ranges = dict()
     optimizer_kwargs_ranges = dict(
-        lr=dict(type="categorical", choices=[0.0001, 0.0002, 0.0005, 0.001]),
-        # lr=dict(type="float", low=0.0001, high=0.0005, q=0.0001),
+        lr=dict(
+            type="categorical",
+            choices=[
+                0.0005,
+                0.0002,
+                0.0001,
+                0.00005,
+                0.00002,
+            ],
+        )
     )
     # lr_scheduler_kwargs_ranges = dict()
     negative_sampler_kwargs_ranges = dict(
-        # num_negs_per_pos=dict(type=int, scale="power_two", low=6, high=7),
-        # num_negs_per_pos=dict(type="categorical", choices=[128, 256, 512]), # 128
+        num_negs_per_pos=dict(type=int, scale="power_two", low=7, high=9)
     )
     # training_kwargs_ranges = dict()
 
@@ -330,18 +352,16 @@ if __name__ == "__main__":
             negative_sampler_kwargs.pop(kwarg)
 
     from Custom.Custom_hpo import hpo_pipeline
-    from optuna.samplers import NSGAIISampler, RandomSampler, TPESampler
+    from optuna.samplers import RandomSampler, TPESampler
     from pykeen.sampling.basic_negative_sampler import BasicNegativeSampler
 
     # loss 和 模型应该分别初始化
     pipeline_result = hpo_pipeline(
-        # sampler=RandomSampler,
         sampler=TPESampler,
         sampler_kwargs=dict(multivariate=True, group=True),
         n_trials=500,
         # pruner="nop",
         pruner_kwargs=dict(n_startup_trials=5, n_warmup_steps=500, interval_steps=10),
-        # timeout=43200,  # seconds
         training=training_data,
         validation=validation,
         testing=testing,
@@ -354,13 +374,13 @@ if __name__ == "__main__":
         device=args.device,
         result_tracker="tensorboard",
         result_tracker_kwargs=dict(
-            experiment_path="../result/tensorBoard_log/hpo/"
+            experiment_path="../../result/tensorBoard_log/hpo/"
             + args.description
             + "/"
             + date_time,
         ),
         study_name=args.description + date_time,
-        storage="sqlite:///../models/{}.db".format(dataset + "_transe"),
+        storage="sqlite:///../../models/{}.db".format(dataset + "_loss_transe"),
         load_if_exists=True,
         optimizer_kwargs=optimizer_kwargs,
         optimizer_kwargs_ranges=optimizer_kwargs_ranges,
@@ -370,5 +390,5 @@ if __name__ == "__main__":
         **pipeline_config,
     )
 
-    model_path = "../models/hpo" + date_time
+    model_path = "../../models/hpo" + date_time
     pipeline_result.save_to_directory(model_path)

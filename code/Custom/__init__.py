@@ -1,4 +1,4 @@
-'''
+"""
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-28 16:36:00
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
@@ -7,6 +7,6 @@ FilePath: /code/Custom/__init__.py
 Description: 
 
 Copyright (c) 2022 by error: git config user.name && git config user.email & please set dead value or install git, All Rights Reserved. 
-'''
-from .CustomTripleFactory import TriplesTypesFactory
-from .ir_evaluation import IRRankBasedEvaluator
+"""
+
+from Custom import CustomTripleFactory
