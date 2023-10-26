@@ -148,6 +148,14 @@ for file_name in os.listdir(result_path):
                         results_dict["margin"].append(margin)
                     else:
                         results_dict["margin"].append(-1)
+                    if "lower_bound" in config["loss_kwargs"]:
+                        lower_bound = re.search(
+                            r"'lower_bound':\s*tensor\(([\d\.]+)\)",
+                            config["loss_kwargs"],
+                        ).group(1)
+                        results_dict["lower_bound"].append(lower_bound)
+                    else:
+                        results_dict["lower_bound"].append(-1)
 
                     # {'training': False, '_parameters': OrderedDict(), '_buffers': OrderedDict(), '_non_persistent_buffers_set': set(), '_backward_pre_hooks': OrderedDict(), '_backward_hooks': OrderedDict(), '_is_full_backward_hook': None, '_forward_hooks': OrderedDict(), '_forward_hooks_with_kwargs': OrderedDict(), '_forward_pre_hooks': OrderedDict(), '_forward_pre_hooks_with_kwargs': OrderedDict(), '_state_dict_hooks': OrderedDict(), '_state_dict_pre_hooks': OrderedDict(), '_load_state_dict_pre_hooks': OrderedDict(), '_load_state_dict_post_hooks': OrderedDict(), '_modules': OrderedDict(), 'reduction': 'mean', '_reduction_method': <built-in method mean of type object at 0x7f2261842540>, 'inverse_softmax_temperature': 1.0, 'factor': 0.5, 'margin': 8.0}
                     if "ETC" in model_name or "NNY" in model_name or "MM" in model_name:
