@@ -36,6 +36,7 @@ def read_constraint_type_test_data(
     create_inverse_triples=False,
     type_position=0,
     type_completed=False,
+    one_relation_type=False,
 ):
     """
     @Params: data_name, data_pro_func, create_inverse_triples, type_position
@@ -78,6 +79,7 @@ def read_constraint_type_test_data(
         type_triples=training_type_triples,
         type_position=type_position,
         create_inverse_triples=create_inverse_triples,
+        one_relation_type=one_relation_type,
     )
 
     validation = TriplesFactory.from_path(
@@ -279,27 +281,33 @@ def get_result_dict(model, evaluator, relation_set, dataset, ir_evaluator=None):
 if __name__ == "__main__":
     # dataset_name = 'CAKE-FB15K237'
     # dataset_name = "CAKE-NELL-995"
-    dataset_name = "yago5k-106"
-    description = "noDescriptionUsingSoftMax"
+    dataset_name = "yago_new"
+    description = "best_hpo"
     # model_name = "NNYwithRotatE"
-    model_name = "TransE"
-    model_date = "20230718-095323"
+    model_name = "AMwithRotatE"
+    # model_name = "RotatE"
+    model_date = "20231024-055210"
+
+    type_completed = True
+    entity_match = False
+    one_relation_type = True
 
     if "TypeAsTrain" in description:
         type_as_train = True
     else:
         type_as_train = False
 
-    training_data, validation, testing = load_dataset(
-        dataset=dataset_name, ifTypeAsTrain=type_as_train
+    # training_data, validation, testing = load_dataset(
+    #     dataset=dataset_name, ifTypeAsTrain=type_as_train
+    # ) # 使用load dataset 会导致TypeConstraintEvaluator 出现错误的得分
+    training_data, validation, testing = read_constraint_type_test_data(
+        data_name=dataset_name,
+        data_pro_func=splitTypeData,
+        type_position=2,
+        type_completed=type_completed,
+        one_relation_type=one_relation_type,
+        # type_completed=False,
     )
-    # training_data, validation, testing = read_constraint_type_test_data(
-    #     data_name=dataset_name,
-    #     data_pro_func=splitTypeData,
-    #     type_position=2,
-    #     # type_completed=True,
-    #     type_completed=False,
-    # )
 
     # example_str_yago = "Henry_Mancini | diedIn | Los_Angeles | \
     # Om_Puri | diedIn | Los_Angeles |\
@@ -353,7 +361,8 @@ if __name__ == "__main__":
     # 测试特例的得分
     trained_model.strong_constraint = False
     scores = test_examples(model=trained_model, examples=example_index)
-    scores = list(scores.tolist())
+    scores = scores.tolist()
+    scores = [[score[0] / scores[0][0]] for score in scores]
     scores_str = str(round(scores[0][0], 3)) + " & "
     for score in scores[1:-1]:
         scores_str += str(round(score[0], 3)) + " & "
@@ -369,7 +378,8 @@ if __name__ == "__main__":
     type_constraint_evaluator = TypeConstraintEvaluator(
         training_data.ents_types,
         rels_types=training_data.rels_types,
-        entity_match=True,
+        entity_match=entity_match,
+        # entity_match=False,
     )
     r = type_constraint_evaluator.evaluate(
         model=trained_model,
@@ -377,11 +387,15 @@ if __name__ == "__main__":
         additional_filter_triples=[
             dataset.training.mapped_triples,
             dataset.validation.mapped_triples,
-            dataset.testing.mapped_triples,
         ],
         batch_size=4,
     )
-    print(r.to_dict()["both"]["realistic"]["inverse_harmonic_mean_rank"])
+
+    mrr = str(round(r.to_dict()["both"]["realistic"]["inverse_harmonic_mean_rank"], 3))
+    hit1 = str(round(r.to_dict()["both"]["realistic"]["hits_at_1"], 3))
+    hit3 = str(round(r.to_dict()["both"]["realistic"]["hits_at_3"], 3))
+    hit10 = str(round(r.to_dict()["both"]["realistic"]["hits_at_10"], 3))
+    print(" & ".join([mrr, hit1, hit3, hit10]))
 
     ranks_path = "../../result/ranks/"
     os.makedirs(ranks_path, exist_ok=True)

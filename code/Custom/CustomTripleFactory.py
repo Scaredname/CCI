@@ -356,8 +356,6 @@ class TypesConstraintTestFactory(TriplesFactory):
         *,
         ents_types: np.ndarray,
         rels_types: np.ndarray,
-        # rels_inj_conf: np.ndarray,
-        # rel_related_ent: list[torch.tensor, torch.tensor],
         types_to_id: Mapping[str, int],
         **kwargs,
     ) -> None:
@@ -384,6 +382,7 @@ class TypesConstraintTestFactory(TriplesFactory):
         *,
         type_triples: LabeledTriples = None,
         type_position: int = 0,
+        one_relation_type=False,
         **kwargs,
     ) -> "TriplesTypesFactory":
         if type_triples is None:
@@ -409,22 +408,20 @@ class TypesConstraintTestFactory(TriplesFactory):
             if_reverse=create_inverse_triples,
         )
 
-        rel_related_ent = crate_rel_type_related_ent(
-            ents_types=ents_types, rels_types=rels_types
-        )
-
-        (
-            relation_injective_confidence,
-            see_confindence,
-        ) = create_relation_injective_confidence(base.mapped_triples)
-
         # Calculate the proportion of each type.
         ents_types = torch.where(
             torch.tensor(ents_types) != 0, torch.tensor(1), torch.tensor(0)
         )
-        rels_types = torch.where(
-            torch.tensor(rels_types) != 0, torch.tensor(1), torch.tensor(0)
-        )
+        if one_relation_type:
+            rels_types = torch.tensor(rels_types).view(-1, rels_types.shape[2])
+            _, max_indices = torch.max(rels_types, dim=-1)
+            ones_rels_types = torch.zeros_like(rels_types)
+            ones_rels_types[torch.arange(max_indices.shape[0]), max_indices] = 1
+            rels_types = ones_rels_types.view(2, -1, rels_types.shape[-1])
+        else:
+            rels_types = torch.where(
+                torch.tensor(rels_types) != 0, torch.tensor(1), torch.tensor(0)
+            )
 
         return cls(
             entity_to_id=base.entity_to_id,
@@ -434,8 +431,6 @@ class TypesConstraintTestFactory(TriplesFactory):
             ents_types=ents_types,
             rels_types=rels_types,
             types_to_id=types_to_id,
-            # rels_inj_conf=relation_injective_confidence,
-            # rel_related_ent=rel_related_ent,
         )
 
 
@@ -488,6 +483,7 @@ class TriplesTypesFactory(TriplesFactory):
 
         if select_one_type:
             # 只保留最相关的实体类型
+            # todo: 只保留关系的最相关实体类型
             max_values_ent, _ = torch.max(self.ents_types, dim=1)
             max_values_rel, _ = torch.max(self.rels_types, dim=2)
 
