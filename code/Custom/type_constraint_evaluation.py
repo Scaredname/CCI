@@ -93,19 +93,30 @@ class TypeConstraintEvaluator(RankBasedEvaluator):
                     self.ents_types[None] * self.ents_types[h].unsqueeze(dim=1)
                 ).sum(-1).clamp(0, 1)
 
+            true_constraint_score = 100 * (self.ents_types[h] * self.ents_types[t]).sum(
+                -1
+            ).clamp(0, 1)
+
         else:
             if target == "head":
                 constraint_score = 100 * (
                     self.ents_types[None] * self.rels_types[0][r].unsqueeze(dim=1)
                 ).sum(-1).clamp(0, 1)
+                true_constraint_score = 100 * (
+                    self.ents_types[h] * self.rels_types[0][r].unsqueeze(dim=1)
+                ).sum(-1).clamp(0, 1)
             elif target == "tail":
                 constraint_score = 100 * (
                     self.ents_types[None] * self.rels_types[1][r].unsqueeze(dim=1)
                 ).sum(-1).clamp(0, 1)
+                true_constraint_score = 100 * (
+                    self.ents_types[t] * self.rels_types[1][r].unsqueeze(dim=1)
+                ).sum(-1).clamp(0, 1)
         constraint_score = constraint_score.to(scores.device)
+        true_constraint_score = true_constraint_score.to(scores.device)
 
         scores += constraint_score
-        true_scores += 100
+        true_scores += true_constraint_score.view(*true_scores.shape)
         if true_scores is None:
             raise ValueError(f"{self.__class__.__name__} needs the true scores!")
         batch_ranks = Ranks.from_scores(
