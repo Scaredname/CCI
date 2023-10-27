@@ -279,15 +279,14 @@ def get_result_dict(model, evaluator, relation_set, dataset, ir_evaluator=None):
 
 
 if __name__ == "__main__":
-    dataset_name = "CAKE-DBpedia-242"
-    # dataset_name = "CAKE-FB15K237"
-    # dataset_name = "CAKE-NELL-995_new"
-    # dataset_name = "yago_new"
-    description = "final"
+    # dataset_name = 'CAKE-FB15K237'
+    # dataset_name = "CAKE-NELL-995"
+    dataset_name = "yago_new"
+    description = "best_hpo"
     # model_name = "NNYwithRotatE"
-    # model_name = "AMwithRotatE"
-    model_name = "RotatE"
-    model_date = "20230726-181050"
+    model_name = "AMwithRotatE"
+    # model_name = "RotatE"
+    model_date = "20231024-055210"
 
     type_completed_list = [True, False]
     entity_match_list = [True, False]
@@ -323,8 +322,6 @@ if __name__ == "__main__":
                     training=training_data, testing=testing, validation=validation
                 )
 
-                evaluator = RankBasedEvaluator(clear_on_finalize=False)
-                ir_evaluator = IRRankBasedEvaluator()
                 type_constraint_evaluator = TypeConstraintEvaluator(
                     training_data.ents_types,
                     rels_types=training_data.rels_types,
@@ -350,6 +347,14 @@ if __name__ == "__main__":
                 hit1 = str(round(r.to_dict()["both"]["realistic"]["hits_at_1"], 3))
                 hit3 = str(round(r.to_dict()["both"]["realistic"]["hits_at_3"], 3))
                 hit10 = str(round(r.to_dict()["both"]["realistic"]["hits_at_10"], 3))
+                print(
+                    "type_completed",
+                    type_completed,
+                    "entity_match",
+                    entity_match,
+                    "one_relation_type",
+                    one_relation_type,
+                )
                 print(" & ".join([mrr, hit1, hit3, hit10]))
 
     # ranks_path = "../../result/ranks/"

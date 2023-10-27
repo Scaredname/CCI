@@ -103,14 +103,14 @@ class TypeConstraintEvaluator(RankBasedEvaluator):
                     self.ents_types[None] * self.rels_types[0][r].unsqueeze(dim=1)
                 ).sum(-1).clamp(0, 1)
                 true_constraint_score = 100 * (
-                    self.ents_types[h] * self.rels_types[0][r].unsqueeze(dim=1)
+                    self.ents_types[h] * self.rels_types[0][r]
                 ).sum(-1).clamp(0, 1)
             elif target == "tail":
                 constraint_score = 100 * (
                     self.ents_types[None] * self.rels_types[1][r].unsqueeze(dim=1)
                 ).sum(-1).clamp(0, 1)
                 true_constraint_score = 100 * (
-                    self.ents_types[t] * self.rels_types[1][r].unsqueeze(dim=1)
+                    self.ents_types[t] * self.rels_types[1][r]
                 ).sum(-1).clamp(0, 1)
         constraint_score = constraint_score.to(scores.device)
         true_constraint_score = true_constraint_score.to(scores.device)
