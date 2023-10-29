@@ -49,6 +49,7 @@ parser.add_argument("-neg", "--negative_sampler", type=str, default=None)
 parser.add_argument("-nen", "--num_negs_per_pos", type=int, default=None)
 parser.add_argument("-ef", "--filtered", type=bool, default=True)
 parser.add_argument("-eb", "--evaluator_batch_size", type=int, default=128)
+parser.add_argument("-lr_step", "--warm_up_steps", type=int, default=None)
 parser.add_argument("-med", "--model_ent_dim", type=int, default=100)
 parser.add_argument("-mrd", "--model_rel_dim", type=int, default=100)
 parser.add_argument("-mtd", "--model_type_dim", type=int, default=100)
@@ -152,6 +153,11 @@ else:
 print("----------------------------max cpu workers: ", os.cpu_count())
 print("----------------------------used cpu workers: ", args.num_workers)
 
+if args.warm_up_steps:
+    warm_up_steps = args.warm_up_steps
+else:
+    warm_up_steps = args.epochs // 2
+
 training_setting = dict(
     num_epochs=args.epochs,
     batch_size=args.batch_size,
@@ -175,10 +181,15 @@ pipeline_config = dict(
         filtered=args.filtered,
         batch_size=args.evaluator_batch_size,
     ),
+    lr_scheduler="StepLR",
+    lr_scheduler_kwargs=dict(step_size=warm_up_steps),
+    # 用early stop来筛选模型
     stopper=args.stopper,
     stopper_kwargs=dict(
-        frequency=frequency,
-        patience=args.early_stop_patience,
+        frequency=100,
+        # frequency=frequency,
+        # patience=args.early_stop_patience,
+        patience=9,  # e 为1000 的情况
         relative_delta=0.0001,
         metric="mean_reciprocal_rank",
         evaluation_batch_size=args.evaluator_batch_size,
