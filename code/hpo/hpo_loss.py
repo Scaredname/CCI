@@ -387,13 +387,13 @@ if __name__ == "__main__":
         device=args.device,
         result_tracker="tensorboard",
         result_tracker_kwargs=dict(
-            experiment_path="../result/tensorBoard_log/hpo/"
+            experiment_path="../../result/tensorBoard_log/hpo/"
             + args.description
             + "/"
             + date_time,
         ),
         study_name=args.description + date_time,
-        storage="sqlite:///../models/{}.db".format(dataset + "_loss"),
+        storage="sqlite:///../../models/{}.db".format(dataset + "_loss"),
         load_if_exists=True,
         optimizer_kwargs=optimizer_kwargs,
         optimizer_kwargs_ranges=optimizer_kwargs_ranges,
@@ -403,5 +403,5 @@ if __name__ == "__main__":
         **pipeline_config,
     )
 
-    model_path = "../models/hpo" + date_time
+    model_path = "../../models/hpo" + date_time
     pipeline_result.save_to_directory(model_path)
