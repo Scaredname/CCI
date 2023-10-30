@@ -3,6 +3,9 @@ import argparse
 import datetime
 import json
 import os
+import sys
+
+sys.path.append("..")
 
 from Custom.CustomTrain import TypeSLCWATrainingLoop
 from pykeen.constants import PYKEEN_CHECKPOINTS
@@ -322,12 +325,12 @@ if __name__ == "__main__":
     model_kwargs_range = dict(
         # type_dim=dict(type=int, scale="power", base=2, low=4, high=10),
         # embedding_dim=dict(type=int, scale="power_two", low=7, high=9),
-        ent_dim=dict(type=int, scale="power_two", low=6, high=10),
+        ent_dim=dict(type=int, scale="power_two", low=9, high=10),
         init_preference_one=dict(type="bool"),
     )
     loss_kwargs_ranges = dict(
-        margin=dict(type=int, low=2, high=12, q=2),
-        adversarial_temperature=dict(type=float, low=1, high=5, q=0.5),
+        margin=dict(type=int, low=6, high=10, q=1),
+        adversarial_temperature=dict(type=float, low=2, high=3, q=0.5),
         lower_bound=dict(type=float, low=0.1, high=0.8, q=0.1),
     )
     # regularizer_kwargs_ranges = dict()
@@ -335,7 +338,6 @@ if __name__ == "__main__":
         lr=dict(
             type="categorical",
             choices=[
-                0.005,
                 0.002,
                 0.001,
                 0.0005,
@@ -344,7 +346,7 @@ if __name__ == "__main__":
     )
     # lr_scheduler_kwargs_ranges = dict()
     negative_sampler_kwargs_ranges = dict(
-        num_negs_per_pos=dict(type=int, scale="power_two", low=1, high=9)
+        num_negs_per_pos=dict(type=int, scale="power_two", low=7, high=9)
     )
     # training_kwargs_ranges = dict()
 
@@ -370,8 +372,9 @@ if __name__ == "__main__":
     pipeline_result = hpo_pipeline(
         sampler=TPESampler,
         sampler_kwargs=dict(multivariate=True, group=True),
-        n_trials=500,
-        pruner="nop",
+        n_trials=200,
+        # pruner="nop",
+        pruner_kwargs=dict(n_startup_trials=5, n_warmup_steps=500, interval_steps=10),
         training=training_data,
         validation=validation,
         testing=testing,
