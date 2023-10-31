@@ -182,4 +182,4 @@ class TypeawareMarginNegativeSmapling(NSSALoss):
         # p >> -m => m + p >> 0 => sigma(m + p) ~= 1 => log sigma(m + p) ~= 0 => -log sigma(m + p) ~= 0
         # p << -m => m + p << 0 => sigma(m + p) ~= 0 => log sigma(m + p) << 0 => -log sigma(m + p) >> 0
         self.type_aware_margin = self.type_aware_margin.view(*neg_scores.shape).detach()
-        return -F.logsigmoid(-neg_scores - (self.margin))
+        return -F.logsigmoid(-neg_scores - (self.margin + self.type_aware_margin))
