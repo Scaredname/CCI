@@ -24,6 +24,7 @@ parser.add_argument(
         "CAKE-NELL-995",
         "CAKE-NELL-995_new",
         "CAKE-DBpedia-242",
+        "CAKE-DBpedia_hpo",
         "CAKE-DBpedia-242_new",
         "yago5k-106",
         "yago_new",
