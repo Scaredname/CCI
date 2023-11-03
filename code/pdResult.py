@@ -33,6 +33,7 @@ parser.add_argument(
         "fb15k-237-type",
         "yago5k-106",
         "CAKE-NELL-995_new",
+        "CAKE-DBpedia_hpo",
         "CAKE-DBpedia-242_new",
         "yago_new",
     ],
