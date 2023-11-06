@@ -316,24 +316,25 @@ if __name__ == "__main__":
     # | Henry_Mancini | diedIn | San_Francisco |\
     # | Henry_Mancini | diedIn | Joe_Mantegna |"
 
-    examples_yago = [
-        ("Henry_Mancini", "diedIn", "Los_Angeles"),
-        ("Om_Puri", "diedIn", "Los_Angeles"),
-        ("Orson_Welles", "diedIn", "Los_Angeles"),
-        ("Iraq", "diedIn", "Los_Angeles"),
-        ("Henry_Mancini", "diedIn", "San_Francisco"),
-        ("Henry_Mancini", "diedIn", "Joe_Mantegna"),
-    ]
-    example_index = list()
-    for example in examples_yago:
-        example_index.append(
-            (
-                training_data.entity_to_id[example[0]],
-                training_data.relation_to_id[example[1]],
-                training_data.entity_to_id[example[2]],
+    if "yago" in dataset_name:
+        examples_yago = [
+            ("Henry_Mancini", "diedIn", "Los_Angeles"),
+            ("Om_Puri", "diedIn", "Los_Angeles"),
+            ("Orson_Welles", "diedIn", "Los_Angeles"),
+            ("Iraq", "diedIn", "Los_Angeles"),
+            ("Henry_Mancini", "diedIn", "San_Francisco"),
+            ("Henry_Mancini", "diedIn", "Joe_Mantegna"),
+        ]
+        example_index = list()
+        for example in examples_yago:
+            example_index.append(
+                (
+                    training_data.entity_to_id[example[0]],
+                    training_data.relation_to_id[example[1]],
+                    training_data.entity_to_id[example[2]],
+                )
             )
-        )
-    example_index = torch.tensor(example_index).long()
+        example_index = torch.tensor(example_index).long()
 
     print(
         training_data.num_entities, training_data.num_relations, training_data.num_types
@@ -358,20 +359,22 @@ if __name__ == "__main__":
         print(m, ":", test_data.mapped_triples.shape[0])
 
     trained_model = load_model(dataset_name, description, model_date, model_name)
-    # 测试特例的得分
-    trained_model.strong_constraint = False
-    scores = test_examples(model=trained_model, examples=example_index)
-    scores = scores.tolist()
-    scores = [[score[0] / scores[0][0]] for score in scores]
-    scores_str = str(round(scores[0][0], 3)) + " & "
-    for score in scores[1:-1]:
-        scores_str += str(round(score[0], 3)) + " & "
-    scores_str += str(round(scores[-1][0], 3)) + " \\\\"
-    print(scores_str)
-    for pair in zip(examples_yago, scores):
-        print(pair[0], ": ", round(pair[1][0], 3))
 
-    # 统计每种类别的关系的数据量。
+    if "yago" in dataset_name:
+        # 测试特例的得分
+        trained_model.strong_constraint = False
+        scores = test_examples(model=trained_model, examples=example_index)
+        scores = scores.tolist()
+        scores = [[score[0] / scores[0][0]] for score in scores]
+        scores_str = str(round(scores[0][0], 3)) + " & "
+        for score in scores[1:-1]:
+            scores_str += str(round(score[0], 3)) + " & "
+        scores_str += str(round(scores[-1][0], 3)) + " \\\\"
+        print(scores_str)
+        for pair in zip(examples_yago, scores):
+            print(pair[0], ": ", round(pair[1][0], 3))
+
+        # 统计每种类别的关系的数据量。
 
     evaluator = RankBasedEvaluator(clear_on_finalize=False)
     ir_evaluator = IRRankBasedEvaluator()
