@@ -215,6 +215,7 @@ for file_name in os.listdir(result_path):
                     )
                     results_dict["train-loop"].append(config["training_loop"])
                     results_dict["optimizer"].append(config["optimizer"])
+                    results_dict["best_epoch"].append(results["stopper"]["best_epoch"])
                     # if "SLCWATrainingLoop" == config["training_loop"]:
                     #     results_dict["negative_sampler"].append(
                     #         config["negative_sampler"]
