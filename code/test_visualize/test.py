@@ -279,18 +279,24 @@ def get_result_dict(model, evaluator, relation_set, dataset, ir_evaluator=None):
 
 
 if __name__ == "__main__":
-    # dataset_name = 'CAKE-FB15K237'
-    # dataset_name = "CAKE-NELL-995"
-    dataset_name = "yago_new"
-    description = "best_hpo"
+    dataset_name = "CAKE-DBpedia-242"
+    # dataset_name = "CAKE-FB15K237"
+    # dataset_name = "CAKE-NELL-995_new"
+    # dataset_name = "yago_new"
+    description = "final"
     # model_name = "NNYwithRotatE"
-    model_name = "AMwithRotatE"
-    # model_name = "RotatE"
-    model_date = "20231024-055210"
+    # model_name = "AMwithRotatE"
+    model_name = "RotatE"
+    model_date = "20230726-181050"
 
-    type_completed = True
-    entity_match = False
-    one_relation_type = True
+    type_completed = False
+    entity_match = True
+    one_relation_type = False
+
+    if "yago" not in dataset_name:
+        show_example_scores = False
+    else:
+        show_example_scores = True
 
     if "TypeAsTrain" in description:
         type_as_train = True
@@ -316,7 +322,7 @@ if __name__ == "__main__":
     # | Henry_Mancini | diedIn | San_Francisco |\
     # | Henry_Mancini | diedIn | Joe_Mantegna |"
 
-    if "yago" in dataset_name:
+    if show_example_scores:
         examples_yago = [
             ("Henry_Mancini", "diedIn", "Los_Angeles"),
             ("Om_Puri", "diedIn", "Los_Angeles"),
@@ -347,6 +353,19 @@ if __name__ == "__main__":
         "test:",
         testing.num_triples,
     )
+    print(
+        "Density: ",
+        100000
+        * (
+            (training_data.num_triples + validation.num_triples + testing.num_triples)
+            / (training_data.num_entities * (training_data.num_entities - 1))
+        ),
+    )
+    print(
+        "Complexity: ",
+        1000 * (training_data.num_relations / training_data.num_entities),
+    )
+    # breakpoint()
 
     dataset = get_dataset(
         training=training_data, testing=testing, validation=validation
@@ -359,10 +378,9 @@ if __name__ == "__main__":
         print(m, ":", test_data.mapped_triples.shape[0])
 
     trained_model = load_model(dataset_name, description, model_date, model_name)
-
-    if "yago" in dataset_name:
+    trained_model.strong_constraint = False
+    if show_example_scores:
         # 测试特例的得分
-        trained_model.strong_constraint = False
         scores = test_examples(model=trained_model, examples=example_index)
         scores = scores.tolist()
         scores = [[score[0] / scores[0][0]] for score in scores]
@@ -374,7 +392,7 @@ if __name__ == "__main__":
         for pair in zip(examples_yago, scores):
             print(pair[0], ": ", round(pair[1][0], 3))
 
-        # 统计每种类别的关系的数据量。
+    # 统计每种类别的关系的数据量。
 
     evaluator = RankBasedEvaluator(clear_on_finalize=False)
     ir_evaluator = IRRankBasedEvaluator()
@@ -391,7 +409,7 @@ if __name__ == "__main__":
             dataset.training.mapped_triples,
             dataset.validation.mapped_triples,
         ],
-        batch_size=4,
+        batch_size=2,
     )
 
     mrr = str(round(r.to_dict()["both"]["realistic"]["inverse_harmonic_mean_rank"], 3))
