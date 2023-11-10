@@ -1,17 +1,16 @@
-'''
+"""
 Author: error: git config user.name && git config user.email & please set dead value or install git
 Date: 2022-12-28 16:19:48
-LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-07-15 14:23:08
+LastEditors: Ni Runyu & MonkeyDC
+LastEditTime: 2023-11-06 16:53:47
 FilePath: /ESETC/code/Custom/TypeModels/ESETC.py
 Description: "Entity Specific Entity and entity Type Combination" (ESETC)
 
 Copyright (c) 2022 by error: git config user.name && git config user.email & please set dead value or install git, All Rights Reserved. 
-'''
+"""
 
 import logging
-from typing import (Any, ClassVar, Mapping, Optional, Sequence, Tuple, Type,
-                    cast)
+from typing import Any, ClassVar, Mapping, Optional, Sequence, Tuple, Type, cast
 
 import numpy as np
 import torch
@@ -24,14 +23,24 @@ from pykeen.models.nbase import _prepare_representation_module_list
 from pykeen.nn import Representation
 from pykeen.nn.combination import Combination
 from pykeen.nn.init import LabelBasedInitializer, init_phases, xavier_uniform_
-from pykeen.nn.modules import (Interaction, RotatEInteraction,
-                               interaction_resolver, parallel_unsqueeze)
+from pykeen.nn.modules import (
+    Interaction,
+    RotatEInteraction,
+    interaction_resolver,
+    parallel_unsqueeze,
+)
 from pykeen.nn.representation import Representation
 from pykeen.regularizers import Regularizer
 from pykeen.triples import KGInfo
-from pykeen.typing import (Constrainer, HeadRepresentation, Hint,
-                           InductiveMode, Initializer, RelationRepresentation,
-                           TailRepresentation)
+from pykeen.typing import (
+    Constrainer,
+    HeadRepresentation,
+    Hint,
+    InductiveMode,
+    Initializer,
+    RelationRepresentation,
+    TailRepresentation,
+)
 from pykeen.utils import complex_normalize
 from torch import nn
 
@@ -40,6 +49,7 @@ from ..CustomTripleFactory import TriplesTypesFactory
 logger = logging.getLogger(__name__)
 
 name_to_index = {name: index for index, name in enumerate("hrt")}
+
 
 def repeat_if_necessary(
     scores: torch.FloatTensor,
@@ -67,11 +77,16 @@ def repeat_if_necessary(
         return scores
     return scores.repeat(1, num)
 
+
 class TypeFramework(ERModel):
     """Base class for models with entity types that uses combinations."""
-    def __init__(self,
+
+    def __init__(
+        self,
         triples_factory: TriplesTypesFactory,
-        interaction: HintOrType[Interaction[torch.FloatTensor, torch.FloatTensor, torch.FloatTensor]],
+        interaction: HintOrType[
+            Interaction[torch.FloatTensor, torch.FloatTensor, torch.FloatTensor]
+        ],
         entity_representations: OneOrManyHintOrType[Representation] = None,
         entity_representations_kwargs: OneOrManyOptionalKwargs = None,
         relation_representations: OneOrManyHintOrType[Representation] = None,
@@ -85,23 +100,23 @@ class TypeFramework(ERModel):
         ent_dim: int = 50,
         rel_dim: int = 50,
         type_dim: int = 20,
-        data_type = float,
-        bias = True,
-        dropout = 0.0,
-        shape: Sequence[str] = ('d',),
+        data_type=float,
+        bias=True,
+        dropout=0.0,
+        shape: Sequence[str] = ("d",),
         activation: HintOrType[nn.Module] = nn.Identity,
         activation_kwargs: OptionalKwargs = None,
-        usepretrained = None,
+        usepretrained=None,
         entity_initializer: Hint[Initializer] = xavier_uniform_,
         relation_initializer: Hint[Initializer] = xavier_uniform_,
         type_initializer: Hint[Initializer] = xavier_uniform_,
-        freeze_matrix = False,
-        freeze_type_emb = False,
-        activation_weight = False,
-        weight_mask = False,
-        type_weight_temperature = 1.0,
-        **kwargs,) -> None:
-
+        freeze_matrix=False,
+        freeze_type_emb=False,
+        activation_weight=False,
+        weight_mask=False,
+        type_weight_temperature=1.0,
+        **kwargs,
+    ) -> None:
         self.triples_factory = triples_factory
         self.shape = shape
         self.ent_dim = ent_dim
@@ -129,28 +144,33 @@ class TypeFramework(ERModel):
             dropout = 0.0
 
         # 冻结与可训练是相反的
-        type_representations_kwargs['trainable'] = not freeze_type_emb
+        type_representations_kwargs["trainable"] = not freeze_type_emb
         # Using pre-trained embeddings for type representations
         if usepretrained:
             types = list(triples_factory.types_to_id.keys())
-            encoder_kwargs=dict(
-					pretrained_model_name_or_path = usepretrained,
-                    max_length = 512,
-                    )
-            type_init = LabelBasedInitializer(labels=types, encoder='transformer', encoder_kwargs=encoder_kwargs)
-            type_representations_kwargs['initializer'] = type_init
-            type_representations_kwargs['shape'] = type_init.as_embedding().shape[0]
+            encoder_kwargs = dict(
+                pretrained_model_name_or_path=usepretrained,
+                max_length=512,
+            )
+            type_init = LabelBasedInitializer(
+                labels=types, encoder="transformer", encoder_kwargs=encoder_kwargs
+            )
+            type_representations_kwargs["initializer"] = type_init
+            type_representations_kwargs["shape"] = type_init.as_embedding().shape[0]
             self.type_dim = type_init.as_embedding().shape[0]
             logger.info(f"Using pre-trained type embeddings: {usepretrained}")
             if data_type == torch.cfloat:
-                type_representations_kwargs['dtype'] = torch.cfloat
-                self.type_dim = self.type_dim/2
+                type_representations_kwargs["dtype"] = torch.cfloat
+                self.type_dim = self.type_dim / 2
 
         self.projection = torch.nn.Sequential(
-                torch.nn.Linear(self.type_dim+ent_dim, ent_dim, bias=bias, dtype=data_type),
-                torch.nn.Dropout(dropout),
-                activation_resolver.make(activation, activation_kwargs),)
-        
+            torch.nn.Linear(
+                self.type_dim + ent_dim, ent_dim, bias=bias, dtype=data_type
+            ),
+            torch.nn.Dropout(dropout),
+            activation_resolver.make(activation, activation_kwargs),
+        )
+
         self.type_representations = self._build_type_representations(
             triples_factory=triples_factory,
             shape=shape,
@@ -159,23 +179,43 @@ class TypeFramework(ERModel):
             skip_checks=skip_checks,
         )
 
-        self.ents_types = torch.nn.parameter.Parameter(torch.as_tensor(self.triples_factory.ents_types, dtype=self.data_type, device=self.device), requires_grad= not freeze_matrix) #令获得实体对应的实体类型嵌入时的权重为可训练参数
+        self.ents_types = torch.nn.parameter.Parameter(
+            torch.as_tensor(
+                self.triples_factory.ents_types,
+                dtype=self.data_type,
+                device=self.device,
+            ),
+            requires_grad=not freeze_matrix,
+        )  # 令获得实体对应的实体类型嵌入时的权重为可训练参数
         self.activation_function = nn.Softmax(dim=-1)
         self.ents_types_mask = self.triples_factory.ents_types_mask
         self.rels_types_mask = self.triples_factory.rels_types_mask
-    def _build_type_representations(self, triples_factory: KGInfo, shape: Sequence[str], representations: OneOrManyHintOrType[Representation] = None, representations_kwargs: OneOrManyOptionalKwargs = None, **kwargs) -> Sequence[Representation]:
+
+    def _build_type_representations(
+        self,
+        triples_factory: KGInfo,
+        shape: Sequence[str],
+        representations: OneOrManyHintOrType[Representation] = None,
+        representations_kwargs: OneOrManyOptionalKwargs = None,
+        **kwargs,
+    ) -> Sequence[Representation]:
         return _prepare_representation_module_list(
             representations=representations,
             representations_kwargs=representations_kwargs,
             max_id=triples_factory.num_types,
             shapes=shape,
-            label= 'type',
+            label="type",
             **kwargs,
-    )
+        )
+
     @property
     def num_parameter_bytes(self) -> int:
         """Different from origin function. Calculate the number of bytes used for gradient enabled parameters of the model."""
-        return sum(param.numel() * param.element_size() for param in self.parameters() if param.requires_grad)
+        return sum(
+            param.numel() * param.element_size()
+            for param in self.parameters()
+            if param.requires_grad
+        )
 
     def _replace_emb(self, emb_list, assignments):
         """
@@ -183,19 +223,21 @@ class TypeFramework(ERModel):
         """
         if len(emb_list[0].shape) != 2:
             shape = emb_list[0].shape
-            new_emb = torch.squeeze(emb_list[0]) + torch.squeeze(emb_list[1])*assignments.view(-1, 1)
+            new_emb = torch.squeeze(emb_list[0]) + torch.squeeze(
+                emb_list[1]
+            ) * assignments.view(-1, 1)
             new_emb = new_emb.view(shape)
         else:
-            new_emb = emb_list[0] + emb_list[1]*assignments.view(-1, 1)
+            new_emb = emb_list[0] + emb_list[1] * assignments.view(-1, 1)
         return new_emb
-    
+
     def _complex_dropout(self, input, p=0.5, training=True):
-    # need to have the same dropout mask for real and imaginary part,
-        mask = torch.ones(*input.shape, dtype = torch.float32).to(self.device)
-        mask = nn.functional.dropout(mask, p, training)*1/(1-p)
+        # need to have the same dropout mask for real and imaginary part,
+        mask = torch.ones(*input.shape, dtype=torch.float32).to(self.device)
+        mask = nn.functional.dropout(mask, p, training) * 1 / (1 - p)
         mask.type(input.dtype)
-        return mask*input
-    
+        return mask * input
+
     def _get_representations(
         self,
         h: Optional[torch.LongTensor],
@@ -205,9 +247,15 @@ class TypeFramework(ERModel):
         mode: Optional[InductiveMode],
     ) -> Tuple[HeadRepresentation, RelationRepresentation, TailRepresentation]:
         """Get representations for head, relation and tails."""
-        head_representations = tail_representations = self._get_entity_representations_from_inductive_mode(mode=mode)
-        head_representations = [head_representations[i] for i in self.interaction.head_indices()]
-        tail_representations = [tail_representations[i] for i in self.interaction.tail_indices()]
+        head_representations = (
+            tail_representations
+        ) = self._get_entity_representations_from_inductive_mode(mode=mode)
+        head_representations = [
+            head_representations[i] for i in self.interaction.head_indices()
+        ]
+        tail_representations = [
+            tail_representations[i] for i in self.interaction.tail_indices()
+        ]
         hr, rr, tr = [
             [representation(indices=indices) for representation in representations]
             for indices, representations in (
@@ -230,29 +278,44 @@ class TypeFramework(ERModel):
         mode: Optional[InductiveMode],
     ) -> Tuple:
         """Get representations for head ent type emb and tail ent type emb."""
-        
+
         assignments = self.triples_factory.assignments.to(self.device)
         self.ents_types_mask = self.ents_types_mask.to(self.device)
         ents_types = self.ents_types.to(self.device)
         # type_emb = self.type_representations[0]._embeddings.weight.to(self.device)
-        ents_types.data = nn.functional.relu(ents_types.data) # 确保始终为正.
-        type_emb = self.type_representations[0](indices = torch.arange(self.ents_types.shape[1]).long().to(self.device)) #取出所有的type embedding
+        ents_types.data = nn.functional.relu(ents_types.data)  # 确保始终为正.
+        type_emb = self.type_representations[0](
+            indices=torch.arange(self.ents_types.shape[1]).long().to(self.device)
+        )  # 取出所有的type embedding
 
-        #通过邻接矩阵与类型嵌入矩阵的矩阵乘法可以快速每个实体对应的类型嵌入，如果是多个类型则是多个类型嵌入的加权和，权重为邻接矩阵中的值。如果值都为1则相当于sum操作，为平均值则是mean操作。
+        # 通过邻接矩阵与类型嵌入矩阵的矩阵乘法可以快速每个实体对应的类型嵌入，如果是多个类型则是多个类型嵌入的加权和，权重为邻接矩阵中的值。如果值都为1则相当于sum操作，为平均值则是mean操作。
         if self.weight_mask:
-            ents_types = self.ents_types*self.ents_types_mask
+            ents_types = self.ents_types * self.ents_types_mask
         if self.activation_weight:
-            head_type_emb_tensor = torch.matmul(self.activation_function(self.type_weight_temperature * ents_types[h]), type_emb)
-            tail_type_emb_tensor = torch.matmul(self.activation_function(self.type_weight_temperature * ents_types[t]), type_emb)
+            head_type_emb_tensor = torch.matmul(
+                self.activation_function(self.type_weight_temperature * ents_types[h]),
+                type_emb,
+            )
+            tail_type_emb_tensor = torch.matmul(
+                self.activation_function(self.type_weight_temperature * ents_types[t]),
+                type_emb,
+            )
         else:
             head_type_emb_tensor = torch.matmul(ents_types[h], type_emb)
             tail_type_emb_tensor = torch.matmul(ents_types[t], type_emb)
         h_assignments = assignments[h]
         t_assignments = assignments[t]
 
-        return torch.squeeze(head_type_emb_tensor), torch.squeeze(tail_type_emb_tensor), torch.squeeze(h_assignments), torch.squeeze(t_assignments)
+        return (
+            torch.squeeze(head_type_emb_tensor),
+            torch.squeeze(tail_type_emb_tensor),
+            torch.squeeze(h_assignments),
+            torch.squeeze(t_assignments),
+        )
 
-    def score_hrt(self, hrt_batch: torch.LongTensor, *, mode: Optional[InductiveMode] = None) -> torch.FloatTensor:
+    def score_hrt(
+        self, hrt_batch: torch.LongTensor, *, mode: Optional[InductiveMode] = None
+    ) -> torch.FloatTensor:
         """Forward pass.
 
         This method takes head, relation and tail of each triple and calculates the corresponding score.
@@ -273,29 +336,37 @@ class TypeFramework(ERModel):
         h_index = hrt_batch[:, 0]
         r_index = hrt_batch[:, 1]
         t_index = hrt_batch[:, 2]
-        
-        
+
         h, r, t = self._get_representations(h=h_index, r=r_index, t=t_index, mode=mode)
-        head_type_emb, tail_type_emb, h_assig, t_assig = self._get_enttype_representations(h=h_index, t=t_index, mode=mode)
-        h_s_type_emb = self.projection(torch.cat([head_type_emb, h],dim=-1)).to(self.device)
-        t_s_type_emb = self.projection(torch.cat([tail_type_emb, t],dim=-1)).to(self.device)
+        (
+            head_type_emb,
+            tail_type_emb,
+            h_assig,
+            t_assig,
+        ) = self._get_enttype_representations(h=h_index, t=t_index, mode=mode)
+        h_s_type_emb = self.projection(torch.cat([head_type_emb, h], dim=-1)).to(
+            self.device
+        )
+        t_s_type_emb = self.projection(torch.cat([tail_type_emb, t], dim=-1)).to(
+            self.device
+        )
         # h_s_type_emb = torch.matmul(torch.cat([head_type_emb, h],dim=-1), self.W).to(self.device)
         # t_s_type_emb = torch.matmul(torch.cat([tail_type_emb, t],dim=-1), self.W).to(self.device)
         if self.data_type == torch.cfloat:
             h_s_type_emb = self._complex_dropout(h_s_type_emb, p=self.dropout)
             t_s_type_emb = self._complex_dropout(t_s_type_emb, p=self.dropout)
-        
+
         h_emb_list = [h_s_type_emb, h]
         h = self._replace_emb(h_emb_list, h_assig)
 
         # h = h_s_type_emb
-    
+
         t_emb_list = [t_s_type_emb, t]
         t = self._replace_emb(t_emb_list, t_assig)
         # t = t_s_type_emb
 
         return self.interaction.score_hrt(h=h, r=r, t=t)
-    
+
     def score_t(
         self,
         hr_batch: torch.LongTensor,
@@ -307,22 +378,33 @@ class TypeFramework(ERModel):
         self._check_slicing(slice_size=slice_size)
         # add broadcast dimension
         hr_batch = hr_batch.unsqueeze(dim=1)
-        h, r, t = self._get_representations(h=hr_batch[..., 0], r=hr_batch[..., 1], t=tails, mode=mode)
-        head_type_emb, tail_type_emb, h_assig, t_assig = self._get_enttype_representations(h=hr_batch[..., 0], t=tails, mode=mode)
-        
+        h, r, t = self._get_representations(
+            h=hr_batch[..., 0], r=hr_batch[..., 1], t=tails, mode=mode
+        )
+        (
+            head_type_emb,
+            tail_type_emb,
+            h_assig,
+            t_assig,
+        ) = self._get_enttype_representations(h=hr_batch[..., 0], t=tails, mode=mode)
+
         tail_type_emb = tail_type_emb.view(t.shape[0], -1)
         t_assig = t_assig.view(t.shape[0], -1)
         head_type_emb = head_type_emb.view(h.shape[0], h.shape[1], -1)
 
-        h_s_type_emb = self.projection(torch.cat([head_type_emb, h],dim=-1)).to(self.device)
-        t_s_type_emb = self.projection(torch.cat([tail_type_emb, t],dim=-1)).to(self.device)
+        h_s_type_emb = self.projection(torch.cat([head_type_emb, h], dim=-1)).to(
+            self.device
+        )
+        t_s_type_emb = self.projection(torch.cat([tail_type_emb, t], dim=-1)).to(
+            self.device
+        )
 
         if self.data_type == torch.cfloat:
             h_s_type_emb = self._complex_dropout(h_s_type_emb, p=self.dropout)
             t_s_type_emb = self._complex_dropout(t_s_type_emb, p=self.dropout)
 
         h_emb_list = [h_s_type_emb, h]
-        h = self._replace_emb(h_emb_list, h_assig)    
+        h = self._replace_emb(h_emb_list, h_assig)
         t_emb_list = [t_s_type_emb, t]
         t = self._replace_emb(t_emb_list, t_assig)
         # unsqueeze if necessary
@@ -330,11 +412,13 @@ class TypeFramework(ERModel):
             t = parallel_unsqueeze(t, dim=0)
 
         return repeat_if_necessary(
-            scores=self.interaction.score(h=h, r=r, t=t, slice_size=slice_size, slice_dim=1),
+            scores=self.interaction.score(
+                h=h, r=r, t=t, slice_size=slice_size, slice_dim=1
+            ),
             representations=self.entity_representations,
             num=self._get_entity_len(mode=mode) if tails is None else tails.shape[-1],
         )
-    
+
     def score_h(
         self,
         rt_batch: torch.LongTensor,
@@ -346,37 +430,43 @@ class TypeFramework(ERModel):
         self._check_slicing(slice_size=slice_size)
         # add broadcast dimension
         rt_batch = rt_batch.unsqueeze(dim=1)
-        h, r, t = self._get_representations(h=heads, r=rt_batch[..., 0], t=rt_batch[..., 1], mode=mode)
-        
-        head_type_emb, tail_type_emb, h_assig, t_assig = self._get_enttype_representations(h=heads, t=rt_batch[..., 1], mode=mode)
+        h, r, t = self._get_representations(
+            h=heads, r=rt_batch[..., 0], t=rt_batch[..., 1], mode=mode
+        )
+
+        (
+            head_type_emb,
+            tail_type_emb,
+            h_assig,
+            t_assig,
+        ) = self._get_enttype_representations(h=heads, t=rt_batch[..., 1], mode=mode)
 
         head_type_emb = head_type_emb.view(h.shape[0], -1)
         h_assig = h_assig.view(h.shape[0], -1)
         tail_type_emb = tail_type_emb.view(t.shape[0], t.shape[1], -1)
-        
-        
-        h_s_type_emb = self.projection(torch.cat([head_type_emb, h],dim=-1)).to(self.device)    
-        t_s_type_emb = self.projection(torch.cat([tail_type_emb, t],dim=-1)).to(self.device)
+
+        h_s_type_emb = self.projection(torch.cat([head_type_emb, h], dim=-1)).to(
+            self.device
+        )
+        t_s_type_emb = self.projection(torch.cat([tail_type_emb, t], dim=-1)).to(
+            self.device
+        )
         if self.data_type == torch.cfloat:
             h_s_type_emb = self._complex_dropout(h_s_type_emb, p=self.dropout)
             t_s_type_emb = self._complex_dropout(t_s_type_emb, p=self.dropout)
 
         h_emb_list = [h_s_type_emb, h]
-        h = self._replace_emb(h_emb_list, h_assig)    
+        h = self._replace_emb(h_emb_list, h_assig)
         t_emb_list = [t_s_type_emb, t]
         t = self._replace_emb(t_emb_list, t_assig)
         # unsqueeze if necessary
         if heads is None or heads.ndimension() == 1:
             h = parallel_unsqueeze(h, dim=0)
 
-
         return repeat_if_necessary(
-            scores=self.interaction.score(h=h, r=r, t=t, slice_size=slice_size, slice_dim=1),
+            scores=self.interaction.score(
+                h=h, r=r, t=t, slice_size=slice_size, slice_dim=1
+            ),
             representations=self.entity_representations,
             num=self._get_entity_len(mode=mode) if heads is None else heads.shape[-1],
         )
-
-    
-
-
-        

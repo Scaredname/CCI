@@ -213,6 +213,7 @@ training_data, validation, testing = load_dataset(
 
 
 import torch
+from Custom.CustomInit import TypeCenterInitializer
 from Custom.CustomLoss import SoftTypeawareNegativeSmapling
 from Custom.CustomLoss_new import TypeawareMarginNegativeSmapling
 from Custom.HAKE import HAKEModel
@@ -239,7 +240,7 @@ from pykeen.losses import NSSALoss
 # Pick a model
 # from Custom.CustomModel import EETCRLwithRotate
 from pykeen.models import ComplEx, DistMultLiteral, RotatE, TransE
-from pykeen.nn.init import xavier_uniform_
+from pykeen.nn.init import xavier_normal_, xavier_uniform_
 from pykeen.nn.modules import RotatEInteraction, TransEInteraction
 
 # if args.model_index in [41, 42, 51, 52] and args.description == 'final':
@@ -534,6 +535,68 @@ elif args.model_index == 16:
         ),
         phase_weight=args.phase_weight,
         modulus_weight=args.modulus_weight,
+    )
+
+elif args.model_index == 17:
+    type_center_initializer = TypeCenterInitializer(
+        training_data,
+        torch.cfloat,
+        type_dim=args.model_type_dim,
+        pretrain="bert-base-uncased",
+    )
+    model = RotatE(
+        triples_factory=training_data,
+        embedding_dim=type_center_initializer.type_dim,
+        entity_initializer=type_center_initializer,
+        relation_initializer="init_phases",
+        relation_constrainer="complex_normalize",
+        loss="NSSALoss",
+        loss_kwargs=dict(
+            reduction="mean",
+            adversarial_temperature=args.adversarial_temperature,
+            margin=args.loss_margin,
+        ),
+    )
+
+elif args.model_index == 18:
+    # type_center_initializer = TypeCenterInitializer(
+    #     training_data,
+    #     torch.cfloat,
+    #     type_dim=args.model_type_dim,
+    #     pretrain="bert-base-uncased",
+    # )
+    model = RotatE(
+        triples_factory=training_data,
+        embedding_dim=args.model_ent_dim,
+        entity_initializer=xavier_uniform_,
+        relation_initializer="init_phases",
+        relation_constrainer="complex_normalize",
+        loss="NSSALoss",
+        loss_kwargs=dict(
+            reduction="mean",
+            adversarial_temperature=args.adversarial_temperature,
+            margin=args.loss_margin,
+        ),
+    )
+elif args.model_index == 19:
+    # type_center_initializer = TypeCenterInitializer(
+    #     training_data,
+    #     torch.cfloat,
+    #     type_dim=args.model_type_dim,
+    #     pretrain="bert-base-uncased",
+    # )
+    model = RotatE(
+        triples_factory=training_data,
+        embedding_dim=args.model_ent_dim,
+        entity_initializer=xavier_normal_,
+        relation_initializer="init_phases",
+        relation_constrainer="complex_normalize",
+        loss="NSSALoss",
+        loss_kwargs=dict(
+            reduction="mean",
+            adversarial_temperature=args.adversarial_temperature,
+            margin=args.loss_margin,
+        ),
     )
 
 elif args.model_index == 21:
