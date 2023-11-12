@@ -185,7 +185,6 @@ class TypeCenterRandomInitializer(TypeCenterInitializer):
         entity_emb_tensor = torch.empty(
             entity_type_constraints.shape[0], type_embedding.shape[1]
         )
-        print("type_embedding var:", torch.var(type_embedding))
         for entity_index, entity_type in enumerate(entity_type_constraints):
             type_indices = torch.argwhere(entity_type).squeeze(dim=1)
             type_emb = type_embedding[type_indices]
