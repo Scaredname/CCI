@@ -12,6 +12,7 @@ tryVisualization.py
 data/*
 result/*
 models/*
+runs/
 
 # bash
 *.sh
