@@ -4,7 +4,7 @@ import torch
 from class_resolver.utils import OneOrManyHintOrType, OneOrManyOptionalKwargs
 from pykeen.models.nbase import _prepare_representation_module_list
 from pykeen.nn import Representation
-from pykeen.nn.init import LabelBasedInitializer, PretrainedInitializer
+from pykeen.nn.init import LabelBasedInitializer, PretrainedInitializer, xavier_uniform_
 from pykeen.triples import KGInfo
 from torch import FloatTensor
 
@@ -77,7 +77,7 @@ class TypeCenterInitializer(PretrainedInitializer):
         triples_factory,
         data_type,
         type_dim=None,
-        # tensor: FloatTensor,
+        type_init="xavier_uniform_",
         pretrain=None,
         shape: Sequence[str] = ("d",),
     ) -> None:
@@ -101,6 +101,8 @@ class TypeCenterInitializer(PretrainedInitializer):
             type_representations_kwargs["shape"] = type_dim
             # if data_type == torch.cfloat:
             #     type_representations_kwargs["dtype"] = torch.cfloat
+        else:
+            type_representations_kwargs["initializer"] = type_init
 
         self.type_representations = self._build_type_representations(
             triples_factory=triples_factory,
@@ -154,3 +156,48 @@ class TypeCenterInitializer(PretrainedInitializer):
         if torch.any(torch.sum(entity_type_constraints, dim=1) > 1):
             entity_type_constraints = cal_propor(entity_type_constraints)
         return torch.matmul(entity_type_constraints, type_embedding)
+
+
+class TypeCenterRandomInitializer(TypeCenterInitializer):
+    def __init__(
+        self,
+        triples_factory,
+        data_type,
+        random_bias_gain=1.0,
+        type_dim=None,
+        pretrain=None,
+        shape: Sequence[str] = ("d",),
+        **kwargs,
+    ) -> None:
+        self.gain = random_bias_gain
+        super().__init__(
+            triples_factory,
+            data_type=data_type,
+            type_dim=type_dim,
+            pretrain=pretrain,
+            shape=shape,
+            **kwargs,
+        )
+
+    def _generate_entity_tensor(
+        self, type_embedding, entity_type_constraints
+    ) -> torch.Tensor:
+        entity_emb_tensor = torch.empty(
+            entity_type_constraints.shape[0], type_embedding.shape[1]
+        )
+        print("type_embedding var:", torch.var(type_embedding))
+        for entity_index, entity_type in enumerate(entity_type_constraints):
+            type_indices = torch.argwhere(entity_type).squeeze(dim=1)
+            type_emb = type_embedding[type_indices]
+
+            random_bias_emb = xavier_uniform_(
+                torch.empty(*type_emb.shape), gain=self.gain
+            )
+            # random_bias_emb = 0.5 * torch.nn.functional.normalize(random_bias_emb)
+            # print("random_bias_emb norm :", torch.norm(random_bias_emb, dim=1))
+            # random_bias_emb = 0
+
+            ent_emb = torch.mean((type_emb + random_bias_emb), dim=0)
+            entity_emb_tensor[entity_index] = ent_emb
+
+        return entity_emb_tensor
