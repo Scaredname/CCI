@@ -20,12 +20,12 @@ if __name__ == "__main__":
         training=training_data, testing=testing, validation=validation
     )
 
-    model = "TransE"
-    embedding_dim = 768
-    lr = 0.005
+    model = "RotatE"
+    embedding_dim = 364
+    lr = 0.0005
     batch_size = 512
     num_negs_per_pos = 64
-    epoch = 200
+    epoch = 1000
     adversarial_temperature = 1.0
     train = "slcwa"
     train_setting = dict(
@@ -80,31 +80,30 @@ if __name__ == "__main__":
     # pipeline_config["training_loop"] = TypeSLCWATrainingLoop
 
     import torch
-    from Custom.CustomInit import (TypeCenterInitializer,
-                                   TypeCenterRandomInitializer)
+    from Custom.CustomInit import TypeCenterInitializer, TypeCenterRandomInitializer
 
-    # type_center_initializer_base = TypeCenterInitializer(
-    #     training_data,
-    #     torch.float,
-    #     type_dim=768,
-    #     pretrain="bert-base-uncased",
-    # )
-    # type_center_initializer_random = TypeCenterInitializer(
-    #     training_data,
-    #     torch.float,
-    #     type_dim=768,
-    #     # pretrain="bert-base-uncased",
-    # )
+    type_center_initializer_base = TypeCenterInitializer(
+        training_data,
+        torch.cfloat,
+        type_dim=768,
+        pretrain="bert-base-uncased",
+    )
+    type_center_initializer_random = TypeCenterInitializer(
+        training_data,
+        torch.cfloat,
+        type_dim=768,
+        # pretrain="bert-base-uncased",
+    )
     type_center_random_initializer_random = TypeCenterRandomInitializer(
         training_data,
-        torch.float,
+        torch.cfloat,
         type_dim=768,
         random_bias_gain=1.0,
         # pretrain="bert-base-uncased",
     )
     type_center_random_initializer_base = TypeCenterRandomInitializer(
         training_data,
-        torch.float,
+        torch.cfloat,
         type_dim=768,
         pretrain="bert-base-uncased",
         random_bias_gain=1.0,
@@ -130,11 +129,11 @@ if __name__ == "__main__":
 
     initializer_dict = dict()
 
-    # for initializer in initializer_list:
-    #     initializer_dict[initializer] = initializer
+    for initializer in initializer_list:
+        initializer_dict[initializer] = initializer
 
-    # initializer_dict["type_center_initializer_base"] = type_center_initializer_base
-    # initializer_dict["type_center_initializer_random"] = type_center_initializer_random
+    initializer_dict["type_center_initializer_base"] = type_center_initializer_base
+    initializer_dict["type_center_initializer_random"] = type_center_initializer_random
     initializer_dict[
         "type_center_random_initializer_base_gain_1.0"
     ] = type_center_random_initializer_base
@@ -153,12 +152,12 @@ if __name__ == "__main__":
             # relation_initializer="init_phases",
             # relation_constrainer="complex_normalize",
             entity_initializer=entity_initializer,
-            entity_constrainer=None,
+            # entity_constrainer=None,
         )
         date_time = "/%s/%s/%s/%s" % (
             "yago_new_init",
             f"{name}",
-            "transe",
+            "rotate",
             datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),
         )
 
@@ -176,5 +175,6 @@ if __name__ == "__main__":
 
             model_path = "../../models/" + date_time
             pipeline_result.save_to_directory(model_path)
-        except:
+        except Exception as e:
             print(f"experiment {i}: {str(entity_initializer)} failed")
+            print(e)
