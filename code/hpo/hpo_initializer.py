@@ -152,9 +152,10 @@ if __name__ == "__main__":
             entity_initializer=entity_initializer,
             entity_constrainer=None,
         )
-        date_time = "/%s/%s/%s" % (
+        date_time = "/%s/%s/%s/%s" % (
             "yago_new",
-            f"transe_{name}",
+            f"{name}",
+            "transe",
             datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),
         )
 
