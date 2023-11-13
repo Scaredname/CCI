@@ -359,7 +359,7 @@ if __name__ == "__main__":
             + date_time,
         ),
         study_name=args.description + date_time,
-        storage="sqlite:///../../models/{}.db".format(dataset),
+        storage="sqlite:///../../models/{}.db".format(dataset + "_rotate"),
         load_if_exists=True,
         optimizer_kwargs=optimizer_kwargs,
         optimizer_kwargs_ranges=optimizer_kwargs_ranges,
