@@ -26,8 +26,9 @@ class NewSoftTypeawareNegativeSmapling(NSSALoss):
     Calculate the weight by injective confidence and type relatedness.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, magnification=1, **kwargs):
         super().__init__(**kwargs)
+        self.magnification = magnification
 
     def process_slcwa_scores(
         self,
@@ -52,10 +53,6 @@ class NewSoftTypeawareNegativeSmapling(NSSALoss):
             type_relatedness.data > 0.05, torch.tensor(1), torch.tensor(0)
         )
 
-        STNS_weights = injective_confidence * type_relatedness + (
-            1 - injective_confidence
-        ) * (1 - type_relatedness)
-
         negative_scores = prepare_negative_scores_for_softmax(
             batch_filter=batch_filter,
             negative_scores=negative_scores,
@@ -64,13 +61,16 @@ class NewSoftTypeawareNegativeSmapling(NSSALoss):
         )
 
         STNS_weights = (
-            torch.max(F.sigmoid(2 * STNS_weights), STNS_weights)
+            (
+                injective_confidence * type_relatedness
+                + (1 - injective_confidence) * (1 - type_relatedness)
+            )
             .view(*negative_scores.shape)
             .detach()
         )
 
         # negative_scores 都是负数, 直接乘0.5反而增大了得分, 所以用除法
-        negative_scores = negative_scores / STNS_weights
+        negative_scores -= (1 - STNS_weights) * self.magnification
 
         # compute weights (without gradient tracking)
         assert negative_scores.ndimension() == 2
@@ -79,8 +79,6 @@ class NewSoftTypeawareNegativeSmapling(NSSALoss):
             .mul(self.inverse_softmax_temperature)
             .softmax(dim=-1)
         )
-
-        # weights = weights * STNS_weights.detach() # 不计算STNS的梯度
 
         # fill negative scores with some finite value, e.g., 0 (they will get masked out anyway)
         negative_scores = torch.masked_fill(
