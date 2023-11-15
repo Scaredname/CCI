@@ -13,6 +13,7 @@ data/*
 result/*
 models/*
 runs/
+code/result/*
 
 # bash
 *.sh

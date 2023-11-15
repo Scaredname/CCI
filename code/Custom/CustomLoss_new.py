@@ -69,7 +69,7 @@ class NewSoftTypeawareNegativeSmapling(NSSALoss):
             .detach()
         )
 
-        # negative_scores 都是负数, 直接乘0.5反而增大了得分, 所以用除法
+        # 直接在计算权重前，降低低质量负例的得分
         negative_scores -= (1 - STNS_weights) * self.magnification
 
         # compute weights (without gradient tracking)
