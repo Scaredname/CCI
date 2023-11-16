@@ -32,7 +32,8 @@ pattern1 = r"\(_embeddings\): Embedding\((.*)\)"
 # args = parser.parse_args()
 
 
-dataset = "yago_new_init"
+# dataset = "yago_new_init"
+dataset = "CAKE-NELL-995_new_init"
 result_path = "../models/%s/" % (dataset)
 # dataset = args.dataset.replace("-", "")
 save_path = "../result/%s.csv" % (dataset)
@@ -58,8 +59,11 @@ for file_name in os.listdir(result_path):
                         results_dict["date"].append(date)
 
                         result_path1 = os.path.join(file_path1, "results.json")
+                        config_path = os.path.join(file_path1, "metadata.json")
                         with open(result_path1, "r", encoding="utf8") as fff:
                             results = json.load(fff)
+                        with open(config_path, "r", encoding="utf8") as fff:
+                            config = json.load(fff)
 
                     if "stopper" in results:
                         results_dict["valid-mrr"].append(
@@ -104,6 +108,10 @@ for file_name in os.listdir(result_path):
                         )
                     else:
                         results_dict["best_epoch"].append("-")
+                    if "optimizer_kwargs" in config:
+                        results_dict["lr"].append(config["optimizer_kwargs"]["lr"])
+                    else:
+                        results_dict["lr"].append("-")
                     results_dict["initializer_name"].append(file_name)
 r = pd.DataFrame(results_dict)
 
