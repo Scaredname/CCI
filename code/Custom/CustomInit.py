@@ -4,7 +4,12 @@ import torch
 from class_resolver.utils import OneOrManyHintOrType, OneOrManyOptionalKwargs
 from pykeen.models.nbase import _prepare_representation_module_list
 from pykeen.nn import Representation
-from pykeen.nn.init import LabelBasedInitializer, PretrainedInitializer, xavier_uniform_
+from pykeen.nn.init import (
+    LabelBasedInitializer,
+    PretrainedInitializer,
+    initializer_resolver,
+    xavier_uniform_,
+)
 from pykeen.triples import KGInfo
 from torch import FloatTensor
 
@@ -85,6 +90,7 @@ class TypeCenterInitializer(PretrainedInitializer):
         type_representations_kwargs = dict(
             dtype=torch.float, shape=type_dim, initializer=None
         )
+        self.init = type_init
 
         if pretrain:
             print(f"using pretrained model '{pretrain}' to initialize type embedding")
@@ -189,9 +195,8 @@ class TypeCenterRandomInitializer(TypeCenterInitializer):
             type_indices = torch.argwhere(entity_type).squeeze(dim=1)
             type_emb = type_embedding[type_indices]
 
-            random_bias_emb = xavier_uniform_(
-                torch.empty(*type_emb.shape), gain=self.gain
-            )
+            initializer = initializer_resolver.make(self.init)
+            random_bias_emb = initializer(torch.empty(*type_emb.shape), gain=self.gain)
             # random_bias_emb = 0.5 * torch.nn.functional.normalize(random_bias_emb)
             # print("random_bias_emb norm :", torch.norm(random_bias_emb, dim=1))
             # random_bias_emb = 0
