@@ -196,7 +196,7 @@ class TypeCenterRandomInitializer(TypeCenterInitializer):
             type_emb = type_embedding[type_indices]
 
             initializer = initializer_resolver.make(self.init)
-            random_bias_emb = initializer(torch.empty(*type_emb.shape), gain=self.gain)
+            random_bias_emb = initializer(torch.empty(*type_emb.shape))
             # random_bias_emb = 0.5 * torch.nn.functional.normalize(random_bias_emb)
             # print("random_bias_emb norm :", torch.norm(random_bias_emb, dim=1))
             # random_bias_emb = 0
