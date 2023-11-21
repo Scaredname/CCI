@@ -187,7 +187,7 @@ pipeline_config = dict(
     # 用early stop来筛选模型
     stopper=args.stopper,
     stopper_kwargs=dict(
-        frequency=100,
+        frequency=5,
         # frequency=frequency,
         # patience=args.early_stop_patience,
         patience=9,  # e 为1000 的情况
