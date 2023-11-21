@@ -129,16 +129,6 @@ class TypeCenterInitializer(PretrainedInitializer):
 
         super().__init__(tensor)
 
-    # def __call__(self, x: torch.Tensor) -> torch.Tensor:
-    #     """Initialize the tensor with the given tensor."""
-    #     if len(x.shape) > 2:
-    #         self.tensor = self.tensor.view(self.tensor.shape[0], -1, 2)
-    #     if x.shape != self.tensor.shape:
-    #         raise ValueError(
-    #             f"shape does not match: expected {self.tensor.shape} but got {x.shape}"
-    #         )
-    #     return self.tensor.to(device=x.device, dtype=x.dtype)
-
     def _build_type_representations(
         self,
         triples_factory: KGInfo,
@@ -197,10 +187,8 @@ class TypeCenterRandomInitializer(TypeCenterInitializer):
 
             initializer = initializer_resolver.make(self.init)
             random_bias_emb = initializer(torch.empty(*type_emb.shape))
-            # random_bias_emb = 0.5 * torch.nn.functional.normalize(random_bias_emb)
-            # print("random_bias_emb norm :", torch.norm(random_bias_emb, dim=1))
-            # random_bias_emb = 0
 
+            # 存在多个类型时，求加和后的嵌入的平均作为实体嵌入
             ent_emb = torch.mean((type_emb + self.gain * random_bias_emb), dim=0)
             entity_emb_tensor[entity_index] = ent_emb
 
