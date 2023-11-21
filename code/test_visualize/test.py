@@ -279,18 +279,18 @@ def get_result_dict(model, evaluator, relation_set, dataset, ir_evaluator=None):
 
 
 if __name__ == "__main__":
-    dataset_name = "CAKE-DBpedia-242"
+    # dataset_name = "CAKE-DBpedia-242"
     # dataset_name = "CAKE-FB15K237"
-    # dataset_name = "CAKE-NELL-995_new"
+    dataset_name = "CAKE-NELL-995_new"
     # dataset_name = "yago_new"
-    description = "final"
+    description = "rotateIpo1000"
     # model_name = "NNYwithRotatE"
-    # model_name = "AMwithRotatE"
-    model_name = "RotatE"
-    model_date = "20230726-181050"
+    model_name = "AMwithRotatE"
+    # model_name = "RotatE"
+    model_date = "20231103-100200"
 
     type_completed = False
-    entity_match = True
+    entity_match = False
     one_relation_type = False
 
     if "yago" not in dataset_name:
