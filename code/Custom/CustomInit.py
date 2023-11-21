@@ -201,7 +201,7 @@ class TypeCenterRandomInitializer(TypeCenterInitializer):
             # print("random_bias_emb norm :", torch.norm(random_bias_emb, dim=1))
             # random_bias_emb = 0
 
-            ent_emb = torch.mean((type_emb + random_bias_emb), dim=0)
+            ent_emb = torch.mean((type_emb + self.gain * random_bias_emb), dim=0)
             entity_emb_tensor[entity_index] = ent_emb
 
         return entity_emb_tensor
