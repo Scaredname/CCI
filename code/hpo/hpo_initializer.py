@@ -12,7 +12,8 @@ from pykeen.constants import PYKEEN_CHECKPOINTS
 from pykeen.datasets import get_dataset
 from utilities import load_dataset
 
-dataset_name = "CAKE-NELL-995_new"
+dataset_name = "yago_new"
+# dataset_name = "CAKE-NELL-995_new"
 
 if __name__ == "__main__":
     test_batch_size = 4
@@ -62,7 +63,7 @@ if __name__ == "__main__":
             batch_size=test_batch_size,
         ),
         # lr_scheduler="StepLR",
-        # lr_scheduler_kwargs=dict(step_size=epoch // 2, gamma=0.1),
+        # lr_scheduler_kwargs=dict(step_size=10, gamma=0.316),
         # 用early stop来筛选模型
         stopper="early",
         stopper_kwargs=dict(
@@ -85,47 +86,6 @@ if __name__ == "__main__":
     import torch
     from Custom.CustomInit import TypeCenterInitializer, TypeCenterRandomInitializer
 
-    type_center_initializer_base = TypeCenterInitializer(
-        training_data,
-        torch.float,
-        type_dim=768,
-        pretrain="bert-base-uncased",
-    )
-    type_center_initializer_random = TypeCenterInitializer(
-        training_data,
-        torch.float,
-        type_dim=768,
-        # pretrain="bert-base-uncased",
-    )
-    type_center_random_initializer_random = TypeCenterRandomInitializer(
-        training_data,
-        torch.float,
-        type_dim=768,
-        random_bias_gain=1.0,
-        # pretrain="bert-base-uncased",
-    )
-    type_center_random_initializer_base = TypeCenterRandomInitializer(
-        training_data,
-        torch.float,
-        type_dim=768,
-        pretrain="bert-base-uncased",
-        random_bias_gain=1.0,
-    )
-    type_center_random_initializer_random_0_1 = TypeCenterRandomInitializer(
-        training_data,
-        torch.float,
-        type_dim=768,
-        random_bias_gain=0.1,
-        # pretrain="bert-base-uncased",
-    )
-    type_center_random_initializer_base_0_1 = TypeCenterRandomInitializer(
-        training_data,
-        torch.float,
-        type_dim=768,
-        pretrain="bert-base-uncased",
-        random_bias_gain=0.1,
-    )
-
     # initializer_list = [
     #     "uniform",
     #     "normal",
@@ -145,8 +105,9 @@ if __name__ == "__main__":
     # ]
 
     initializer_list = [
-        "xavier_normal_",
-        "xavier_normal_",
+        "uniform_norm_",
+        "xavier_uniform_norm_",
+        "xavier_normal_norm_",
     ]
 
     initializer_dict = dict()
@@ -154,24 +115,89 @@ if __name__ == "__main__":
     for initializer in initializer_list:
         initializer_dict[initializer] = initializer
 
-    # initializer_dict["type_center_initializer_base"] = type_center_initializer_base
-    # initializer_dict["type_center_initializer_random"] = type_center_initializer_random
-    # initializer_dict[
-    #     "type_center_random_initializer_base_gain_0.1"
-    # ] = type_center_random_initializer_base_0_1
-    # initializer_dict[
-    #     "type_center_random_initializer_random_gain_0.1"
-    # ] = type_center_random_initializer_random_0_1
-    # initializer_dict[
-    #     "type_center_random_initializer_base_gain_1.0"
-    # ] = type_center_random_initializer_base
-    # initializer_dict[
-    #     "type_center_random_initializer_random_gain_1.0"
-    # ] = type_center_random_initializer_random
+        random_initializer_50 = TypeCenterRandomInitializer(
+            training_data,
+            torch.float,
+            type_dim=768,
+            random_bias_gain=50,
+            type_init=initializer,
+        )
+
+        initializer_dict["random_initializer_50_" + initializer] = random_initializer_50
+
+        # bert_initializer_50 = TypeCenterRandomInitializer(
+        #     training_data,
+        #     torch.float,
+        #     type_dim=768,
+        #     pretrain="bert-base-uncased",
+        #     random_bias_gain=50,
+        #     type_init=initializer,
+        # )
+
+        # initializer_dict[
+        #     "bert_initializer_50_" + initializer
+        # ] = bert_initializer_50
+
+        random_initializer_10 = TypeCenterRandomInitializer(
+            training_data,
+            torch.float,
+            type_dim=768,
+            random_bias_gain=10,
+            type_init=initializer,
+        )
+
+        initializer_dict["random_initializer_10_" + initializer] = random_initializer_10
+
+        # bert_initializer_10 = TypeCenterRandomInitializer(
+        #     training_data,
+        #     torch.float,
+        #     type_dim=768,
+        #     pretrain="bert-base-uncased",
+        #     random_bias_gain=10,
+        #     type_init=initializer,
+        # )
+
+        # initializer_dict["bert_initializer_10_" + initializer] = bert_initializer_10
+
+        random_initializer_100 = TypeCenterRandomInitializer(
+            training_data,
+            torch.float,
+            type_dim=768,
+            random_bias_gain=100,
+            type_init=initializer,
+        )
+
+        initializer_dict[
+            "random_initializer_100_" + initializer
+        ] = random_initializer_100
+
+        # bert_initializer_100 = TypeCenterRandomInitializer(
+        #     training_data,
+        #     torch.float,
+        #     type_dim=768,
+        #     pretrain="bert-base-uncased",
+        #     random_bias_gain=100,
+        #     type_init=initializer,
+        # )
+
+        # initializer_dict[
+        #     "bert_initializer_100_" + initializer
+        # ] = bert_initializer_100
+
+        random_initializer_1 = TypeCenterRandomInitializer(
+            training_data,
+            torch.float,
+            type_dim=768,
+            random_bias_gain=1,
+            type_init=initializer,
+        )
+
+        initializer_dict["random_initializer_1_" + initializer] = random_initializer_1
 
     from pykeen.pipeline import pipeline
 
-    lr_lists = [0.1, 0.01, 0.001, 0.0001, 0.00001]
+    lr_lists = [0.001, 0.0001]
+    # lr_lists = [0.1, 0.01]
 
     for i, (name, entity_initializer) in enumerate(initializer_dict.items()):
         print(
@@ -190,7 +216,7 @@ if __name__ == "__main__":
                 fix_config["optimizer_kwargs"]["lr"] = learning_rate
                 date_time = "/%s/%s/%s/%s" % (
                     f"{dataset_name}_init",
-                    f"{name}",
+                    f"{name}_gain",
                     "transe",
                     datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),
                 )

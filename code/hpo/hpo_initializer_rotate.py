@@ -27,7 +27,7 @@ if __name__ == "__main__":
     lr = 0.005
     batch_size = 512
     num_negs_per_pos = 64
-    epoch = 100
+    epoch = 200
     adversarial_temperature = 1.0
     train = "slcwa"
     train_setting = dict(
@@ -84,90 +84,135 @@ if __name__ == "__main__":
     import torch
     from Custom.CustomInit import TypeCenterInitializer, TypeCenterRandomInitializer
 
-    type_center_initializer_base = TypeCenterInitializer(
-        training_data,
-        torch.cfloat,
-        type_dim=768,
-        pretrain="bert-base-uncased",
-    )
-    type_center_initializer_random = TypeCenterInitializer(
-        training_data,
-        torch.cfloat,
-        type_dim=768,
-        # pretrain="bert-base-uncased",
-    )
-    type_center_random_initializer_random = TypeCenterRandomInitializer(
-        training_data,
-        torch.cfloat,
-        type_dim=768,
-        random_bias_gain=1.0,
-        # pretrain="bert-base-uncased",
-    )
-    type_center_random_initializer_base = TypeCenterRandomInitializer(
-        training_data,
-        torch.cfloat,
-        type_dim=768,
-        pretrain="bert-base-uncased",
-        random_bias_gain=1.0,
-    )
-
-    type_center_random_initializer_random_0_1 = TypeCenterRandomInitializer(
-        training_data,
-        torch.cfloat,
-        type_dim=768,
-        random_bias_gain=0.1,
-        # pretrain="bert-base-uncased",
-    )
-    type_center_random_initializer_base_0_1 = TypeCenterRandomInitializer(
-        training_data,
-        torch.cfloat,
-        type_dim=768,
-        pretrain="bert-base-uncased",
-        random_bias_gain=0.1,
-    )
-
+    # initializer_list = [
+    #     "uniform",
+    #     "normal",
+    #     "orthogonal_",
+    #     "constant_",
+    #     "ones_",
+    #     "zeros_",
+    #     "eye_",
+    #     "sparse_",
+    #     "xavier_uniform_",
+    #     "xavier_uniform_norm_",
+    #     "xavier_normal_",
+    #     "xavier_normal_norm_",
+    #     "uniform_norm_",
+    #     "uniform_norm_p1_",
+    #     "normal_norm_",
+    # ]
     initializer_list = [
-        "uniform",
-        "normal",
-        "orthogonal_",
-        "constant_",
-        "ones_",
-        "zeros_",
-        "eye_",
-        "sparse_",
-        "xavier_uniform_",
-        "xavier_uniform_norm_",
-        "xavier_normal_",
-        "xavier_normal_norm_",
         "uniform_norm_",
-        "uniform_norm_p1_",
         "normal_norm_",
+        "xavier_uniform_norm_",
+        "xavier_normal_norm_",
     ]
-
     initializer_dict = dict()
 
-    # for initializer in initializer_list:
-    #     initializer_dict[initializer] = initializer
+    for initializer in initializer_list:
+        initializer_dict[initializer] = initializer
 
-    # initializer_dict["type_center_initializer_base"] = type_center_initializer_base
-    # initializer_dict["type_center_initializer_random"] = type_center_initializer_random
-    # initializer_dict[
-    #     "type_center_random_initializer_base_gain_1.0"
-    # ] = type_center_random_initializer_base
-    # initializer_dict[
-    #     "type_center_random_initializer_random_gain_1.0"
-    # ] = type_center_random_initializer_random
+        random_initializer_50 = TypeCenterRandomInitializer(
+            training_data,
+            torch.cfloat,
+            type_dim=768,
+            random_bias_gain=50,
+            type_init=initializer,
+        )
 
-    initializer_dict[
-        "type_center_random_initializer_base_gain_0.1"
-    ] = type_center_random_initializer_base_0_1
-    initializer_dict[
-        "type_center_random_initializer_random_gain_0.1"
-    ] = type_center_random_initializer_random_0_1
+        initializer_dict[
+            "norm_random_initializer_50_" + initializer
+        ] = random_initializer_50
+
+        bert_initializer_50 = TypeCenterRandomInitializer(
+            training_data,
+            torch.cfloat,
+            type_dim=768,
+            pretrain="bert-base-uncased",
+            random_bias_gain=50,
+            type_init=initializer,
+        )
+
+        initializer_dict[
+            "norm_bert_initializer_50_" + initializer
+        ] = bert_initializer_50
+
+        random_initializer_10 = TypeCenterRandomInitializer(
+            training_data,
+            torch.cfloat,
+            type_dim=768,
+            random_bias_gain=10,
+            type_init=initializer,
+        )
+
+        initializer_dict[
+            "norm_random_initializer_10_" + initializer
+        ] = random_initializer_10
+
+        bert_initializer_10 = TypeCenterRandomInitializer(
+            training_data,
+            torch.cfloat,
+            type_dim=768,
+            pretrain="bert-base-uncased",
+            random_bias_gain=10,
+            type_init=initializer,
+        )
+
+        initializer_dict[
+            "norm_bert_initializer_10_" + initializer
+        ] = bert_initializer_10
+
+        random_initializer_100 = TypeCenterRandomInitializer(
+            training_data,
+            torch.cfloat,
+            type_dim=768,
+            random_bias_gain=100,
+            type_init=initializer,
+        )
+
+        initializer_dict[
+            "norm_random_initializer_100_" + initializer
+        ] = random_initializer_100
+
+        bert_initializer_100 = TypeCenterRandomInitializer(
+            training_data,
+            torch.cfloat,
+            type_dim=768,
+            pretrain="bert-base-uncased",
+            random_bias_gain=100,
+            type_init=initializer,
+        )
+
+        initializer_dict[
+            "norm_bert_initializer_100_" + initializer
+        ] = bert_initializer_100
+
+        random_initializer_1 = TypeCenterRandomInitializer(
+            training_data,
+            torch.cfloat,
+            type_dim=768,
+            random_bias_gain=1,
+            type_init=initializer,
+        )
+
+        initializer_dict[
+            "norm_random_initializer_1_" + initializer
+        ] = random_initializer_1
+
+        bert_initializer_1 = TypeCenterRandomInitializer(
+            training_data,
+            torch.cfloat,
+            type_dim=768,
+            pretrain="bert-base-uncased",
+            random_bias_gain=1,
+            type_init=initializer,
+        )
+
+        initializer_dict["norm_bert_initializer_1_" + initializer] = bert_initializer_1
 
     from pykeen.pipeline import pipeline
 
-    lr_lists = [0.1, 0.01, 0.05, 0.005, 0.001]
+    lr_lists = [0.01]
 
     for i, (name, entity_initializer) in enumerate(initializer_dict.items()):
         print(
