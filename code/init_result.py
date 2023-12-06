@@ -9,31 +9,26 @@ import pandas as pd
 pattern = r"\(([^)]+)\)"
 pattern1 = r"\(_embeddings\): Embedding\((.*)\)"
 
-# parser = argparse.ArgumentParser()
-# parser.add_argument(
-#     "-d",
-#     "--dataset",
-#     choices=[
-#         "YAGO3-10-TypeLike",
-#         "YAGO3-10",
-#         "CAKE-FB15K237",
-#         "CAKE-FB15K",
-#         "CAKE-NELL-995",
-#         "CAKE-DBpedia-242",
-#         "fb15k-237-type",
-#         "yago5k-106",
-#         "CAKE-NELL-995_new",
-#         "CAKE-DBpedia_hpo",
-#         "CAKE-DBpedia-242_new",
-#         "yago_new",
-#     ],
-#     default="YAGO3-10-TypeLike",
-# )
-# args = parser.parse_args()
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "-d",
+    "--dataset",
+    choices=[
+        "a",
+        "b",
+        "c",
+    ],
+    default="a",
+    type=str,
+    help='a="yago_new_init", b="CAKE-NELL-995_new_init", c="CAKE-DBpedia-242_new_init"',
+)
+args = parser.parse_args()
 
-
-# dataset = "yago_new_init"
-dataset = "CAKE-NELL-995_new_init"
+dataset_dict = dict(
+    a="yago_new_init", b="CAKE-NELL-995_new_init", c="CAKE-DBpedia-242_new_init"
+)
+dataset = dataset_dict[args.dataset]
+# dataset = "CAKE-NELL-995_new_init"
 result_path = "../models/%s/" % (dataset)
 # dataset = args.dataset.replace("-", "")
 save_path = "../result/%s.csv" % (dataset)
@@ -51,8 +46,6 @@ for file_name in os.listdir(result_path):
             if os.path.isdir(de_path):
                 model_name = f
                 for ff in os.listdir(de_path):
-                    results_dict["model"].append(model_name)
-
                     date = ff
                     file_path1 = os.path.join(de_path, date)
                     if "-" in date:
@@ -64,6 +57,11 @@ for file_name in os.listdir(result_path):
                             results = json.load(fff)
                         with open(config_path, "r", encoding="utf8") as fff:
                             config = json.load(fff)
+
+                        if "model" in config:
+                            results_dict["model"].append(config["model"])
+                        else:
+                            results_dict["model"].append(model_name)
 
                     if "stopper" in results:
                         results_dict["valid-mrr"].append(
