@@ -8,12 +8,14 @@ Description:
 
 Copyright (c) 2023 by Ni Runyu ni-runyu@ed.tmu.ac.jp, All Rights Reserved. 
 """
+import datetime
 import os
 from collections import defaultdict
 
 import torch
 from Custom.CustomTripleFactory import TriplesTypesFactory
-from pykeen.datasets import YAGO310, FB15k237
+from pykeen.datasets import YAGO310, FB15k237, get_dataset
+from pykeen.pipeline import pipeline
 from pykeen.triples import TriplesFactory
 
 HEAD = 0
@@ -319,3 +321,64 @@ def load_dataset(
                 testing = data.testing
 
     return training_data, validation, testing
+
+
+def init_train_model(
+    entity_initializer,
+    name,
+    dataset,
+    dataset_name,
+    fix_config,
+    embedding_dim,
+    lr_list,
+    no_constrainer=False,
+):
+    """
+    description: test initialization
+    param entity_initializer:
+    param name: the name of initializer
+    param dataset:
+    param dataset_name:
+    param fix_config:
+    param embedding_dim:
+    param lr_list:
+    param no_constrainer: some models don't have constrainer
+    return {*}
+    """
+    lr_lists = lr_list
+
+    model_kwargs = dict(
+        embedding_dim=embedding_dim,
+        entity_initializer=entity_initializer,
+        entity_constrainer=None,
+    )
+    if no_constrainer:
+        model_kwargs.pop("entity_constrainer")
+
+    try:
+        for learning_rate in lr_lists:
+            fix_config["optimizer_kwargs"]["lr"] = learning_rate
+            date_time = "/%s/%s/%s/%s" % (
+                f"{dataset_name}_init",
+                f"{name}_gain",
+                fix_config["model"],
+                datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),
+            )
+
+            pipeline_result = pipeline(
+                dataset=dataset,
+                model_kwargs=model_kwargs,
+                device="cuda",
+                result_tracker="tensorboard",
+                result_tracker_kwargs=dict(
+                    experiment_path="../../result/hpo_init/" + date_time,
+                ),
+                **fix_config,
+            )
+
+            model_path = "../../models/" + date_time
+            pipeline_result.metadata = fix_config
+            pipeline_result.save_to_directory(model_path)
+    except Exception as e:
+        print(f"experiment: {str(entity_initializer)} failed")
+        print(e)
