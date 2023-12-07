@@ -10,10 +10,11 @@ sys.path.append("..")
 from Custom.CustomTrain import TypeSLCWATrainingLoop
 from pykeen.constants import PYKEEN_CHECKPOINTS
 from pykeen.datasets import get_dataset
+from pykeen.pipeline import pipeline
 from utilities import load_dataset
 
-dataset_name = "yago_new"
-# dataset_name = "CAKE-NELL-995_new"
+# dataset_name = "yago_new"
+dataset_name = "CAKE-NELL-995_new"
 
 if __name__ == "__main__":
     test_batch_size = 4
@@ -95,44 +96,63 @@ if __name__ == "__main__":
         TypeCenterRandomInitializer,
     )
 
-    # initializer_list = [
-    #     "uniform",
-    #     "normal",
-    #     "orthogonal_",
-    #     "constant_",
-    #     "ones_",
-    #     "zeros_",
-    #     "eye_",
-    #     "sparse_",
-    #     "xavier_uniform_",
-    #     "xavier_uniform_norm_",
-    #     "xavier_normal_",
-    #     "xavier_normal_norm_",
-    #     "uniform_norm_",
-    #     "uniform_norm_p1_",
-    #     "normal_norm_",
-    # ]
+    def train_model(entity_initializer, name):
+        lr_lists = [0.0001]
+
+        model_kwargs = dict(
+            embedding_dim=embedding_dim,
+            # relation_initializer="init_phases",
+            # relation_constrainer="complex_normalize",
+            entity_initializer=entity_initializer,
+            entity_constrainer=None,
+        )
+
+        try:
+            for learning_rate in lr_lists:
+                fix_config["optimizer_kwargs"]["lr"] = learning_rate
+                date_time = "/%s/%s/%s/%s" % (
+                    f"{dataset_name}_init",
+                    f"{name}_gain",
+                    fix_config["model"],
+                    datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),
+                )
+
+                pipeline_result = pipeline(
+                    dataset=dataset,
+                    model_kwargs=model_kwargs,
+                    device="cuda",
+                    result_tracker="tensorboard",
+                    result_tracker_kwargs=dict(
+                        experiment_path="../../result/hpo_init/" + date_time,
+                    ),
+                    **fix_config,
+                )
+
+                model_path = "../../models/" + date_time
+                pipeline_result.metadata = fix_config
+                pipeline_result.save_to_directory(model_path)
+        except:
+            print(f"experiment: {str(entity_initializer)} failed")
 
     initializer_list = [
-        # "uniform_norm_",
+        "uniform_norm_",
+        "normal_norm_",
         "xavier_uniform_norm_",
-        # "xavier_normal_norm_",
+        "xavier_normal_norm_",
     ]
 
-    initializer_dict = dict()
-
     for initializer in initializer_list:
-        initializer_dict[initializer] = initializer
+        train_model(initializer, initializer)  # baseline
 
-        # random_initializer_50 = TypeCenterRandomInitializer(
-        #     training_data,
-        #     torch.float,
-        #     type_dim=768,
-        #     random_bias_gain=50,
-        #     type_init=initializer,
-        # )
+        random_initializer_50 = TypeCenterRandomInitializer(
+            training_data,
+            torch.float,
+            type_dim=768,
+            random_bias_gain=50,
+            type_init=initializer,
+        )
 
-        # initializer_dict["random_initializer_50_" + initializer] = random_initializer_50
+        train_model(random_initializer_50, "random_initializer_50_" + initializer)
 
         # bert_initializer_50 = TypeCenterRandomInitializer(
         #     training_data,
@@ -145,7 +165,7 @@ if __name__ == "__main__":
 
         # initializer_dict["bert_initializer_50_" + initializer] = bert_initializer_50
 
-        random_initializer_0_5 = TypeCenterProductRandomInitializer(
+        random_product_initializer_0_5 = TypeCenterProductRandomInitializer(
             training_data,
             torch.float,
             type_dim=768,
@@ -153,9 +173,10 @@ if __name__ == "__main__":
             type_init=initializer,
         )
 
-        initializer_dict[
-            "random_initializer_0_5_" + initializer
-        ] = random_initializer_0_5
+        train_model(
+            random_product_initializer_0_5,
+            "random_product_initializer_0_5_" + initializer,
+        )
 
         # random_initializer_10 = TypeCenterRandomInitializer(
         #     training_data,
@@ -203,68 +224,37 @@ if __name__ == "__main__":
         # #     "bert_initializer_100_" + initializer
         # # ] = bert_initializer_100
 
-        random_initializer_0_1 = TypeCenterProductRandomInitializer(
+        random_product_initializer_0_1 = TypeCenterProductRandomInitializer(
             training_data,
             torch.float,
             type_dim=768,
-            random_bias_gain=0.11,
+            random_bias_gain=0.1,
             type_init=initializer,
         )
 
-        initializer_dict[
-            "random_product_initializer_0_1_" + initializer
-        ] = random_initializer_0_1
-
-        # random_initializer_1 = TypeCenterRandomInitializer(
-        #     training_data,
-        #     torch.float,
-        #     type_dim=768,
-        #     random_bias_gain=1,
-        #     type_init=initializer,
-        # )
-
-        # initializer_dict["random_initializer_1_" + initializer] = random_initializer_1
-
-    from pykeen.pipeline import pipeline
-
-    lr_lists = [0.001]
-    # lr_lists = [0.1, 0.01]
-
-    for i, (name, entity_initializer) in enumerate(initializer_dict.items()):
-        print(
-            f"experiment {i} / {len(initializer_dict.items())} : {name} .............."
-        )
-        model_kwargs = dict(
-            embedding_dim=embedding_dim,
-            # relation_initializer="init_phases",
-            # relation_constrainer="complex_normalize",
-            entity_initializer=entity_initializer,
-            entity_constrainer=None,
+        train_model(
+            random_product_initializer_0_1,
+            "random_product_initializer_0_1_" + initializer,
         )
 
-        try:
-            for learning_rate in lr_lists:
-                fix_config["optimizer_kwargs"]["lr"] = learning_rate
-                date_time = "/%s/%s/%s/%s" % (
-                    f"{dataset_name}_init",
-                    f"{name}_gain",
-                    fix_config["model"],
-                    datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),
-                )
+        random_product_initializer_1 = TypeCenterProductRandomInitializer(
+            training_data,
+            torch.float,
+            type_dim=768,
+            random_bias_gain=1,
+            type_init=initializer,
+        )
 
-                pipeline_result = pipeline(
-                    dataset=dataset,
-                    model_kwargs=model_kwargs,
-                    device="cuda",
-                    result_tracker="tensorboard",
-                    result_tracker_kwargs=dict(
-                        experiment_path="../../result/hpo_init/" + date_time,
-                    ),
-                    **fix_config,
-                )
+        train_model(
+            random_product_initializer_1, "random_product_initializer_1_" + initializer
+        )
 
-                model_path = "../../models/" + date_time
-                pipeline_result.metadata = fix_config
-                pipeline_result.save_to_directory(model_path)
-        except:
-            print(f"experiment {i}: {str(entity_initializer)} failed")
+        random_initializer_1 = TypeCenterRandomInitializer(
+            training_data,
+            torch.float,
+            type_dim=768,
+            random_bias_gain=1,
+            type_init=initializer,
+        )
+
+        train_model(random_initializer_1, "random_initializer_1_" + initializer)

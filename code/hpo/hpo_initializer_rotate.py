@@ -10,12 +10,13 @@ sys.path.append("..")
 from Custom.CustomTrain import TypeSLCWATrainingLoop
 from pykeen.constants import PYKEEN_CHECKPOINTS
 from pykeen.datasets import get_dataset
+from pykeen.pipeline import pipeline
 from utilities import load_dataset
 
 if __name__ == "__main__":
     test_batch_size = 4
-    # dataset_name = "CAKE-NELL-995_new"
-    dataset_name = "yago_new"
+    dataset_name = "CAKE-NELL-995_new"
+    # dataset_name = "yago_new"
     training_data, validation, testing = load_dataset(
         dataset=dataset_name,
     )
@@ -89,158 +90,14 @@ if __name__ == "__main__":
         TypeCenterRandomInitializer,
     )
 
-    # initializer_list = [
-    #     "uniform",
-    #     "normal",
-    #     "orthogonal_",
-    #     "constant_",
-    #     "ones_",
-    #     "zeros_",
-    #     "eye_",
-    #     "sparse_",
-    #     "xavier_uniform_",
-    #     "xavier_uniform_norm_",
-    #     "xavier_normal_",
-    #     "xavier_normal_norm_",
-    #     "uniform_norm_",
-    #     "uniform_norm_p1_",
-    #     "normal_norm_",
-    # ]
-    initializer_list = [
-        "uniform_norm_",
-        "normal_norm_",
-        "xavier_uniform_norm_",
-        "xavier_normal_norm_",
-    ]
-    initializer_dict = dict()
+    def train_model(entity_initializer, name):
+        lr_lists = [0.001]
 
-    for initializer in initializer_list:
-        initializer_dict[initializer] = initializer
-
-        random_initializer_50 = TypeCenterRandomInitializer(
-            training_data,
-            torch.cfloat,
-            type_dim=768,
-            random_bias_gain=50,
-            type_init=initializer,
-        )
-
-        initializer_dict[
-            "norm_random_initializer_50_" + initializer
-        ] = random_initializer_50
-
-        bert_initializer_50 = TypeCenterRandomInitializer(
-            training_data,
-            torch.cfloat,
-            type_dim=768,
-            pretrain="bert-base-uncased",
-            random_bias_gain=50,
-            type_init=initializer,
-        )
-
-        initializer_dict[
-            "norm_bert_initializer_50_" + initializer
-        ] = bert_initializer_50
-
-        random_initializer_10 = TypeCenterRandomInitializer(
-            training_data,
-            torch.cfloat,
-            type_dim=768,
-            random_bias_gain=10,
-            type_init=initializer,
-        )
-
-        initializer_dict[
-            "norm_random_initializer_10_" + initializer
-        ] = random_initializer_10
-
-        # bert_initializer_10 = TypeCenterRandomInitializer(
-        #     training_data,
-        #     torch.cfloat,
-        #     type_dim=768,
-        #     pretrain="bert-base-uncased",
-        #     random_bias_gain=10,
-        #     type_init=initializer,
-        # )
-
-        # initializer_dict[
-        #     "norm_bert_initializer_10_" + initializer
-        # ] = bert_initializer_10
-
-        random_initializer_100 = TypeCenterRandomInitializer(
-            training_data,
-            torch.cfloat,
-            type_dim=768,
-            random_bias_gain=100,
-            type_init=initializer,
-        )
-
-        initializer_dict[
-            "norm_random_initializer_100_" + initializer
-        ] = random_initializer_100
-
-        # bert_initializer_100 = TypeCenterRandomInitializer(
-        #     training_data,
-        #     torch.cfloat,
-        #     type_dim=768,
-        #     pretrain="bert-base-uncased",
-        #     random_bias_gain=100,
-        #     type_init=initializer,
-        # )
-
-        # initializer_dict[
-        #     "norm_bert_initializer_100_" + initializer
-        # ] = bert_initializer_100
-
-        random_initializer_1 = TypeCenterRandomInitializer(
-            training_data,
-            torch.cfloat,
-            type_dim=768,
-            random_bias_gain=1,
-            type_init=initializer,
-        )
-
-        initializer_dict[
-            "norm_random_initializer_1_" + initializer
-        ] = random_initializer_1
-
-        # bert_initializer_1 = TypeCenterRandomInitializer(
-        #     training_data,
-        #     torch.cfloat,
-        #     type_dim=768,
-        #     pretrain="bert-base-uncased",
-        #     random_bias_gain=1,
-        #     type_init=initializer,
-        # )
-
-        # initializer_dict["norm_bert_initializer_1_" + initializer] = bert_initializer_1
-
-        random_product_initializer_1 = TypeCenterProductRandomInitializer(
-            training_data,
-            torch.cfloat,
-            type_dim=768,
-            random_bias_gain=1,
-            type_init=initializer,
-        )
-
-        initializer_dict[
-            "random_product_initializer_1_" + initializer
-        ] = random_product_initializer_1
-
-    from pykeen.pipeline import pipeline
-
-    lr_lists = [0.005]
-
-    for i, (name, entity_initializer) in enumerate(initializer_dict.items()):
-        print(
-            f"experiment {i} / {len(initializer_dict.items())} : {name} .............."
-        )
         model_kwargs = dict(
             embedding_dim=embedding_dim,
             # relation_initializer="init_phases",
             # relation_constrainer="complex_normalize",
             entity_initializer=entity_initializer,
-            # entity_constrainer=None,
         )
 
         try:
@@ -248,8 +105,8 @@ if __name__ == "__main__":
                 fix_config["optimizer_kwargs"]["lr"] = learning_rate
                 date_time = "/%s/%s/%s/%s" % (
                     f"{dataset_name}_init",
-                    f"{name}",
-                    "rotate",
+                    f"{name}_gain",
+                    fix_config["model"],
                     datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),
                 )
 
@@ -267,6 +124,80 @@ if __name__ == "__main__":
                 model_path = "../../models/" + date_time
                 pipeline_result.metadata = fix_config
                 pipeline_result.save_to_directory(model_path)
-        except Exception as e:
-            print(f"experiment {i}: {str(entity_initializer)} failed")
-            print(e)
+        except:
+            print(f"experiment: {str(entity_initializer)} failed")
+
+    initializer_list = [
+        # "uniform_norm_",
+        # "normal_norm_",
+        "xavier_uniform_norm_",
+        "xavier_normal_norm_",
+    ]
+
+    for initializer in initializer_list:
+        train_model(initializer, initializer)  # baseline
+
+        random_initializer_50 = TypeCenterRandomInitializer(
+            training_data,
+            torch.cfloat,
+            type_dim=768,
+            random_bias_gain=50,
+            type_init=initializer,
+        )
+
+        train_model(random_initializer_50, "norm_random_initializer_50_" + initializer)
+
+        bert_initializer_50 = TypeCenterRandomInitializer(
+            training_data,
+            torch.cfloat,
+            type_dim=768,
+            pretrain="bert-base-uncased",
+            random_bias_gain=50,
+            type_init=initializer,
+        )
+
+        train_model(bert_initializer_50, "norm_bert_initializer_50_" + initializer)
+
+        random_initializer_10 = TypeCenterRandomInitializer(
+            training_data,
+            torch.cfloat,
+            type_dim=768,
+            random_bias_gain=10,
+            type_init=initializer,
+        )
+
+        train_model(random_initializer_10, "norm_random_initializer_10_" + initializer)
+
+        random_initializer_100 = TypeCenterRandomInitializer(
+            training_data,
+            torch.cfloat,
+            type_dim=768,
+            random_bias_gain=100,
+            type_init=initializer,
+        )
+
+        train_model(
+            random_initializer_100, "norm_random_initializer_100_" + initializer
+        )
+
+        random_initializer_1 = TypeCenterRandomInitializer(
+            training_data,
+            torch.cfloat,
+            type_dim=768,
+            random_bias_gain=1,
+            type_init=initializer,
+        )
+
+        train_model(random_initializer_1, "norm_random_initializer_1_" + initializer)
+
+        random_product_initializer_1 = TypeCenterProductRandomInitializer(
+            training_data,
+            torch.cfloat,
+            type_dim=768,
+            random_bias_gain=1,
+            type_init=initializer,
+        )
+
+        train_model(
+            random_product_initializer_1, "random_product_initializer_1_" + initializer
+        )
