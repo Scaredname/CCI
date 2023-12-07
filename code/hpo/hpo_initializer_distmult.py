@@ -89,31 +89,35 @@ if __name__ == "__main__":
     # pipeline_config["training_loop"] = TypeSLCWATrainingLoop
 
     import torch
-    from Custom.CustomInit import TypeCenterInitializer, TypeCenterRandomInitializer
-
-    initializer_list = [
-        "uniform",
-        "normal",
-        "orthogonal_",
-        "constant_",
-        "ones_",
-        "zeros_",
-        "eye_",
-        "sparse_",
-        "xavier_uniform_",
-        "xavier_uniform_norm_",
-        "xavier_normal_",
-        "xavier_normal_norm_",
-        "uniform_norm_",
-        "uniform_norm_p1_",
-        "normal_norm_",
-    ]
+    from Custom.CustomInit import (
+        TypeCenterInitializer,
+        TypeCenterProductRandomInitializer,
+        TypeCenterRandomInitializer,
+    )
 
     # initializer_list = [
-    #     "uniform_norm_",
+    #     "uniform",
+    #     "normal",
+    #     "orthogonal_",
+    #     "constant_",
+    #     "ones_",
+    #     "zeros_",
+    #     "eye_",
+    #     "sparse_",
+    #     "xavier_uniform_",
     #     "xavier_uniform_norm_",
+    #     "xavier_normal_",
     #     "xavier_normal_norm_",
+    #     "uniform_norm_",
+    #     "uniform_norm_p1_",
+    #     "normal_norm_",
     # ]
+
+    initializer_list = [
+        # "uniform_norm_",
+        "xavier_uniform_norm_",
+        # "xavier_normal_norm_",
+    ]
 
     initializer_dict = dict()
 
@@ -140,6 +144,18 @@ if __name__ == "__main__":
         # )
 
         # initializer_dict["bert_initializer_50_" + initializer] = bert_initializer_50
+
+        random_initializer_0_5 = TypeCenterProductRandomInitializer(
+            training_data,
+            torch.float,
+            type_dim=768,
+            random_bias_gain=0.5,
+            type_init=initializer,
+        )
+
+        initializer_dict[
+            "random_initializer_0_5_" + initializer
+        ] = random_initializer_0_5
 
         # random_initializer_10 = TypeCenterRandomInitializer(
         #     training_data,
@@ -187,6 +203,18 @@ if __name__ == "__main__":
         # #     "bert_initializer_100_" + initializer
         # # ] = bert_initializer_100
 
+        random_initializer_0_1 = TypeCenterProductRandomInitializer(
+            training_data,
+            torch.float,
+            type_dim=768,
+            random_bias_gain=0.11,
+            type_init=initializer,
+        )
+
+        initializer_dict[
+            "random_product_initializer_0_1_" + initializer
+        ] = random_initializer_0_1
+
         # random_initializer_1 = TypeCenterRandomInitializer(
         #     training_data,
         #     torch.float,
@@ -199,7 +227,7 @@ if __name__ == "__main__":
 
     from pykeen.pipeline import pipeline
 
-    lr_lists = [0.01, 0.001, 0.0001]
+    lr_lists = [0.001]
     # lr_lists = [0.1, 0.01]
 
     for i, (name, entity_initializer) in enumerate(initializer_dict.items()):

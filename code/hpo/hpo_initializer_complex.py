@@ -92,46 +92,50 @@ if __name__ == "__main__":
     # pipeline_config["training_loop"] = TypeSLCWATrainingLoop
 
     import torch
-    from Custom.CustomInit import TypeCenterInitializer, TypeCenterRandomInitializer
-
-    initializer_list = [
-        "uniform",
-        "normal",
-        "orthogonal_",
-        "constant_",
-        "ones_",
-        "zeros_",
-        "eye_",
-        "sparse_",
-        "xavier_uniform_",
-        "xavier_uniform_norm_",
-        "xavier_normal_",
-        "xavier_normal_norm_",
-        "uniform_norm_",
-        "uniform_norm_p1_",
-        "normal_norm_",
-    ]
+    from Custom.CustomInit import (
+        TypeCenterInitializer,
+        TypeCenterProductRandomInitializer,
+        TypeCenterRandomInitializer,
+    )
 
     # initializer_list = [
-    #     "uniform_norm_",
+    #     "uniform",
+    #     "normal",
+    #     "orthogonal_",
+    #     "constant_",
+    #     "ones_",
+    #     "zeros_",
+    #     "eye_",
+    #     "sparse_",
+    #     "xavier_uniform_",
     #     "xavier_uniform_norm_",
+    #     "xavier_normal_",
     #     "xavier_normal_norm_",
+    #     "uniform_norm_",
+    #     "uniform_norm_p1_",
+    #     "normal_norm_",
     # ]
+
+    initializer_list = [
+        "uniform_norm_",
+        "xavier_uniform_norm_",
+        # "xavier_normal_norm_",
+    ]
 
     initializer_dict = dict()
 
     for initializer in initializer_list:
         initializer_dict[initializer] = initializer
 
-        # random_initializer_50 = TypeCenterRandomInitializer(
-        #     training_data,
-        #     torch.cfloat,
-        #     type_dim=768,
-        #     random_bias_gain=50,
-        #     type_init=initializer,
-        # )
+        random_initializer_50 = TypeCenterRandomInitializer(
+            training_data,
+            torch.cfloat,
+            type_dim=768,
+            random_bias_gain=50,
+            type_init=initializer,
+        )
 
-        # initializer_dict["random_initializer_50_" + initializer] = random_initializer_50
+        initializer_dict["random_initializer_50_" + initializer] = random_initializer_50
 
         # bert_initializer_50 = TypeCenterRandomInitializer(
         #     training_data,
@@ -190,15 +194,51 @@ if __name__ == "__main__":
         # #     "bert_initializer_100_" + initializer
         # # ] = bert_initializer_100
 
-        # random_initializer_1 = TypeCenterRandomInitializer(
-        #     training_data,
-        #     torch.cfloat,
-        #     type_dim=768,
-        #     random_bias_gain=1,
-        #     type_init=initializer,
-        # )
+        random_initializer_1 = TypeCenterRandomInitializer(
+            training_data,
+            torch.cfloat,
+            type_dim=768,
+            random_bias_gain=1,
+            type_init=initializer,
+        )
 
-        # initializer_dict["random_initializer_1_" + initializer] = random_initializer_1
+        initializer_dict["random_initializer_1_" + initializer] = random_initializer_1
+
+        random_product_initializer_1 = TypeCenterProductRandomInitializer(
+            training_data,
+            torch.cfloat,
+            type_dim=768,
+            random_bias_gain=1,
+            type_init=initializer,
+        )
+
+        initializer_dict[
+            "random_product_initializer_1_" + initializer
+        ] = random_product_initializer_1
+
+        random_product_initializer_0_1 = TypeCenterProductRandomInitializer(
+            training_data,
+            torch.cfloat,
+            type_dim=768,
+            random_bias_gain=0.1,
+            type_init=initializer,
+        )
+
+        initializer_dict[
+            "random_product_initializer_0_1_" + initializer
+        ] = random_product_initializer_0_1
+
+        random_product_initializer_0_5 = TypeCenterProductRandomInitializer(
+            training_data,
+            torch.cfloat,
+            type_dim=768,
+            random_bias_gain=0.5,
+            type_init=initializer,
+        )
+
+        initializer_dict[
+            "random_product_initializer_0_5_" + initializer
+        ] = random_product_initializer_0_5
 
     from pykeen.pipeline import pipeline
 

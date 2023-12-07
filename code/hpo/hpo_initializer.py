@@ -84,7 +84,11 @@ if __name__ == "__main__":
     # pipeline_config["training_loop"] = TypeSLCWATrainingLoop
 
     import torch
-    from Custom.CustomInit import TypeCenterInitializer, TypeCenterRandomInitializer
+    from Custom.CustomInit import (
+        TypeCenterInitializer,
+        TypeCenterProductRandomInitializer,
+        TypeCenterRandomInitializer,
+    )
 
     # initializer_list = [
     #     "uniform",
@@ -194,9 +198,21 @@ if __name__ == "__main__":
 
         initializer_dict["random_initializer_1_" + initializer] = random_initializer_1
 
+        random_product_initializer_1 = TypeCenterProductRandomInitializer(
+            training_data,
+            torch.cfloat,
+            type_dim=768,
+            random_bias_gain=1,
+            type_init=initializer,
+        )
+
+        initializer_dict[
+            "random_product_initializer_1_" + initializer
+        ] = random_product_initializer_1
+
     from pykeen.pipeline import pipeline
 
-    lr_lists = [0.001, 0.0001]
+    lr_lists = [0.0001]
     # lr_lists = [0.1, 0.01]
 
     for i, (name, entity_initializer) in enumerate(initializer_dict.items()):
