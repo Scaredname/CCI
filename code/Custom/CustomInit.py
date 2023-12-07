@@ -193,3 +193,44 @@ class TypeCenterRandomInitializer(TypeCenterInitializer):
             entity_emb_tensor[entity_index] = ent_emb
 
         return torch.nn.functional.normalize(entity_emb_tensor)
+
+
+class TypeCenterProductRandomInitializer(TypeCenterRandomInitializer):
+    def __init__(
+        self,
+        triples_factory,
+        data_type,
+        random_bias_gain=1,
+        type_dim=None,
+        pretrain=None,
+        shape: Sequence[str] = ("d",),
+        **kwargs,
+    ) -> None:
+        super().__init__(
+            triples_factory,
+            data_type,
+            random_bias_gain,
+            type_dim,
+            pretrain,
+            shape,
+            **kwargs,
+        )
+
+    def _generate_entity_tensor(
+        self, type_embedding, entity_type_constraints
+    ) -> torch.Tensor:
+        entity_emb_tensor = torch.empty(
+            entity_type_constraints.shape[0], type_embedding.shape[1]
+        )
+        for entity_index, entity_type in enumerate(entity_type_constraints):
+            type_indices = torch.argwhere(entity_type).squeeze(dim=1)
+            type_emb = type_embedding[type_indices]
+
+            initializer = initializer_resolver.make(self.init)
+            random_bias_emb = initializer(torch.empty(*type_emb.shape))
+
+            # 存在多个类型时，求加和后的嵌入的平均作为实体嵌入
+            ent_emb = torch.mean((type_emb * self.gain * random_bias_emb), dim=0)
+            entity_emb_tensor[entity_index] = ent_emb
+
+        return torch.nn.functional.normalize(entity_emb_tensor)
