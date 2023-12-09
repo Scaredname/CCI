@@ -273,7 +273,7 @@ if __name__ == "__main__":
 
         random_product_initializer_1 = TypeCenterProductRandomInitializer(
             training_data,
-            torch.cfloat,
+            torch.float,
             type_dim=768,
             random_bias_gain=1,
             type_init=initializer,
