@@ -332,6 +332,7 @@ def init_train_model(
     embedding_dim,
     lr_list,
     no_constrainer=False,
+    relation_initializer=None,
 ):
     """
     description: test initialization
@@ -354,6 +355,8 @@ def init_train_model(
     )
     if no_constrainer:
         model_kwargs.pop("entity_constrainer")
+    if relation_initializer:
+        model_kwargs["relation_initializer"] = relation_initializer
 
     try:
         for learning_rate in lr_lists:
