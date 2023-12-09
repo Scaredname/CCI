@@ -70,8 +70,8 @@ def determine_convergence_epoch(stopper_data):
     convergence_epoch = stopper_data["best_epoch"]
     convergence_valid = round(float(results_log[-1]), 3)
 
-    # 计算当前epoch的结果与前一个epoch的差值，判断是否手懒
-    convergence_thersholds = np.array(results_log) * 0.001
+    # 计算当前epoch的结果与前一个epoch的差值，判断是否收敛
+    convergence_thersholds = np.array(results_log) * 0.001  # 阈值
     convergence_indices = np.where(results_delta < convergence_thersholds)[0]
     if len(convergence_indices):  # 判断是否大于收敛阈值
         for i in convergence_indices:
@@ -111,11 +111,7 @@ for file_name in os.listdir(result_path):
                         with open(config_path, "r", encoding="utf8") as fff:
                             config = json.load(fff)
 
-                        if "model" in config:
-                            results_dict["model"].append(config["model"])
-                        else:
-                            results_dict["model"].append(model_name)
-
+                    results_dict["initializer_name"].append(file_name)
                     if "stopper" in results:
                         results_dict["valid-mrr"].append(
                             round(float(results["stopper"]["best_metric"]), 3)
@@ -169,7 +165,10 @@ for file_name in os.listdir(result_path):
                         results_dict["lr"].append(config["optimizer_kwargs"]["lr"])
                     else:
                         results_dict["lr"].append("-")
-                    results_dict["initializer_name"].append(file_name)
+                    if "model" in config:
+                        results_dict["model"].append(config["model"])
+                    else:
+                        results_dict["model"].append(model_name)
 r = pd.DataFrame(results_dict)
 
 r.to_csv(save_path, index=False)
