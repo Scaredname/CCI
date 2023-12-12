@@ -93,10 +93,10 @@ if __name__ == "__main__":
 
     initializer_list = [
         "uniform_norm_",
-        "xavier_uniform_norm_",
-        "xavier_normal_norm_",
+        # "xavier_uniform_norm_",
+        # "xavier_normal_norm_",
     ]
-    lr_list = [0.001, 0.0001]
+    lr_list = [0.0001]
     for initializer in initializer_list:
         # init_train_model(
         #     initializer,
@@ -161,52 +161,52 @@ if __name__ == "__main__":
         #     relation_initializer=relation_random_initializer_10,
         # )
 
-        # random_initializer_1 = TypeCenterRandomInitializer(
-        #     training_data,
-        #     torch.float,
-        #     type_dim=768,
-        #     random_bias_gain=1,
-        #     type_init=initializer,
-        # )
-        # relation_random_initializer_1 = TypeCenterRelationInitializer(
-        #     training_data,
-        #     torch.float,
-        #     type_dim=768,
-        #     type_init=initializer,
-        #     type_emb=random_initializer_1.type_representations,
-        # )
-        # init_train_model(
-        #     random_initializer_1,
-        #     "relation_random_initializer_1_" + initializer,
-        #     dataset,
-        #     dataset_name,
-        #     fix_config,
-        #     embedding_dim,
-        #     lr_list,
-        #     relation_initializer=relation_random_initializer_1,
-        # )
-
-        random_product_initializer_1 = TypeCenterProductRandomInitializer(
+        random_initializer_100 = TypeCenterRandomInitializer(
             training_data,
             torch.float,
             type_dim=768,
             random_bias_gain=1,
             type_init=initializer,
         )
-        relation_random_product_initializer_1 = TypeCenterRelationInitializer(
+        relation_random_initializer_100 = TypeCenterRelationInitializer(
             training_data,
             torch.float,
             type_dim=768,
             type_init=initializer,
-            type_emb=random_product_initializer_1.type_representations,
+            type_emb=random_initializer_100.type_representations,
         )
-
         init_train_model(
-            random_product_initializer_1,
-            "relation_random_product_initializer_1_" + initializer,
+            random_initializer_100,
+            "relation_random_initializer_100_" + initializer,
             dataset,
             dataset_name,
             fix_config,
             embedding_dim,
             lr_list,
+            relation_initializer=relation_random_initializer_100,
         )
+
+        # random_product_initializer_100 = TypeCenterProductRandomInitializer(
+        #     training_data,
+        #     torch.float,
+        #     type_dim=768,
+        #     random_bias_gain=100,
+        #     type_init=initializer,
+        # )
+        # relation_random_product_initializer_100 = TypeCenterRelationInitializer(
+        #     training_data,
+        #     torch.float,
+        #     type_dim=768,
+        #     type_init=initializer,
+        #     type_emb=random_product_initializer_100.type_representations,
+        # )
+
+        # init_train_model(
+        #     random_product_initializer_100,
+        #     "relation_random_product_initializer_100_" + initializer,
+        #     dataset,
+        #     dataset_name,
+        #     fix_config,
+        #     embedding_dim,
+        #     lr_list,
+        # )

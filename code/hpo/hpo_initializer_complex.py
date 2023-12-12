@@ -12,8 +12,8 @@ from pykeen.constants import PYKEEN_CHECKPOINTS
 from pykeen.datasets import get_dataset
 from utilities import init_train_model, load_dataset
 
-# dataset_name = "yago_new"
-dataset_name = "CAKE-NELL-995_new"
+dataset_name = "yago_new"
+# dataset_name = "CAKE-NELL-995_new"
 
 if __name__ == "__main__":
     print("****************************************")
@@ -103,13 +103,13 @@ if __name__ == "__main__":
     )
 
     initializer_list = [
-        "uniform_norm_",
-        "normal_norm_",
+        # "uniform_norm_",
+        # "normal_norm_",
         "xavier_uniform_norm_",
         "xavier_normal_norm_",
     ]
 
-    lr_list = [0.01, 0.001, 0.0001]
+    lr_list = [0.001]
     for initializer in initializer_list:
         init_train_model(
             initializer,

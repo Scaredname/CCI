@@ -12,8 +12,8 @@ from pykeen.constants import PYKEEN_CHECKPOINTS
 from pykeen.datasets import get_dataset
 from utilities import init_train_model, load_dataset
 
-dataset_name = "CAKE-NELL-995_new"
-# dataset_name = "yago_new"
+# dataset_name = "CAKE-NELL-995_new"
+dataset_name = "yago_new"
 
 if __name__ == "__main__":
     print("****************************************")
@@ -89,19 +89,20 @@ if __name__ == "__main__":
 
     import torch
     from Custom.CustomInit import (
+        TypeCenterFrequencyRandomInitializer,
         TypeCenterInitializer,
         TypeCenterProductRandomInitializer,
         TypeCenterRandomInitializer,
     )
 
     initializer_list = [
-        # "uniform_norm_",
-        # "normal_norm_",
+        "uniform_norm_",
+        "normal_norm_",
         "xavier_uniform_norm_",
         "xavier_normal_norm_",
     ]
 
-    lr_list = [0.001]
+    lr_list = [0.01]
     for initializer in initializer_list:
         init_train_model(
             initializer,
@@ -124,7 +125,7 @@ if __name__ == "__main__":
 
         init_train_model(
             random_initializer_50,
-            "norm_random_initializer_50_" + initializer,
+            "random_initializer_50_" + initializer,
             dataset,
             dataset_name,
             fix_config,
@@ -133,94 +134,70 @@ if __name__ == "__main__":
             True,
         )
 
-        bert_initializer_50 = TypeCenterRandomInitializer(
-            training_data,
-            torch.cfloat,
-            type_dim=768,
-            pretrain="bert-base-uncased",
-            random_bias_gain=50,
-            type_init=initializer,
+        # random_initializer_100 = TypeCenterRandomInitializer(
+        #     training_data,
+        #     torch.cfloat,
+        #     type_dim=768,
+        #     random_bias_gain=100,
+        #     type_init=initializer,
+        # )
+
+        # init_train_model(
+        #     random_initializer_100,
+        #     "random_initializer_100_" + initializer,
+        #     dataset,
+        #     dataset_name,
+        #     fix_config,
+        #     embedding_dim,
+        #     lr_list,
+        #     True,
+        # )
+
+        # random_initializer_200 = TypeCenterRandomInitializer(
+        #     training_data,
+        #     torch.cfloat,
+        #     type_dim=768,
+        #     random_bias_gain=200,
+        #     type_init=initializer,
+        # )
+
+        # init_train_model(
+        #     random_initializer_200,
+        #     "random_initializer_200_" + initializer,
+        #     dataset,
+        #     dataset_name,
+        #     fix_config,
+        #     embedding_dim,
+        #     lr_list,
+        #     True,
+        # )
+
+        # random_product_initializer_1 = TypeCenterProductRandomInitializer(
+        #     training_data,
+        #     torch.cfloat,
+        #     type_dim=768,
+        #     random_bias_gain=1,
+        #     type_init=initializer,
+        # )
+
+        # init_train_model(
+        #     random_product_initializer_1,
+        #     "random_product_initializer_1_" + initializer,
+        #     dataset,
+        #     dataset_name,
+        #     fix_config,
+        #     embedding_dim,
+        #     lr_list,
+        #     True,
+        # )
+
+        random_frequency_initializer = TypeCenterFrequencyRandomInitializer(
+            training_data, torch.cfloat, type_dim=768, type_init=initializer
         )
 
         init_train_model(
-            bert_initializer_50,
-            "norm_bert_initializer_50_" + initializer,
-            dataset,
-            dataset_name,
-            fix_config,
-            embedding_dim,
-            lr_list,
-            True,
-        )
-
-        random_initializer_10 = TypeCenterRandomInitializer(
-            training_data,
-            torch.cfloat,
-            type_dim=768,
-            random_bias_gain=10,
-            type_init=initializer,
-        )
-
-        init_train_model(
-            random_initializer_10,
-            "norm_random_initializer_10_" + initializer,
-            dataset,
-            dataset_name,
-            fix_config,
-            embedding_dim,
-            lr_list,
-            True,
-        )
-
-        random_initializer_100 = TypeCenterRandomInitializer(
-            training_data,
-            torch.cfloat,
-            type_dim=768,
-            random_bias_gain=100,
-            type_init=initializer,
-        )
-
-        init_train_model(
-            random_initializer_100,
-            "norm_random_initializer_100_" + initializer,
-            dataset,
-            dataset_name,
-            fix_config,
-            embedding_dim,
-            lr_list,
-            True,
-        )
-
-        random_initializer_1 = TypeCenterRandomInitializer(
-            training_data,
-            torch.cfloat,
-            type_dim=768,
-            random_bias_gain=1,
-            type_init=initializer,
-        )
-
-        init_train_model(
-            random_initializer_1,
-            "norm_random_initializer_1_" + initializer,
-            dataset,
-            dataset_name,
-            fix_config,
-            embedding_dim,
-            lr_list,
-            True,
-        )
-
-        random_product_initializer_1 = TypeCenterProductRandomInitializer(
-            training_data,
-            torch.cfloat,
-            type_dim=768,
-            random_bias_gain=1,
-            type_init=initializer,
-        )
-
-        init_train_model(
-            random_product_initializer_1,
-            "random_product_initializer_1_" + initializer,
+            random_frequency_initializer,
+            "random_frequency_initializer_" + initializer,
             dataset,
             dataset_name,
             fix_config,
