@@ -15,6 +15,8 @@ from utilities import init_train_model, load_dataset
 # dataset_name = "CAKE-NELL-995_new"
 dataset_name = "yago_new"
 
+# dataset_name = "CAKE-DBpedia-242_new"
+
 if __name__ == "__main__":
     print("****************************************")
     print(dataset_name)

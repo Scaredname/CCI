@@ -14,6 +14,7 @@ from utilities import init_train_model, load_dataset
 
 dataset_name = "yago_new"
 # dataset_name = "CAKE-NELL-995_new"
+# dataset_name = "CAKE-DBpedia-242_new"
 
 if __name__ == "__main__":
     test_batch_size = 4
