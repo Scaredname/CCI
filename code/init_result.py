@@ -64,26 +64,18 @@ def determine_convergence_epoch(stopper_data):
     """
     evaluation_frequency = stopper_data["frequency"]
     results_log = stopper_data["results"]
-    results_delta = np.array(results_log) - np.array([0] + results_log[:-1])
 
     # 如果不收敛直接使用best_epoch 和对应的测试结果
     convergence_epoch = stopper_data["best_epoch"]
     convergence_valid = round(float(results_log[-1]), 3)
 
-    # 计算当前epoch的结果与前一个epoch的差值，判断是否收敛
-    convergence_thersholds = np.array(results_log) * 0.001  # 阈值
-    convergence_indices = np.where(results_delta < convergence_thersholds)[0]
-    if len(convergence_indices):  # 判断是否大于收敛阈值
-        for i in convergence_indices:
-            # 判断收敛的值是否接近最优值，当收敛的valid大于0.9倍的最优valid时，我们认为这是有效的收敛值。否则无效，当作不收敛处理。
-            if results_log[i - 1] > 0.9 * stopper_data["best_metric"]:
-                # 因为基于差来判断，所以实际的convergence=i-1。
-                convergence_index = i - 1
-                convergence_epoch = convergence_index * evaluation_frequency
-                convergence_valid = round(float(results_log[convergence_index]), 3)
+    for i in range(len(results_log) - 1):
+        # 增长幅度为1%
+        if 1.01 * results_log[i] > results_log[i + 1]:
+            if results_log[i] > 0.9 * stopper_data["best_metric"]:
+                convergence_epoch = stopper_data["best_epoch"]
+                convergence_valid = round(float(results_log[i]), 3)
                 break
-    # else:
-    #     print("no convergence")
 
     return convergence_epoch, convergence_valid
 
@@ -135,6 +127,13 @@ for file_name in os.listdir(result_path):
                             3,
                         )
                     )
+                    if "stopper" in results:
+                        results_dict["best_epoch"].append(
+                            results["stopper"]["best_epoch"]
+                        )
+                    else:
+                        results_dict["best_epoch"].append("-")
+
                     results_dict["hits@1"].append(
                         round(
                             float(results["metrics"]["both"]["realistic"]["hits_at_1"]),
@@ -155,12 +154,7 @@ for file_name in os.listdir(result_path):
                             3,
                         )
                     )
-                    if "stopper" in results:
-                        results_dict["best_epoch"].append(
-                            results["stopper"]["best_epoch"]
-                        )
-                    else:
-                        results_dict["best_epoch"].append("-")
+
                     if "optimizer_kwargs" in config:
                         results_dict["lr"].append(config["optimizer_kwargs"]["lr"])
                     else:
