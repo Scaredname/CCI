@@ -360,6 +360,10 @@ def init_train_model(
 
     try:
         for learning_rate in lr_lists:
+            print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+            print("lr:", learning_rate)
+            print("init:", name)
+            print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
             fix_config["optimizer_kwargs"]["lr"] = learning_rate
             date_time = "/%s/%s/%s/%s" % (
                 f"{dataset_name}_init",

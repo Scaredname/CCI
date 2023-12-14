@@ -44,6 +44,7 @@ if __name__ == "__main__":
     test_batch_size = 4
     print("****************************************")
     print(dataset_name)
+    print(model)
     print("****************************************")
 
     training_data, validation, testing = load_dataset(
