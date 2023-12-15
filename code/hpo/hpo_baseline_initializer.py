@@ -55,11 +55,13 @@ if __name__ == "__main__":
     )
 
     if model not in ["RotatE", "complex"]:
-        embedding_dim = 768
+        init_embedding_dim = 768
+        model_embedding_dim = init_embedding_dim
         no_constrainer = False
         data_type = torch.float
     else:
-        embedding_dim = 384
+        init_embedding_dim = 768
+        model_embedding_dim = init_embedding_dim // 2
         no_constrainer = True
         data_type = torch.cfloat
     lr = 0.001
@@ -120,15 +122,15 @@ if __name__ == "__main__":
     # pipeline_config["training_loop"] = TypeSLCWATrainingLoop
 
     import torch
+    from Custom.base_init import (
+        LabelBasedInitializer,
+        RandomWalkPositionalEncodingInitializer,
+        WeisfeilerLehmanInitializer,
+    )
     from Custom.CustomInit import (
         TypeCenterInitializer,
         TypeCenterProductRandomInitializer,
         TypeCenterRandomInitializer,
-    )
-    from pykeen.nn.init import (
-        LabelBasedInitializer,
-        RandomWalkPositionalEncodingInitializer,
-        WeisfeilerLehmanInitializer,
     )
 
     initializer_list = [
@@ -148,12 +150,83 @@ if __name__ == "__main__":
     lr_list = [0.01, 0.001, 0.0001]
 
     for initializer in initializer_list:
-        init_train_model(
-            initializer,
-            initializer,
-            dataset,
-            dataset_name,
-            fix_config,
-            embedding_dim,
-            lr_list,
-        )
+    init_train_model(
+        initializer,
+        initializer,
+        dataset,
+        dataset_name,
+        fix_config,
+        model_embedding_dim,
+        lr_list,
+        no_constrainer=no_constrainer,
+    )
+
+    wl_initializer = WeisfeilerLehmanInitializer(
+        color_initializer=initializer,
+        shape=init_embedding_dim,
+        triples_factory=training_data,
+    )
+
+    init_train_model(
+        wl_initializer,
+        "random_wl_initializer_" + initializer,
+        dataset,
+        dataset_name,
+        fix_config,
+        model_embedding_dim,
+        lr_list,
+        no_constrainer=no_constrainer,
+    )
+
+    walk_position_initializer = RandomWalkPositionalEncodingInitializer(
+        dim=init_embedding_dim + 1,
+        triples_factory=training_data,
+    )
+
+    init_train_model(
+        walk_position_initializer,
+        "random_walk_position_initializer_" + initializer,
+        dataset,
+        dataset_name,
+        fix_config,
+        model_embedding_dim,
+        lr_list,
+        no_constrainer=no_constrainer,
+    )
+
+    pre_initializer = LabelBasedInitializer.from_triples_factory(
+        training_data,
+        encoder="transformer",
+        encoder_kwargs=dict(
+            pretrained_model_name_or_path="bert-base-cased",
+            max_length=512,
+        ),
+    )
+    init_train_model(
+        pre_initializer,
+        "pre_bert_base_cased_initializer",
+        dataset,
+        dataset_name,
+        fix_config,
+        model_embedding_dim,
+        lr_list,
+        no_constrainer=no_constrainer,
+    )
+    pre_initializer_un = LabelBasedInitializer.from_triples_factory(
+        training_data,
+        encoder="transformer",
+        encoder_kwargs=dict(
+            pretrained_model_name_or_path="bert-base-uncased",
+            max_length=512,
+        ),
+    )
+    init_train_model(
+        pre_initializer_un,
+        "pre_bert_base_uncased_initializer",
+        dataset,
+        dataset_name,
+        fix_config,
+        model_embedding_dim,
+        lr_list,
+        no_constrainer=no_constrainer,
+    )

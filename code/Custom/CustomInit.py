@@ -142,9 +142,6 @@ class TypeCenterInitializer(PretrainedInitializer):
         )
         if data_type == torch.cfloat:
             tensor = tensor.view(tensor.shape[0], -1, 2)
-            self.type_dim = type_dim // 2  # 用于像模型传递参数
-        else:
-            self.type_dim = type_dim
 
         super().__init__(tensor)
 
@@ -372,9 +369,6 @@ class TypeCenterRelationInitializer(PretrainedInitializer):
         )
         if data_type == torch.cfloat:
             tensor = tensor.view(tensor.shape[0], -1, 2)
-            self.type_dim = type_dim // 2  # 用于像模型传递参数
-        else:
-            self.type_dim = type_dim
 
         super().__init__(tensor)
 
