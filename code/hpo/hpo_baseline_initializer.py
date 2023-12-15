@@ -178,21 +178,21 @@ if __name__ == "__main__":
             no_constrainer=no_constrainer,
         )
 
-        walk_position_initializer = RandomWalkPositionalEncodingInitializer(
-            dim=init_embedding_dim + 1,
-            triples_factory=training_data,
-        )
+    walk_position_initializer = RandomWalkPositionalEncodingInitializer(
+        dim=init_embedding_dim + 1,
+        triples_factory=training_data,
+    )
 
-        init_train_model(
-            walk_position_initializer,
-            "random_walk_position_initializer_" + initializer,
-            dataset,
-            dataset_name,
-            fix_config,
-            model_embedding_dim,
-            lr_list,
-            no_constrainer=no_constrainer,
-        )
+    init_train_model(
+        walk_position_initializer,
+        "random_walk_position_initializer",
+        dataset,
+        dataset_name,
+        fix_config,
+        model_embedding_dim,
+        lr_list,
+        no_constrainer=no_constrainer,
+    )
 
     pre_initializer = LabelBasedInitializer.from_triples_factory(
         training_data,
