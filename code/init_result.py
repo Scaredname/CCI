@@ -73,7 +73,7 @@ def determine_convergence_epoch(stopper_data):
         # 增长幅度为1%
         if 1.01 * results_log[i] > results_log[i + 1]:
             if results_log[i] > 0.9 * stopper_data["best_metric"]:
-                convergence_epoch = (i + 1) * 5
+                convergence_epoch = (i + 1) * evaluation_frequency
                 convergence_valid = round(float(results_log[i]), 3)
                 break
 
