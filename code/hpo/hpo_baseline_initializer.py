@@ -26,10 +26,11 @@ parser.add_argument(
         "a",
         "b",
         "c",
+        "d",
     ],
     default="a",
     type=str,
-    help='a="yago_new_init", b="CAKE-NELL-995_new_init", c="CAKE-DBpedia-242_new_init"',
+    help='a="yago_new_init", b="CAKE-NELL-995_new_init", c="CAKE-DBpedia-242_new_init", d="Kinships"',
 )
 parser.add_argument(
     "-m", "--model", choices=["distmult", "TransE", "RotatE", "complex"], type=str
@@ -37,8 +38,19 @@ parser.add_argument(
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    dataset_dict = dict(a="yago_new", b="CAKE-NELL-995_new", c="CAKE-DBpedia-242_new")
-    dataset_name = dataset_dict[args.dataset]
+    dataset_typed_dict = dict(
+        a="yago_new", b="CAKE-NELL-995_new", c="CAKE-DBpedia-242_new"
+    )
+    dataset_nontype_dict = dict(d="Kinships")
+    if args.dataset not in dataset_typed_dict:
+        dataset = dataset_nontype_dict[args.dataset]
+    else:
+        training_data, validation, testing = load_dataset(
+            dataset=dataset_typed_dict[args.dataset],
+        )
+        dataset = get_dataset(
+            training=training_data, testing=testing, validation=validation
+        )
     model = args.model
 
     test_batch_size = 4
@@ -46,13 +58,6 @@ if __name__ == "__main__":
     print(dataset_name)
     print(model)
     print("****************************************")
-
-    training_data, validation, testing = load_dataset(
-        dataset=dataset_name,
-    )
-    dataset = get_dataset(
-        training=training_data, testing=testing, validation=validation
-    )
 
     if model not in ["RotatE", "complex"]:
         init_embedding_dim = 768
@@ -134,18 +139,18 @@ if __name__ == "__main__":
     )
 
     initializer_list = [
-        "uniform_norm_",
-        "normal_norm_",
-        "uniform_",
-        "normal_",
-        "xavier_uniform_",
-        "xavier_normal_",
-        # "xavier_uniform_norm_",
-        # "xavier_normal_norm_",
-        "ones_",
-        "zeros_",
-        "eye_",
-        "orthogonal_",
+        # "uniform_norm_",
+        # "normal_norm_",
+        # "uniform_",
+        # "normal_",
+        # "xavier_uniform_",
+        # "xavier_normal_",
+        "xavier_uniform_norm_",
+        "xavier_normal_norm_",
+        # "ones_",
+        # "zeros_",
+        # "eye_",
+        # "orthogonal_",
     ]
     lr_list = [0.01, 0.001, 0.0001]
 
