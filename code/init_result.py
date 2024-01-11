@@ -18,15 +18,19 @@ parser.add_argument(
         "a",
         "b",
         "c",
+        "d",
     ],
     default="a",
     type=str,
-    help='a="yago_new_init", b="CAKE-NELL-995_new_init", c="CAKE-DBpedia-242_new_init"',
+    help='a="yago_new_init", b="CAKE-NELL-995_new_init", c="CAKE-DBpedia-242_new_init", d="Kinships_init"',
 )
 args = parser.parse_args()
 
 dataset_dict = dict(
-    a="yago_new_init", b="CAKE-NELL-995_new_init", c="CAKE-DBpedia-242_new_init"
+    a="yago_new_init",
+    b="CAKE-NELL-995_new_init",
+    c="CAKE-DBpedia-242_new_init",
+    d="Kinships_init",
 )
 dataset = dataset_dict[args.dataset]
 # dataset = "CAKE-NELL-995_new_init"

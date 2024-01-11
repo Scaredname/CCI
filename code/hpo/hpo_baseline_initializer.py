@@ -9,12 +9,13 @@ import torch
 
 sys.path.append("..")
 
+import pykeen.datasets.utils as pdu
 from Custom.CustomTrain import TypeSLCWATrainingLoop
 from pykeen.constants import PYKEEN_CHECKPOINTS
 from pykeen.datasets import get_dataset
 from utilities import init_train_model, load_dataset
 
-dataset_name = "yago_new"
+# dataset_name = "yago_new"
 # dataset_name = "CAKE-NELL-995_new"
 # dataset_name = "CAKE-DBpedia-242_new"
 
@@ -43,10 +44,13 @@ if __name__ == "__main__":
     )
     dataset_nontype_dict = dict(d="Kinships")
     if args.dataset not in dataset_typed_dict:
-        dataset = dataset_nontype_dict[args.dataset]
+        dataset_name = dataset_nontype_dict[args.dataset]
+        dataset = pdu.get_dataset(dataset=dataset_name)
+        training_data = dataset.training
     else:
+        dataset_name = dataset_typed_dict[args.dataset]
         training_data, validation, testing = load_dataset(
-            dataset=dataset_typed_dict[args.dataset],
+            dataset=dataset_name,
         )
         dataset = get_dataset(
             training=training_data, testing=testing, validation=validation
