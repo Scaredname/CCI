@@ -2,6 +2,7 @@ from typing import Any, Optional, Sequence
 
 import torch
 from class_resolver.utils import OneOrManyHintOrType, OneOrManyOptionalKwargs
+from more_itertools import last
 from pykeen.models.nbase import _prepare_representation_module_list
 from pykeen.nn import Representation
 from pykeen.nn.init import (
@@ -11,6 +12,7 @@ from pykeen.nn.init import (
     xavier_uniform_,
 )
 from pykeen.triples import KGInfo
+from pykeen.utils import get_edge_index, iter_weisfeiler_lehman, upgrade_to_sequence
 
 # class PretrainedInitializer:
 #     """
@@ -75,6 +77,84 @@ def cal_propor(data):
     return data
 
 
+class WLCenterInitializer(PretrainedInitializer):
+    """An initializer based on an encoding of categorical colors from the Weisfeiler-Lehman algorithm."""
+
+    def __init__(
+        self,
+        *,
+        # the color initializer
+        color_initializer=None,
+        color_initializer_kwargs=None,
+        shape=32,
+        # variants for the edge index
+        edge_index: Optional[torch.LongTensor] = None,
+        num_entities: Optional[int] = None,
+        mapped_triples: Optional[torch.LongTensor] = None,
+        triples_factory=None,
+        data_type=torch.float,
+        random_bias_gain=1.0,
+        # additional parameters for iter_weisfeiler_lehman
+        **kwargs,
+    ) -> None:
+        """
+        Initialize the initializer.
+
+        :param color_initializer:
+            the initializer for initialization color representations, or a hint thereof
+        :param color_initializer_kwargs:
+            additional keyword-based parameters for the color initializer
+        :param shape:
+            the shape to use for the color representations
+
+        :param edge_index: shape: (2, m)
+            the edge index
+        :param num_entities:
+            the number of entities. can be inferred
+        :param mapped_triples: shape: (m, 3)
+            the Id-based triples
+        :param triples_factory:
+            the triples factory
+
+        :param kwargs:
+            additional keyword-based parameters passed to :func:`pykeen.utils.iter_weisfeiler_lehman`
+        """
+        # normalize shape
+        shape = upgrade_to_sequence(shape)
+        # get coloring, default iter number = 2.
+        colors = last(
+            iter_weisfeiler_lehman(
+                edge_index=get_edge_index(
+                    triples_factory=triples_factory,
+                    mapped_triples=mapped_triples,
+                    edge_index=edge_index,
+                ),
+                num_nodes=num_entities,
+                **kwargs,
+            )
+        )
+        # make color initializer
+        color_initializer = initializer_resolver.make(
+            color_initializer, pos_kwargs=color_initializer_kwargs
+        )
+        # initialize color representations
+        num_colors = colors.max().item() + 1
+        # note: this could be a representation?
+        color_representation = color_initializer(
+            colors.new_empty(num_colors, *shape, dtype=torch.get_default_dtype())
+        )
+        random_representation = color_initializer(
+            colors.new_empty(colors.shape[0], *shape, dtype=torch.get_default_dtype())
+        )
+        tensor = torch.nn.functional.normalize(
+            color_representation[colors] + random_representation
+        )
+        if data_type == torch.cfloat:
+            tensor = tensor.view(tensor.shape[0], -1, 2)
+        # init entity representations according to the color
+        super().__init__(tensor=tensor)
+
+
 class TypeCenterInitializer(PretrainedInitializer):
     def __init__(
         self,
@@ -98,6 +178,8 @@ class TypeCenterInitializer(PretrainedInitializer):
         param shape:
         return {*}
         """
+        # todo: 像wl那样直接生成tensor而不是pykeen中的表示。
+
         # 在读取预训练表示时，设置为float避免pykeen生成表示时随机生成一些参数。设置为float才能确保完全利用预训练的表示。
         type_representations_kwargs = dict(
             dtype=torch.float, shape=type_dim, initializer=None
