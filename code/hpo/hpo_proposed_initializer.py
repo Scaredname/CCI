@@ -297,6 +297,7 @@ if __name__ == "__main__":
                     fix_config,
                     model_embedding_dim,
                     lr_list,
+                    no_constrainer=no_constrainer,
                 )
 
         if len(args.product_gains):
@@ -322,4 +323,5 @@ if __name__ == "__main__":
                     fix_config,
                     model_embedding_dim,
                     lr_list,
+                    no_constrainer=no_constrainer,
                 )
