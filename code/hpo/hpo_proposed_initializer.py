@@ -13,89 +13,103 @@ import pykeen.datasets.utils as pdu
 from pykeen.datasets import get_dataset
 from utilities import init_train_model, load_dataset
 
-# dataset_name = "yago_new"
-# dataset_name = "CAKE-NELL-995_new"
-# dataset_name = "CAKE-DBpedia-242_new"
 
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "-d",
-    "--dataset",
-    choices=[
-        "a",
-        "b",
-        "c",
-        "d",
-    ],
-    default="a",
-    type=str,
-    help='a="yago_new_init", b="CAKE-NELL-995_new_init", c="CAKE-DBpedia-242_new_init", d="Kinships"',
-)
-parser.add_argument(
-    "-m", "--model", choices=["distmult", "TransE", "RotatE", "complex"], type=str
-)
-parser.add_argument(
-    "-lr",
-    "--learning_rate_list",
-    nargs="+",
-    help="input one or multiple learning rate",
-    required=True,
-)
+def init_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-esf", "--early_frequency", type=int, default=5)
+    parser.add_argument(
+        "-d",
+        "--dataset",
+        choices=[
+            "a",
+            "b",
+            "c",
+            "d",
+        ],
+        default="a",
+        type=str,
+        help='a="yago_new_init", b="CAKE-NELL-995_new_init", c="CAKE-DBpedia-242_new_init", d="Kinships"',
+    )
+    parser.add_argument(
+        "-m",
+        "--model",
+        choices=["distmult", "TransE", "RotatE", "complex"],
+        type=str,
+        required=True,
+    )
+    parser.add_argument(
+        "-wcg",
+        "--wl_centric_gains",
+        help="the list of gains for wl centric add random initializer",
+        nargs="+",
+        default=[],
+    )
+    parser.add_argument(
+        "-ag",
+        "--add_gains",
+        help="the list of gains for type centric add random initializer",
+        nargs="+",
+        default=[],
+    )
+    parser.add_argument(
+        "-pg",
+        "--product_gains",
+        help="the list of gains for type centric product random initializer",
+        nargs="+",
+        default=[],
+    )
+    parser.add_argument(
+        "-lr",
+        "--learning_rate_list",
+        nargs="+",
+        help="input one or multiple learning rate",
+        required=True,
+    )
 
-parser.add_argument(
-    "-init",
-    "--initializer_list",
-    nargs="+",
-    choices=[
-        "uniform_norm_",
-        "normal_norm_",
-        "uniform_",
-        "normal_",
-        "xavier_uniform_",
-        "xavier_normal_",
-        "xavier_uniform_norm_",
-        "xavier_normal_norm_",
-        "ones_",
-        "zeros_",
-        "eye_",
-        "orthogonal_",
-    ],
-    default=[
-        "xavier_uniform_norm_",
-        "xavier_normal_norm_",
-    ],
-)
+    parser.add_argument(
+        "-init",
+        "--initializer_list",
+        nargs="+",
+        choices=[
+            "uniform_norm_",
+            "normal_norm_",
+            "uniform_",
+            "normal_",
+            "xavier_uniform_",
+            "xavier_normal_",
+            "xavier_uniform_norm_",
+            "xavier_normal_norm_",
+            "ones_",
+            "zeros_",
+            "eye_",
+            "orthogonal_",
+        ],
+        default=[
+            "xavier_uniform_norm_",
+            "xavier_normal_norm_",
+        ],
+    )
 
-parser.add_argument(
-    "-ai",
-    "--all_initializer",
-    help="using all initializer, will seal initializer_list argument",
-    default="",
-)
+    parser.add_argument(
+        "-ai",
+        "--all_initializer",
+        help="using all initializer, will seal initializer_list argument",
+        default="",
+    )
 
-parser.add_argument("-ba", "--base", help="test base initializer", action="store_true")
-parser.add_argument(
-    "-nc",
-    "--no_category",
-    help="test initializer without explicit category information",
-    action="store_true",
-)
-parser.add_argument(
-    "-ar",
-    "--add_random",
-    help="test type centric add random initializer",
-    action="store_true",
-)
-parser.add_argument(
-    "-pr",
-    "--product_random",
-    help="test type centric product random initializer",
-    action="store_true",
-)
+    parser.add_argument(
+        "-ba", "--base", help="test base initializer", action="store_true"
+    )
 
-parser.add_argument("-de", "--description", help="additional description", default="")
+    parser.add_argument(
+        "-de", "--description", help="additional description", default=""
+    )
+
+    return parser
+
 
 if __name__ == "__main__":
+    parser = init_parser()
     args = parser.parse_args()
     dataset_typed_dict = dict(
         a="yago_new", b="CAKE-NELL-995_new", c="CAKE-DBpedia-242_new"
@@ -172,7 +186,7 @@ if __name__ == "__main__":
         # 用early stop来筛选模型
         stopper="early",
         stopper_kwargs=dict(
-            frequency=5,
+            frequency=args.early_frequency,
             # frequency=frequency,
             # patience=args.early_stop_patience,
             patience=6,  # e 为1000 的情况
@@ -234,60 +248,78 @@ if __name__ == "__main__":
                 no_constrainer=no_constrainer,
             )
 
-        if args.no_category:
-            wl_center_200_initializer = WLCenterInitializer(
-                color_initializer=initializer,
-                shape=init_embedding_dim,
-                triples_factory=training_data,
-                data_type=data_type,
-                random_bias_gain=200,
-            )
+        if len(args.wl_centric_gains):
+            maxiter = 5
+            for gain in args.wl_centric_gains:
+                gain_num = float(gain)
+                if gain_num < 1:
+                    gain = "_".join(gain.split("."))
+                wl_center_initializer = WLCenterInitializer(
+                    color_initializer=initializer,
+                    shape=init_embedding_dim,
+                    triples_factory=training_data,
+                    data_type=data_type,
+                    random_bias_gain=gain_num,
+                    max_iter=maxiter,
+                )
 
-            init_train_model(
-                wl_center_200_initializer,
-                args.description + "wl_center_200_initializer_" + initializer,
-                dataset,
-                dataset_name,
-                fix_config,
-                model_embedding_dim,
-                lr_list,
-                no_constrainer=no_constrainer,
-            )
+                init_train_model(
+                    wl_center_initializer,
+                    args.description
+                    + f"wl{maxiter}_center_{gain}_initializer_"
+                    + initializer,
+                    dataset,
+                    dataset_name,
+                    fix_config,
+                    model_embedding_dim,
+                    lr_list,
+                    no_constrainer=no_constrainer,
+                )
 
-        if args.add_random:
-            random_initializer_50 = TypeCenterRandomInitializer(
-                training_data,
-                data_type,
-                type_dim=init_embedding_dim,
-                random_bias_gain=50,
-                type_init=initializer,
-            )
+        if len(args.add_gains):
+            for gain in args.add_gains:
+                gain_num = float(gain)
+                if gain_num < 1:
+                    gain = "_".join(gain.split("."))
+                random_initializer = TypeCenterRandomInitializer(
+                    training_data,
+                    data_type,
+                    type_dim=init_embedding_dim,
+                    random_bias_gain=gain_num,
+                    type_init=initializer,
+                )
 
-            init_train_model(
-                random_initializer_50,
-                args.description + "random_initializer_50_" + initializer,
-                dataset,
-                dataset_name,
-                fix_config,
-                model_embedding_dim,
-                lr_list,
-            )
+                init_train_model(
+                    random_initializer,
+                    args.description + f"random_initializer_{gain}_" + initializer,
+                    dataset,
+                    dataset_name,
+                    fix_config,
+                    model_embedding_dim,
+                    lr_list,
+                )
 
-        if args.product_random:
-            random_product_initializer_0_1 = TypeCenterProductRandomInitializer(
-                training_data,
-                torch.float,
-                type_dim=init_embedding_dim,
-                random_bias_gain=0.1,
-                type_init=initializer,
-            )
+        if len(args.product_gains):
+            for gain in args.product_gains:
+                gain_num = float(gain)
+                if gain_num < 1:
+                    gain = "_".join(gain.split("."))
+                random_product_initializer = TypeCenterProductRandomInitializer(
+                    training_data,
+                    torch.float,
+                    type_dim=init_embedding_dim,
+                    random_bias_gain=gain_num,
+                    type_init=initializer,
+                )
 
-            init_train_model(
-                random_product_initializer_0_1,
-                args.description + "random_product_initializer_0_1_" + initializer,
-                dataset,
-                dataset_name,
-                fix_config,
-                model_embedding_dim,
-                lr_list,
-            )
+                init_train_model(
+                    random_product_initializer,
+                    args.description
+                    + f"random_product_initializer_{gain}_"
+                    + initializer,
+                    dataset,
+                    dataset_name,
+                    fix_config,
+                    model_embedding_dim,
+                    lr_list,
+                )
