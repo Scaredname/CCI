@@ -84,13 +84,17 @@ if __name__ == "__main__":
         batch_size=batch_size,
         checkpoint_on_failure=True,
     )
-    loss = "NSSALoss"
+    if model in ["TransE", "RotatE"]:
+        loss = "NSSALoss"
 
-    loss_kwargs = dict(
-        reduction="mean",
-        adversarial_temperature=1,
-        margin=9,
-    )
+        loss_kwargs = dict(
+            reduction="mean",
+            adversarial_temperature=1,
+            margin=9,
+        )
+    else:
+        loss = "crossentropy"
+        loss_kwargs = dict()
 
     fix_config = dict(
         model=model,
