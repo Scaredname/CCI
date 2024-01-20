@@ -92,9 +92,20 @@ if __name__ == "__main__":
             adversarial_temperature=1,
             margin=9,
         )
+        regularizer = None
+        regularizer_kwargs = None
     else:
         loss = "crossentropy"
         loss_kwargs = dict()
+        if model == "complex":
+            regularizer = "lp"
+            regularizer_kwargs = dict(
+                weight=0.1,
+                p=3.0,
+            )
+        elif model == "distmult":
+            regularizer = "lp"
+            regularizer_kwargs = dict(weight=0.01)
 
     fix_config = dict(
         model=model,
@@ -128,6 +139,8 @@ if __name__ == "__main__":
         ),
         loss=loss,
         loss_kwargs=loss_kwargs,
+        regularizer=regularizer,
+        regularizer_kwargs=regularizer_kwargs,
     )
 
     # 每次调参前决定使用什么loss和训练方式
@@ -147,20 +160,21 @@ if __name__ == "__main__":
     )
 
     initializer_list = [
-        # "uniform_norm_",
-        # "normal_norm_",
-        # "uniform_",
-        # "normal_",
-        # "xavier_uniform_",
-        # "xavier_normal_",
+        "uniform_norm_",
+        "normal_norm_",
+        "uniform_",
+        "normal_",
+        "xavier_uniform_",
+        "xavier_normal_",
         "xavier_uniform_norm_",
         "xavier_normal_norm_",
-        # "ones_",
-        # "zeros_",
-        # "eye_",
-        # "orthogonal_",
+        "ones_",
+        "zeros_",
+        "eye_",
+        "orthogonal_",
     ]
-    lr_list = [0.01, 0.001, 0.0001]
+    # lr_list = [0.01, 0.001, 0.0001]
+    lr_list = [0.001]
 
     for initializer in initializer_list:
         init_train_model(

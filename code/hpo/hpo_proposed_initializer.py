@@ -165,9 +165,20 @@ if __name__ == "__main__":
             adversarial_temperature=1,
             margin=9,
         )
+        regularizer = None
+        regularizer_kwargs = None
     else:
         loss = "crossentropy"
         loss_kwargs = dict()
+        if model == "complex":
+            regularizer = "lp"
+            regularizer_kwargs = dict(
+                weight=0.1,
+                p=3.0,
+            )
+        elif model == "distmult":
+            regularizer = "lp"
+            regularizer_kwargs = dict(weight=0.01)
 
     fix_config = dict(
         model=model,
@@ -201,6 +212,8 @@ if __name__ == "__main__":
         ),
         loss=loss,
         loss_kwargs=loss_kwargs,
+        regularizer=regularizer,
+        regularizer_kwargs=regularizer_kwargs,
     )
 
     # 每次调参前决定使用什么loss和训练方式
