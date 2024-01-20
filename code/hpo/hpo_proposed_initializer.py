@@ -257,7 +257,7 @@ if __name__ == "__main__":
         if args.base:
             init_train_model(
                 initializer,
-                initializer,
+                args.description + initializer,
                 dataset,
                 dataset_name,
                 fix_config,
