@@ -77,6 +77,12 @@ def cal_propor(data):
     return data
 
 
+def standardization(tensor):
+    means = tensor.mean(dim=1, keepdim=True)
+    stds = tensor.std(dim=1, keepdim=True)
+    return (tensor - means) / stds
+
+
 class WLCenterInitializer(PretrainedInitializer):
     """An initializer based on an encoding of categorical colors from the Weisfeiler-Lehman algorithm."""
 
@@ -264,9 +270,11 @@ class TypeCenterRandomInitializer(TypeCenterInitializer):
         type_dim=None,
         pretrain=None,
         shape: Sequence[str] = ("d",),
+        preprocess="lp_normalize",
         **kwargs,
     ) -> None:
         self.gain = random_bias_gain
+        self.preprocess = preprocess
         super().__init__(
             triples_factory,
             data_type=data_type,
@@ -290,10 +298,17 @@ class TypeCenterRandomInitializer(TypeCenterInitializer):
             random_bias_emb = initializer(torch.empty(*type_emb.shape))
 
             # 存在多个类型时，求加和后的嵌入的平均作为实体嵌入
-            ent_emb = torch.mean((type_emb + self.gain * random_bias_emb), dim=0)
+            ent_emb = torch.mean((type_emb / self.gain + random_bias_emb), dim=0)
             entity_emb_tensor[entity_index] = ent_emb
 
-        return torch.nn.functional.normalize(entity_emb_tensor)
+        if self.preprocess == "lp_normalize":
+            return torch.nn.functional.normalize(entity_emb_tensor)
+        elif self.preprocess == "standardization":
+            return standardization(entity_emb_tensor)
+        elif self.preprocess == "no":
+            return entity_emb_tensor
+        else:
+            raise ValueError("process method error")
 
 
 class TypeCenterFrequencyRandomInitializer(TypeCenterInitializer):
@@ -356,6 +371,7 @@ class TypeCenterProductRandomInitializer(TypeCenterRandomInitializer):
         random_bias_gain=1,
         type_dim=None,
         pretrain=None,
+        preprocess="lp_normalize",
         shape: Sequence[str] = ("d",),
         **kwargs,
     ) -> None:
@@ -366,6 +382,7 @@ class TypeCenterProductRandomInitializer(TypeCenterRandomInitializer):
             type_dim,
             pretrain,
             shape,
+            preprocess,
             **kwargs,
         )
 
@@ -386,7 +403,14 @@ class TypeCenterProductRandomInitializer(TypeCenterRandomInitializer):
             ent_emb = torch.mean((type_emb * self.gain * random_bias_emb), dim=0)
             entity_emb_tensor[entity_index] = ent_emb
 
-        return torch.nn.functional.normalize(entity_emb_tensor)
+        if self.preprocess == "lp_normalize":
+            return torch.nn.functional.normalize(entity_emb_tensor)
+        elif self.preprocess == "standardization":
+            return standardization(entity_emb_tensor)
+        elif self.preprocess == "no":
+            return entity_emb_tensor
+        else:
+            raise ValueError("process method error")
 
 
 class TypeCenterRelationInitializer(PretrainedInitializer):

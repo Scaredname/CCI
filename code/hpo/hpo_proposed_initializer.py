@@ -52,6 +52,13 @@ def init_parser():
         default=[],
     )
     parser.add_argument(
+        "-agn",
+        "--add_gains_no",
+        help="the list of gains for type centric add random initializer for no process",
+        nargs="+",
+        default=[],
+    )
+    parser.add_argument(
         "-pg",
         "--product_gains",
         help="the list of gains for type centric product random initializer",
@@ -221,17 +228,13 @@ if __name__ == "__main__":
     # pipeline_config["training_loop"] = TypeSLCWATrainingLoop
 
     import torch
-    from Custom.base_init import (
-        LabelBasedInitializer,
-        RandomWalkPositionalEncodingInitializer,
-        WeisfeilerLehmanInitializer,
-    )
-    from Custom.CustomInit import (
-        TypeCenterInitializer,
-        TypeCenterProductRandomInitializer,
-        TypeCenterRandomInitializer,
-        WLCenterInitializer,
-    )
+    from Custom.base_init import (LabelBasedInitializer,
+                                  RandomWalkPositionalEncodingInitializer,
+                                  WeisfeilerLehmanInitializer)
+    from Custom.CustomInit import (TypeCenterInitializer,
+                                   TypeCenterProductRandomInitializer,
+                                   TypeCenterRandomInitializer,
+                                   WLCenterInitializer)
 
     initializer_list = [
         "uniform_norm_",
@@ -310,6 +313,33 @@ if __name__ == "__main__":
                 init_train_model(
                     random_initializer,
                     args.description + f"random_initializer_{gain}_" + initializer,
+                    dataset,
+                    dataset_name,
+                    fix_config,
+                    model_embedding_dim,
+                    lr_list,
+                    no_constrainer=no_constrainer,
+                )
+
+        if len(args.add_gains_no):
+            for gain in args.add_gains_no:
+                gain_num = float(gain)
+                if gain_num < 1:
+                    gain = "_".join(gain.split("."))
+                random_initializer = TypeCenterRandomInitializer(
+                    training_data,
+                    data_type,
+                    type_dim=init_embedding_dim,
+                    random_bias_gain=gain_num,
+                    type_init=initializer,
+                    preprocess="no",
+                )
+
+                init_train_model(
+                    random_initializer,
+                    args.description
+                    + f"no_random_initializer_{gain}_"
+                    + initializer,
                     dataset,
                     dataset_name,
                     fix_config,
