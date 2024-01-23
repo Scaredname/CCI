@@ -52,6 +52,13 @@ def init_parser():
         default=[],
     )
     parser.add_argument(
+        "-ags",
+        "--add_gains_standardization",
+        help="the list of gains for type centric add random initializer",
+        nargs="+",
+        default=[],
+    )
+    parser.add_argument(
         "-pg",
         "--product_gains",
         help="the list of gains for type centric product random initializer",
@@ -310,6 +317,33 @@ if __name__ == "__main__":
                 init_train_model(
                     random_initializer,
                     args.description + f"random_initializer_{gain}_" + initializer,
+                    dataset,
+                    dataset_name,
+                    fix_config,
+                    model_embedding_dim,
+                    lr_list,
+                    no_constrainer=no_constrainer,
+                )
+
+        if len(args.add_gains_standardization):
+            for gain in args.add_gains_standardization:
+                gain_num = float(gain)
+                if gain_num < 1:
+                    gain = "_".join(gain.split("."))
+                random_initializer = TypeCenterRandomInitializer(
+                    training_data,
+                    data_type,
+                    type_dim=init_embedding_dim,
+                    random_bias_gain=gain_num,
+                    type_init=initializer,
+                    preprocess="standardization",
+                )
+
+                init_train_model(
+                    random_initializer,
+                    args.description
+                    + f"standard_random_initializer_{gain}_"
+                    + initializer,
                     dataset,
                     dataset_name,
                     fix_config,
