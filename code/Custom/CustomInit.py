@@ -94,6 +94,7 @@ class WLCenterInitializer(PretrainedInitializer):
         triples_factory=None,
         data_type=torch.float,
         random_bias_gain=1.0,
+        max_iter=2,
         # additional parameters for iter_weisfeiler_lehman
         **kwargs,
     ) -> None:
@@ -130,6 +131,7 @@ class WLCenterInitializer(PretrainedInitializer):
                     edge_index=edge_index,
                 ),
                 num_nodes=num_entities,
+                max_iter=max_iter,
                 **kwargs,
             )
         )
@@ -139,6 +141,7 @@ class WLCenterInitializer(PretrainedInitializer):
         )
         # initialize color representations
         num_colors = colors.max().item() + 1
+        print("category number is ", num_colors)
         # note: this could be a representation?
         color_representation = color_initializer(
             colors.new_empty(num_colors, *shape, dtype=torch.get_default_dtype())
