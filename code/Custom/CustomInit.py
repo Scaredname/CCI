@@ -295,13 +295,14 @@ class TypeCenterRandomInitializer(TypeCenterInitializer):
             random_bias_emb = initializer(torch.empty(*type_emb.shape))
 
             # 存在多个类型时，求加和后的嵌入的平均作为实体嵌入
-            ent_emb = torch.mean((type_emb + self.gain * random_bias_emb), dim=0)
+            ent_emb = torch.mean((type_emb / self.gain + random_bias_emb), dim=0)
             entity_emb_tensor[entity_index] = ent_emb
 
         if self.preprocess == "lp_normalize":
             return torch.nn.functional.normalize(entity_emb_tensor)
         elif self.preprocess == "standardization":
-            # return standardization(entity_emb_tensor)
+            return standardization(entity_emb_tensor)
+        elif self.preprocess == "no":
             return entity_emb_tensor
         else:
             raise ValueError("process method error")
@@ -403,6 +404,8 @@ class TypeCenterProductRandomInitializer(TypeCenterRandomInitializer):
             return torch.nn.functional.normalize(entity_emb_tensor)
         elif self.preprocess == "standardization":
             return standardization(entity_emb_tensor)
+        elif self.preprocess == "no":
+            return entity_emb_tensor
         else:
             raise ValueError("process method error")
 
