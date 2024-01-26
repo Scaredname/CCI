@@ -77,10 +77,10 @@ def cal_propor(data):
     return data
 
 
-def standardization(tensor):
+def standardization(tensor, epsilon=1e-12):
     means = tensor.mean(dim=1, keepdim=True)
     stds = tensor.std(dim=1, keepdim=True)
-    return (tensor - means) / stds
+    return (tensor - means) / stds.clamp_min(epsilon)
 
 
 class WLCenterInitializer(PretrainedInitializer):
