@@ -84,6 +84,25 @@ def determine_convergence_epoch(stopper_data):
     return convergence_epoch, convergence_valid
 
 
+def find_early_stop_epoch(stopper_data, relative_delta=0.0001):
+    evaluation_frequency = stopper_data["frequency"]
+    results_log = stopper_data["results"]
+
+    early_stop_epoch = 0
+    early_stop_epoch_valid = round(float(0), 3)
+    patience = stopper_data["patience"]
+
+    for i in range(len(results_log)):
+        if (results_log[i] - early_stop_epoch_valid) > relative_delta:
+            early_stop_epoch_valid = results_log[i]
+            early_stop_epoch = evaluation_frequency * i
+            patience = stopper_data["patience"]
+        else:
+            patience -= 1
+
+    return early_stop_epoch, early_stop_epoch_valid
+
+
 # dataset/de/model/date/results.json
 for file_name in os.listdir(result_path):
     file_path = os.path.join(result_path, file_name)
@@ -131,6 +150,16 @@ for file_name in os.listdir(result_path):
                             3,
                         )
                     )
+
+                    epoch_01, mrr_01 = find_early_stop_epoch(results["stopper"], 0.01)
+                    results_dict["best_epoch_01"].append(epoch_01)
+                    results_dict["best_epoch_01_valid"].append(round(mrr_01, 3))
+                    epoch_001, mrr_001 = find_early_stop_epoch(
+                        results["stopper"], 0.001
+                    )
+                    results_dict["best_epoch_001"].append(epoch_001)
+                    results_dict["best_epoch_001_valid"].append(round(mrr_001, 3))
+
                     if "stopper" in results:
                         results_dict["best_epoch"].append(
                             results["stopper"]["best_epoch"]
