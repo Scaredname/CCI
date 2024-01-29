@@ -45,6 +45,13 @@ def init_parser():
         default=[],
     )
     parser.add_argument(
+        "-wcgn",
+        "--wl_centric_gains_no",
+        help="the list of gains for wl centric add random initializer with no process",
+        nargs="+",
+        default=[],
+    )
+    parser.add_argument(
         "-ag",
         "--add_gains",
         help="the list of gains for type centric add random initializer",
@@ -270,7 +277,7 @@ if __name__ == "__main__":
             )
 
         if len(args.wl_centric_gains):
-            maxiter = 5
+            maxiter = 5  # fix
             for gain in args.wl_centric_gains:
                 gain_num = float(gain)
                 if gain_num < 1:
@@ -288,6 +295,35 @@ if __name__ == "__main__":
                     wl_center_initializer,
                     args.description
                     + f"wl{maxiter}_center_{gain}_initializer_"
+                    + initializer,
+                    dataset,
+                    dataset_name,
+                    fix_config,
+                    model_embedding_dim,
+                    lr_list,
+                    no_constrainer=no_constrainer,
+                )
+
+        if len(args.wl_centric_gains_no):
+            maxiter = 5  # fix
+            for gain in args.wl_centric_gains_no:
+                gain_num = float(gain)
+                if gain_num < 1:
+                    gain = "_".join(gain.split("."))
+                wl_center_initializer = WLCenterInitializer(
+                    color_initializer=initializer,
+                    shape=init_embedding_dim,
+                    triples_factory=training_data,
+                    data_type=data_type,
+                    random_bias_gain=gain_num,
+                    max_iter=maxiter,
+                    preprocess="no",
+                )
+
+                init_train_model(
+                    wl_center_initializer,
+                    args.description
+                    + f"no_wl{maxiter}_center_{gain}_initializer_"
                     + initializer,
                     dataset,
                     dataset_name,
@@ -337,9 +373,7 @@ if __name__ == "__main__":
 
                 init_train_model(
                     random_initializer,
-                    args.description
-                    + f"no_random_initializer_{gain}_"
-                    + initializer,
+                    args.description + f"no_random_initializer_{gain}_" + initializer,
                     dataset,
                     dataset_name,
                     fix_config,
