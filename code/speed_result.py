@@ -92,6 +92,8 @@ threshold_dict = {
     ),
 }
 
+threshold_dict = threshold_dict[dataset]
+
 # dataset/de/model/date/results.json
 for file_name in os.listdir(result_path):
     file_path = os.path.join(result_path, file_name)
