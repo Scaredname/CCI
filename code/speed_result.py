@@ -124,7 +124,9 @@ for file_name in os.listdir(result_path):
                             results["stopper"], threshold_value
                         )
                         if not retain:
-                            continue
+                            results_dict["retain"].append(0)
+                        else:
+                            results_dict["retain"].append(1)
                         results_dict["date"].append(date)
                         results_dict["initializer_name"].append(file_name)
                         results_dict["threshold_value"].append(
