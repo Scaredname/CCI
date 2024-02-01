@@ -84,11 +84,11 @@ def determine_convergence_epoch(stopper_data, threshold_value):
     return convergence_epoch, convergence_valid, retain
 
 
-# 取每个模型的最小的验证集上的结果, mean-std的结果
+# 取每个模型的最优的验证集上的结果的0.9, mean+std的结果。
 threshold_dict = {
-    "yago_new_init": dict(distmult=0.248, complex=0.288, RotatE=0.291, TransE=0.203),
+    "yago_new_init": dict(distmult=0.259, complex=0.298, RotatE=0.291, TransE=0.206),
     "CAKE-NELL-995_new_init": dict(
-        distmult=0.376, complex=0.388, RotatE=0.374, TransE=0.296
+        distmult=0.385, complex=0.391, RotatE=0.380, TransE=0.307
     ),
 }
 
