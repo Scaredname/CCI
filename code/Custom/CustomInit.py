@@ -111,6 +111,7 @@ class WLCenterInitializer(PretrainedInitializer):
         triples_factory=None,
         data_type=torch.float,
         random_bias_gain=1.0,
+        if_plus_random: int = 1,
         preprocess="lp_normalize",
         max_iter=2,
         # additional parameters for iter_weisfeiler_lehman
@@ -134,10 +135,13 @@ class WLCenterInitializer(PretrainedInitializer):
             the Id-based triples
         :param triples_factory:
             the triples factory
+        :param if_plus_random:
+            control whether use random emb, only has 0 or 1 value.
 
         :param kwargs:
             additional keyword-based parameters passed to :func:`pykeen.utils.iter_weisfeiler_lehman`
         """
+        assert if_plus_random in [0, 1]
         # normalize shape
         shape = upgrade_to_sequence(shape)
         # get coloring, default iter number = 2.
@@ -169,7 +173,8 @@ class WLCenterInitializer(PretrainedInitializer):
         )
 
         entity_emb_tensor = (
-            color_representation[colors] / random_bias_gain + random_representation
+            color_representation[colors] / random_bias_gain
+            + if_plus_random * random_representation
         )
         tensor = process_tensor(entity_emb_tensor, preprocess)
 
@@ -282,13 +287,16 @@ class TypeCenterRandomInitializer(TypeCenterInitializer):
         triples_factory,
         data_type,
         random_bias_gain=1.0,
+        if_plus_random: int = 1,
         type_dim=None,
         pretrain=None,
         shape: Sequence[str] = ("d",),
         preprocess="lp_normalize",
         **kwargs,
     ) -> None:
+        assert if_plus_random in [0, 1]
         self.gain = random_bias_gain
+        self.plus_random = if_plus_random
         self.preprocess = preprocess
         super().__init__(
             triples_factory,
@@ -313,7 +321,9 @@ class TypeCenterRandomInitializer(TypeCenterInitializer):
             random_bias_emb = initializer(torch.empty(*type_emb.shape))
 
             # 存在多个类型时，求加和后的嵌入的平均作为实体嵌入
-            ent_emb = torch.mean((type_emb / self.gain + random_bias_emb), dim=0)
+            ent_emb = torch.mean(
+                (type_emb / self.gain + self.plus_random * random_bias_emb), dim=0
+            )
             entity_emb_tensor[entity_index] = ent_emb
 
         return process_tensor(entity_emb_tensor, self.preprocess)
@@ -377,6 +387,7 @@ class TypeCenterProductRandomInitializer(TypeCenterRandomInitializer):
         triples_factory,
         data_type,
         random_bias_gain=1,
+        if_plus_random: int = 1,
         type_dim=None,
         pretrain=None,
         preprocess="lp_normalize",
@@ -387,6 +398,7 @@ class TypeCenterProductRandomInitializer(TypeCenterRandomInitializer):
             triples_factory,
             data_type,
             random_bias_gain,
+            if_plus_random,
             type_dim,
             pretrain,
             shape,

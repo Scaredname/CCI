@@ -116,6 +116,10 @@ def init_parser():
     )
 
     parser.add_argument(
+        "-nr", "--no_random", help="don't plus random emb", action="store_true"
+    )
+
+    parser.add_argument(
         "-de", "--description", help="additional description", default=""
     )
 
@@ -235,13 +239,17 @@ if __name__ == "__main__":
     # pipeline_config["training_loop"] = TypeSLCWATrainingLoop
 
     import torch
-    from Custom.base_init import (LabelBasedInitializer,
-                                  RandomWalkPositionalEncodingInitializer,
-                                  WeisfeilerLehmanInitializer)
-    from Custom.CustomInit import (TypeCenterInitializer,
-                                   TypeCenterProductRandomInitializer,
-                                   TypeCenterRandomInitializer,
-                                   WLCenterInitializer)
+    from Custom.base_init import (
+        LabelBasedInitializer,
+        RandomWalkPositionalEncodingInitializer,
+        WeisfeilerLehmanInitializer,
+    )
+    from Custom.CustomInit import (
+        TypeCenterInitializer,
+        TypeCenterProductRandomInitializer,
+        TypeCenterRandomInitializer,
+        WLCenterInitializer,
+    )
 
     initializer_list = [
         "uniform_norm_",
@@ -262,6 +270,12 @@ if __name__ == "__main__":
 
     if not args.all_initializer:
         initializer_list = args.initializer_list
+
+    if args.no_random:
+        if_plus_random = 0
+        args.description += "without_random_"
+    else:
+        if_plus_random = 1
 
     for initializer in initializer_list:
         if args.base:
@@ -289,6 +303,7 @@ if __name__ == "__main__":
                     data_type=data_type,
                     random_bias_gain=gain_num,
                     max_iter=maxiter,
+                    if_plus_random=if_plus_random,
                 )
 
                 init_train_model(
@@ -318,6 +333,7 @@ if __name__ == "__main__":
                     random_bias_gain=gain_num,
                     max_iter=maxiter,
                     preprocess="no",
+                    if_plus_random=if_plus_random,
                 )
 
                 init_train_model(
@@ -344,6 +360,7 @@ if __name__ == "__main__":
                     type_dim=init_embedding_dim,
                     random_bias_gain=gain_num,
                     type_init=initializer,
+                    if_plus_random=if_plus_random,
                 )
 
                 init_train_model(
@@ -369,6 +386,7 @@ if __name__ == "__main__":
                     random_bias_gain=gain_num,
                     type_init=initializer,
                     preprocess="no",
+                    if_plus_random=if_plus_random,
                 )
 
                 init_train_model(
