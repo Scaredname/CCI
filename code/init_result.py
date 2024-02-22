@@ -93,6 +93,8 @@ def find_early_stop_epoch(stopper_data, relative_delta=0.0001):
     patience = stopper_data["patience"]
 
     for i in range(len(results_log)):
+        if patience < 1:
+            break
         if (results_log[i] - early_stop_epoch_valid) > relative_delta:
             early_stop_epoch_valid = results_log[i]
             early_stop_epoch = evaluation_frequency * (i + 1)
