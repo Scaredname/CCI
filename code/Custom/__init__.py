@@ -9,4 +9,4 @@ Description:
 Copyright (c) 2022 by error: git config user.name && git config user.email & please set dead value or install git, All Rights Reserved. 
 """
 
-from Custom import CustomTripleFactory
+from code.Custom import custom_triple_factory
