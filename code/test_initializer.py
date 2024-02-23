@@ -5,11 +5,8 @@ import json
 import os
 import sys
 
-import torch
-
-sys.path.append("..")
-
 import pykeen.datasets.utils as pdu
+import torch
 from pykeen.datasets import get_dataset
 from utilities import init_train_model, load_dataset
 
