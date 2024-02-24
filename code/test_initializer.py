@@ -1,9 +1,5 @@
 # Get a training dataset
 import argparse
-import datetime
-import json
-import os
-import sys
 
 import pykeen.datasets.utils as pdu
 import torch
@@ -231,20 +227,14 @@ if __name__ == "__main__":
         regularizer_kwargs=regularizer_kwargs,
     )
 
-    # 每次调参前决定使用什么loss和训练方式
-    # soft_loss = SoftTypeawareNegativeSmapling()
-    # pipeline_config["training_loop"] = TypeSLCWATrainingLoop
-
     import torch
-    from Custom.base_init import (
+    from Customize.base_init import (
         LabelBasedInitializer,
         RandomWalkPositionalEncodingInitializer,
         WeisfeilerLehmanInitializer,
     )
-    from Custom.CustomInit import (
-        TypeCenterInitializer,
-        TypeCenterProductRandomInitializer,
-        TypeCenterRandomInitializer,
+    from Customize.custom_initialization import (
+        CateCenterRandomInitializer,
         WLCenterInitializer,
     )
 
@@ -257,9 +247,6 @@ if __name__ == "__main__":
         "xavier_normal_",
         "xavier_uniform_norm_",
         "xavier_normal_norm_",
-        "ones_",
-        "zeros_",
-        "eye_",
         "orthogonal_",
     ]
     # lr_list = [0.01, 0.001, 0.0001]
@@ -351,7 +338,7 @@ if __name__ == "__main__":
                 gain_num = float(gain)
                 if gain_num < 1:
                     gain = "_".join(gain.split("."))
-                random_initializer = TypeCenterRandomInitializer(
+                random_initializer = CateCenterRandomInitializer(
                     training_data,
                     data_type,
                     type_dim=init_embedding_dim,
@@ -376,7 +363,7 @@ if __name__ == "__main__":
                 gain_num = float(gain)
                 if gain_num < 1:
                     gain = "_".join(gain.split("."))
-                random_initializer = TypeCenterRandomInitializer(
+                random_initializer = CateCenterRandomInitializer(
                     training_data,
                     data_type,
                     type_dim=init_embedding_dim,
@@ -389,32 +376,6 @@ if __name__ == "__main__":
                 init_train_model(
                     random_initializer,
                     args.description + f"no_random_initializer_{gain}_" + initializer,
-                    dataset,
-                    dataset_name,
-                    fix_config,
-                    model_embedding_dim,
-                    lr_list,
-                    no_constrainer=no_constrainer,
-                )
-
-        if len(args.product_gains):
-            for gain in args.product_gains:
-                gain_num = float(gain)
-                if gain_num < 1:
-                    gain = "_".join(gain.split("."))
-                random_product_initializer = TypeCenterProductRandomInitializer(
-                    training_data,
-                    data_type=data_type,
-                    type_dim=init_embedding_dim,
-                    random_bias_gain=gain_num,
-                    type_init=initializer,
-                )
-
-                init_train_model(
-                    random_product_initializer,
-                    args.description
-                    + f"random_product_initializer_{gain}_"
-                    + initializer,
                     dataset,
                     dataset_name,
                     fix_config,

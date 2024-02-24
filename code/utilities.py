@@ -11,7 +11,7 @@ Copyright (c) 2023 by Ni Runyu ni-runyu@ed.tmu.ac.jp, All Rights Reserved.
 
 import datetime
 import os
-from code.Custom.custom_triple_factory import TripleswithCategory
+from code.Customize.custom_triple_factory import TripleswithCategory
 
 import torch
 from pykeen.pipeline import pipeline

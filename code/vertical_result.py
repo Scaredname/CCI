@@ -1,10 +1,8 @@
 import argparse
 import json
 import os
-import re
 from collections import defaultdict
 
-import numpy as np
 import pandas as pd
 
 pattern = r"\(([^)]+)\)"
