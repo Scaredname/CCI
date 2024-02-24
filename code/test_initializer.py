@@ -9,25 +9,23 @@ from utilities import init_train_model, load_dataset
 
 def init_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-esf", "--early_frequency", type=int, default=5)
+    parser.add_argument("-esf", "--early_frequency", cate=int, default=5)
     parser.add_argument(
         "-d",
         "--dataset",
         choices=[
             "a",
             "b",
-            "c",
-            "d",
         ],
         default="a",
-        type=str,
-        help='a="yago_new_init", b="CAKE-NELL-995_new_init", c="CAKE-DBpedia-242_new_init", d="Kinships"',
+        cate=str,
+        help='a="yago6k_103", b="NELL995"',
     )
     parser.add_argument(
         "-m",
         "--model",
         choices=["distmult", "TransE", "RotatE", "complex"],
-        type=str,
+        cate=str,
         required=True,
     )
     parser.add_argument(
@@ -47,21 +45,21 @@ def init_parser():
     parser.add_argument(
         "-ag",
         "--add_gains",
-        help="the list of gains for type centric add random initializer",
+        help="the list of gains for cate centric add random initializer",
         nargs="+",
         default=[],
     )
     parser.add_argument(
         "-agn",
         "--add_gains_no",
-        help="the list of gains for type centric add random initializer for no process",
+        help="the list of gains for cate centric add random initializer for no process",
         nargs="+",
         default=[],
     )
     parser.add_argument(
         "-pg",
         "--product_gains",
-        help="the list of gains for type centric product random initializer",
+        help="the list of gains for cate centric product random initializer",
         nargs="+",
         default=[],
     )
@@ -122,22 +120,17 @@ def init_parser():
 if __name__ == "__main__":
     parser = init_parser()
     args = parser.parse_args()
-    dataset_typed_dict = dict(
-        a="yago_new", b="CAKE-NELL-995_new", c="CAKE-DBpedia-242_new"
+    dataset_cated_dict = dict(
+        a="yago_new",
+        b="NELL-995_new",
     )
-    dataset_nontype_dict = dict(d="Kinships")
-    if args.dataset not in dataset_typed_dict:
-        dataset_name = dataset_nontype_dict[args.dataset]
-        dataset = pdu.get_dataset(dataset=dataset_name)
-        training_data = dataset.training
-    else:
-        dataset_name = dataset_typed_dict[args.dataset]
-        training_data, validation, testing = load_dataset(
-            dataset=dataset_name,
-        )
-        dataset = get_dataset(
-            training=training_data, testing=testing, validation=validation
-        )
+    dataset_name = dataset_cated_dict[args.dataset]
+    training_data, validation, testing = load_dataset(
+        dataset=dataset_name,
+    )
+    dataset = get_dataset(
+        training=training_data, testing=testing, validation=validation
+    )
     model = args.model
 
     test_batch_size = 4
@@ -150,12 +143,12 @@ if __name__ == "__main__":
         init_embedding_dim = 768
         model_embedding_dim = init_embedding_dim
         no_constrainer = False
-        data_type = torch.float
+        data_cate = torch.float
     else:
         init_embedding_dim = 768
         model_embedding_dim = init_embedding_dim // 2
         no_constrainer = True
-        data_type = torch.cfloat
+        data_cate = torch.cfloat
     lr = 0.001
     batch_size = 512
     num_negs_per_pos = 64
@@ -284,7 +277,7 @@ if __name__ == "__main__":
                     color_initializer=initializer,
                     shape=init_embedding_dim,
                     triples_factory=training_data,
-                    data_type=data_type,
+                    data_cate=data_cate,
                     random_bias_gain=gain_num,
                     max_iter=maxiter,
                     if_plus_random=if_plus_random,
@@ -313,7 +306,7 @@ if __name__ == "__main__":
                     color_initializer=initializer,
                     shape=init_embedding_dim,
                     triples_factory=training_data,
-                    data_type=data_type,
+                    data_cate=data_cate,
                     random_bias_gain=gain_num,
                     max_iter=maxiter,
                     preprocess="no",
@@ -340,10 +333,10 @@ if __name__ == "__main__":
                     gain = "_".join(gain.split("."))
                 random_initializer = CateCenterRandomInitializer(
                     training_data,
-                    data_type,
-                    type_dim=init_embedding_dim,
+                    data_cate,
+                    cate_dim=init_embedding_dim,
                     random_bias_gain=gain_num,
-                    type_init=initializer,
+                    cate_init=initializer,
                     if_plus_random=if_plus_random,
                 )
 
@@ -365,10 +358,10 @@ if __name__ == "__main__":
                     gain = "_".join(gain.split("."))
                 random_initializer = CateCenterRandomInitializer(
                     training_data,
-                    data_type,
-                    type_dim=init_embedding_dim,
+                    data_cate,
+                    cate_dim=init_embedding_dim,
                     random_bias_gain=gain_num,
-                    type_init=initializer,
+                    cate_init=initializer,
                     preprocess="no",
                     if_plus_random=if_plus_random,
                 )
