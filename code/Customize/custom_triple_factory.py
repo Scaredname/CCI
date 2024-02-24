@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 def cal_propor(data):
     """Calculate the proportion of each cate."""
     for i in range(data.shape[0]):
-        if np.sum(data[i], dcate=np.float32) > 0:
-            data[i] = data[i] / np.sum(data[i], dcate=np.float32)
+        if np.sum(data[i], dtype=np.float32) > 0:
+            data[i] = data[i] / np.sum(data[i], dtype=np.float32)
     return data
 
 
@@ -40,11 +40,15 @@ def create_matrix_of_cates(
         value: key for key, value in enumerate(data_cates)
     }
     # Prepare literal matrix, set every cate to zero, and afterwards fill in the corresponding value if available
-    ents_cates = np.zeros([len(entity_to_id), len(data_cate_to_id)], dcate=np.float32)
+    ents_cates = np.zeros([len(entity_to_id), len(data_cate_to_id)], dtype=np.float32)
 
     for ent, _, cate in cate_triples:
         # row define entity, and column the cate
-        ents_cates[entity_to_id[ent], data_cate_to_id[cate]] = 1
+        try:
+            ents_cates[entity_to_id[ent], data_cate_to_id[cate]] = 1
+        except:
+            # There are some entities not in training set
+            pass
 
     return ents_cates, data_cate_to_id
 

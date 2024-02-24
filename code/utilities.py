@@ -11,9 +11,9 @@ Copyright (c) 2023 by Ni Runyu ni-runyu@ed.tmu.ac.jp, All Rights Reserved.
 
 import datetime
 import os
-from code.Customize.custom_triple_factory import TripleswithCategory
 
 import torch
+from Customize.custom_triple_factory import TripleswithCategory
 from pykeen.pipeline import pipeline
 from pykeen.triples import TriplesFactory
 
@@ -38,14 +38,14 @@ def split_type_data(data: TriplesFactory):
 
 def read_data(
     data_name,
-    data_pro_func,
+    data_pro_func=split_type_data,
     create_inverse_triples=False,
 ):
     """
     @Params: data_name, data_pro_func, create_inverse_triples, type_position
     @Return: Train, Test, Valid
     """
-    data_path = os.path.join(os.getcwd(), "data/")
+    data_path = os.path.join(os.getcwd(), "../data/")
 
     train_path = os.path.join(data_path, "%s/" % (data_name), "train_cate.txt")
     valid_path = os.path.join(data_path, "%s/" % (data_name), "valid.txt")
@@ -59,7 +59,7 @@ def read_data(
     (
         training_triples,
         category_triples,
-    ) = data_pro_func(training, data_pro_func)
+    ) = data_pro_func(training)
     training_data = TripleswithCategory.from_labeled_triples(
         triples=training_triples,
         cate_triples=category_triples,

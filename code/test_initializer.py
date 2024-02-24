@@ -4,12 +4,12 @@ import argparse
 import pykeen.datasets.utils as pdu
 import torch
 from pykeen.datasets import get_dataset
-from utilities import init_train_model, load_dataset
+from utilities import init_train_model, read_data
 
 
 def init_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-esf", "--early_frequency", cate=int, default=5)
+    parser.add_argument("-esf", "--early_frequency", type=int, default=5)
     parser.add_argument(
         "-d",
         "--dataset",
@@ -18,14 +18,14 @@ def init_parser():
             "b",
         ],
         default="a",
-        cate=str,
+        type=str,
         help='a="yago6k_103", b="NELL995"',
     )
     parser.add_argument(
         "-m",
         "--model",
         choices=["distmult", "TransE", "RotatE", "complex"],
-        cate=str,
+        type=str,
         required=True,
     )
     parser.add_argument(
@@ -125,8 +125,8 @@ if __name__ == "__main__":
         b="NELL-995_new",
     )
     dataset_name = dataset_cated_dict[args.dataset]
-    training_data, validation, testing = load_dataset(
-        dataset=dataset_name,
+    training_data, validation, testing = read_data(
+        data_name=dataset_name,
     )
     dataset = get_dataset(
         training=training_data, testing=testing, validation=validation
