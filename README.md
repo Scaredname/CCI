@@ -1,6 +1,6 @@
 [dataset](https://drive.google.com/file/d/1oIMuH1rc87GxBR86FQocNHSmZW1i8DXH/view?usp=sharing)
 
-To get dataset
+The script for getting dataset
 
 ```bash
 mkdir data

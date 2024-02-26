@@ -136,12 +136,12 @@ def init_train_model(
                 device="cuda",
                 result_tracker="tensorboard",
                 result_tracker_kwargs=dict(
-                    experiment_path="../../result/hpo_init/" + date_time,
+                    experiment_path="../result/hpo_init/" + date_time,
                 ),
                 **fix_config,
             )
 
-            model_path = "../../models/" + date_time
+            model_path = "../models/" + date_time
             pipeline_result.metadata = fix_config
             pipeline_result.save_to_directory(model_path)
     except Exception as e:
