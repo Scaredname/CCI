@@ -24,8 +24,8 @@ parser.add_argument(
 args = parser.parse_args()
 
 dataset_dict = dict(
-    a="yago_new",
-    b="NELL-995_new",
+    a="yago_new_init",
+    b="NELL-995_new_init",
 )
 dataset = dataset_dict[args.dataset]
 # dataset = "CAKE-NELL-995_new_init"
@@ -81,8 +81,10 @@ def determine_convergence_epoch(stopper_data, threshold_value):
 
 # 取每个模型的最优的验证集上的结果的0.9, mean+std的结果。
 threshold_dict = {
-    "yago_new": dict(distmult=0.259, complex=0.298, RotatE=0.291, TransE=0.206),
-    "NELL-995_new": dict(distmult=0.385, complex=0.391, RotatE=0.380, TransE=0.307),
+    "yago_new_init": dict(distmult=0.259, complex=0.298, RotatE=0.291, TransE=0.206),
+    "NELL-995_new_init": dict(
+        distmult=0.385, complex=0.391, RotatE=0.380, TransE=0.307
+    ),
 }
 
 threshold_dict = threshold_dict[dataset]

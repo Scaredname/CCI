@@ -23,8 +23,8 @@ parser.add_argument(
 args = parser.parse_args()
 
 dataset_dict = dict(
-    a="yago_new",
-    b="NELL-995_new",
+    a="yago_new_init",
+    b="NELL-995_new_init",
 )
 dataset = dataset_dict[args.dataset]
 # dataset = "CAKE-NELL-995_new_init"
