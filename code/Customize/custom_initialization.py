@@ -13,13 +13,7 @@ from pykeen.nn.init import (
 from pykeen.triples import KGInfo
 from pykeen.utils import get_edge_index, iter_weisfeiler_lehman, upgrade_to_sequence
 
-
-def cal_propor(data):
-    """Calculate the proportion of each cate."""
-    for i in range(data.shape[0]):
-        if torch.sum(data[i], dcate=torch.float32) > 0:
-            data[i] = data[i] / torch.sum(data[i], dcate=torch.float32)
-    return data
+from .custom_triple_factory import L1_normalize_each_rows_of_matrix
 
 
 def standardization(tensor, epsilon=1e-12):
@@ -222,7 +216,9 @@ class CateCenterInitializer(PretrainedInitializer):
         self, cate_embedding, entity_cate_constraints
     ) -> torch.Tensor:
         if torch.any(torch.sum(entity_cate_constraints, dim=1) > 1):
-            entity_cate_constraints = cal_propor(entity_cate_constraints)
+            entity_cate_constraints = L1_normalize_each_rows_of_matrix(
+                entity_cate_constraints
+            )
         return torch.matmul(entity_cate_constraints, cate_embedding)
 
 

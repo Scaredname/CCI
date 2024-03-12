@@ -1,12 +1,11 @@
 """
-Author: Ni Runyu ni-runyu@ed.tmu.ac.jp
-Date: 2023-07-28 17:05:45
-LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
-LastEditTime: 2023-08-20 14:05:54
-FilePath: /ESETC/code/Custom/CustomTripleFactory.py
+Author: Ni Runyu & MonkeyDC
+Date: 2024-03-12 15:59:39
+LastEditors: Ni Runyu & MonkeyDC
+LastEditTime: 2024-03-12 16:02:53
 Description: 
 
-Copyright (c) 2023 by ${git_name_email}, All Rights Reserved. 
+Copyright (c) 2024 by Ni Runyu, All Rights Reserved. 
 """
 
 import logging
@@ -14,18 +13,24 @@ from typing import ClassVar, Dict, Mapping, Tuple
 
 import numpy as np
 import torch
+from numpy import linalg as LA
 from pykeen.triples.triples_factory import TriplesFactory
 from pykeen.typing import EntityMapping, LabeledTriples
 
 logger = logging.getLogger(__name__)
 
 
-def cal_propor(data):
-    """Calculate the proportion of each cate."""
-    for i in range(data.shape[0]):
-        if np.sum(data[i], dtype=np.float32) > 0:
-            data[i] = data[i] / np.sum(data[i], dtype=np.float32)
-    return data
+def L1_normalize_each_rows_of_matrix(matrix: np.array) -> np.array:
+    """
+    description:
+    param matrix: np.float32
+    return {np.float32}
+    """
+
+    for i in range(matrix.shape[0]):
+        if np.sum(abs(matrix[i]), dtype=np.float32) > 0:
+            matrix[i] = matrix[i] / np.sum(abs(matrix[i]), dtype=np.float32)
+    return matrix
 
 
 def create_matrix_of_cates(
@@ -91,7 +96,7 @@ class TripleswithCategory(TriplesFactory):
         )
 
         # Calculate the proportion of each cate.
-        ents_cates = cal_propor(ents_cates)
+        ents_cates = L1_normalize_each_rows_of_matrix(ents_cates)
 
         return cls(
             entity_to_id=base.entity_to_id,
