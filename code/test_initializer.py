@@ -143,12 +143,12 @@ if __name__ == "__main__":
         init_embedding_dim = 768
         model_embedding_dim = init_embedding_dim
         no_constrainer = False
-        data_cate = torch.float
+        data_type = torch.float
     else:
         init_embedding_dim = 768
         model_embedding_dim = init_embedding_dim // 2
         no_constrainer = True
-        data_cate = torch.cfloat
+        data_type = torch.cfloat
     lr = 0.001
     batch_size = 512
     num_negs_per_pos = 64
@@ -277,8 +277,8 @@ if __name__ == "__main__":
                     color_initializer=initializer,
                     shape=init_embedding_dim,
                     triples_factory=training_data,
-                    data_cate=data_cate,
-                    random_bias_gain=gain_num,
+                    data_type=data_type,
+                    alpha=gain_num,
                     max_iter=maxiter,
                     if_plus_random=if_plus_random,
                 )
@@ -306,8 +306,8 @@ if __name__ == "__main__":
                     color_initializer=initializer,
                     shape=init_embedding_dim,
                     triples_factory=training_data,
-                    data_cate=data_cate,
-                    random_bias_gain=gain_num,
+                    data_type=data_type,
+                    alpha=gain_num,
                     max_iter=maxiter,
                     preprocess="no",
                     if_plus_random=if_plus_random,
@@ -333,9 +333,9 @@ if __name__ == "__main__":
                     gain = "_".join(gain.split("."))
                 random_initializer = CateCenterRandomInitializer(
                     training_data,
-                    data_cate,
+                    data_type,
                     cate_dim=init_embedding_dim,
-                    random_bias_gain=gain_num,
+                    alpha=gain_num,
                     cate_init=initializer,
                     if_plus_random=if_plus_random,
                 )
@@ -358,9 +358,9 @@ if __name__ == "__main__":
                     gain = "_".join(gain.split("."))
                 random_initializer = CateCenterRandomInitializer(
                     training_data,
-                    data_cate,
+                    data_type,
                     cate_dim=init_embedding_dim,
-                    random_bias_gain=gain_num,
+                    alpha=gain_num,
                     cate_init=initializer,
                     preprocess="no",
                     if_plus_random=if_plus_random,

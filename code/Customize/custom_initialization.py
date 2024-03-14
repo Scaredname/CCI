@@ -48,8 +48,8 @@ class WLCenterInitializer(PretrainedInitializer):
         num_entities: Optional[int] = None,
         mapped_triples: Optional[torch.LongTensor] = None,
         triples_factory=None,
-        data_cate=torch.float,
-        random_bias_gain=1.0,
+        data_type=torch.float,
+        alpha=1.0,
         if_plus_random: int = 1,
         preprocess="lp_normalize",
         max_iter=2,
@@ -112,12 +112,12 @@ class WLCenterInitializer(PretrainedInitializer):
         )
 
         entity_emb_tensor = (
-            color_representation[colors] / random_bias_gain
+            color_representation[colors] / alpha
             + if_plus_random * random_representation
         )
         tensor = process_tensor(entity_emb_tensor, preprocess)
 
-        if data_cate == torch.cfloat:
+        if data_type == torch.cfloat:
             tensor = tensor.view(tensor.shape[0], -1, 2)
         # init entity representations according to the color
         super().__init__(tensor=tensor)
@@ -127,7 +127,7 @@ class CateCenterInitializer(PretrainedInitializer):
     def __init__(
         self,
         triples_factory,
-        data_cate,
+        data_type,
         cate_dim=None,
         cate_init="xavier_uniform_",
         pretrain=None,
@@ -138,7 +138,7 @@ class CateCenterInitializer(PretrainedInitializer):
         description:
         param self:
         param triples_factory:
-        param data_cate:
+        param data_type:
         param cate_dim:
         param cate_init:
         param pretrain:
@@ -174,7 +174,7 @@ class CateCenterInitializer(PretrainedInitializer):
                 cate_representations_kwargs["initializer"] = cate_init
                 cate_dim = cate_init.as_embedding().shape[0]
                 cate_representations_kwargs["shape"] = cate_dim
-                # if data_cate == torch.cfloat:
+                # if data_type == torch.cfloat:
                 #     cate_representations_kwargs["dcate"] = torch.cfloat
             else:
                 cate_representations_kwargs["initializer"] = cate_init
@@ -190,7 +190,7 @@ class CateCenterInitializer(PretrainedInitializer):
             self.cate_representations[0]._embeddings.weight,
             triples_factory.ents_cates_adj_matrix.float(),
         )
-        if data_cate == torch.cfloat:
+        if data_type == torch.cfloat:
             tensor = tensor.view(tensor.shape[0], -1, 2)
 
         super().__init__(tensor)
@@ -226,8 +226,8 @@ class CateCenterRandomInitializer(CateCenterInitializer):
     def __init__(
         self,
         triples_factory,
-        data_cate,
-        random_bias_gain=1.0,
+        data_type,
+        alpha=1.0,
         if_plus_random: int = 1,
         cate_dim=None,
         pretrain=None,
@@ -236,12 +236,12 @@ class CateCenterRandomInitializer(CateCenterInitializer):
         **kwargs,
     ) -> None:
         assert if_plus_random in [0, 1]
-        self.gain = random_bias_gain
+        self.gain = alpha
         self.plus_random = if_plus_random
         self.preprocess = preprocess
         super().__init__(
             triples_factory,
-            data_cate=data_cate,
+            data_type=data_type,
             cate_dim=cate_dim,
             pretrain=pretrain,
             shape=shape,
