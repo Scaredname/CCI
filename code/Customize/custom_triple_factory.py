@@ -33,29 +33,37 @@ def L1_normalize_each_rows_of_matrix(matrix: np.array) -> np.array:
     return matrix
 
 
-def create_matrix_of_cates(
+def category_to_id(cate_triples: np.array):
+
+    categories = np.unique(np.ndarray.flatten(cate_triples[:, 2]))
+    category_to_id: Dict[str, int] = {
+        value: key for key, value in enumerate(categories)
+    }
+    return category_to_id
+
+
+def create_adjacency_matrix_of_entities_categories(
     cate_triples: np.array,
     entity_to_id: EntityMapping,
+    category_to_id,
 ):
     """
-    Create matrix of literals where each row corresponds to an entity and each column to a cate.
+    Create matrix where each row corresponds to an entity and each column to a cate.
     """
-    data_cates = np.unique(np.ndarray.flatten(cate_triples[:, 2]))
-    data_cate_to_id: Dict[str, int] = {
-        value: key for key, value in enumerate(data_cates)
-    }
     # Prepare literal matrix, set every cate to zero, and afterwards fill in the corresponding value if available
-    ents_cates = np.zeros([len(entity_to_id), len(data_cate_to_id)], dtype=np.float32)
+    ents_cates_adj_matrix = np.zeros(
+        [len(entity_to_id), len(category_to_id)], dtype=np.float32
+    )
 
     for ent, _, cate in cate_triples:
         # row define entity, and column the cate
         try:
-            ents_cates[entity_to_id[ent], data_cate_to_id[cate]] = 1
+            ents_cates_adj_matrix[entity_to_id[ent], category_to_id[cate]] = 1
         except:
             # There are some entities not in training set
             pass
 
-    return ents_cates, data_cate_to_id
+    return ents_cates_adj_matrix
 
 
 class TripleswithCategory(TriplesFactory):
@@ -65,13 +73,13 @@ class TripleswithCategory(TriplesFactory):
     def __init__(
         self,
         *,
-        ents_cates: np.ndarray,
+        ents_cates_adj_matrix: np.ndarray,
         cates_to_id: Mapping[str, int],
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self.cates_to_id = cates_to_id
-        self.ents_cates = torch.from_numpy(ents_cates)
+        self.ents_cates_adj_matrix = torch.from_numpy(ents_cates_adj_matrix)
 
     @classmethod
     def from_labeled_triples(
@@ -88,31 +96,32 @@ class TripleswithCategory(TriplesFactory):
             triples=triples, create_inverse_triples=create_inverse_triples, **kwargs
         )
 
-        # get entity and relation adjacence matrix
-
-        ents_cates, cates_to_id = create_matrix_of_cates(
+        # get entity and relation adjacency matrix
+        categories_to_ids = category_to_id(cate_triples)
+        ents_cates_adj_matrix = create_adjacency_matrix_of_entities_categories(
             cate_triples=cate_triples,
             entity_to_id=base.entity_to_id,
+            category_to_id=categories_to_ids,
         )
 
         # Calculate the proportion of each cate.
-        ents_cates = L1_normalize_each_rows_of_matrix(ents_cates)
+        ents_cates_adj_matrix = L1_normalize_each_rows_of_matrix(ents_cates_adj_matrix)
 
         return cls(
             entity_to_id=base.entity_to_id,
             relation_to_id=base.relation_to_id,
             mapped_triples=base.mapped_triples,
             create_inverse_triples=base.create_inverse_triples,
-            ents_cates=ents_cates,
-            cates_to_id=cates_to_id,
+            ents_cates_adj_matrix=ents_cates_adj_matrix,
+            cates_to_id=categories_to_ids,
         )
 
     @property
     def cate_shape(self) -> Tuple[int, ...]:
         """Return the shape of the cates."""
-        return self.ents_cates.shape[1:]
+        return self.ents_cates_adj_matrix.shape[1:]
 
     @property
     def num_cates(self) -> int:
         """Return the number of cates."""
-        return self.ents_cates.shape[1]
+        return self.ents_cates_adj_matrix.shape[1]

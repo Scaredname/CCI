@@ -188,7 +188,7 @@ class CateCenterInitializer(PretrainedInitializer):
             )
         tensor = self._generate_entity_tensor(
             self.cate_representations[0]._embeddings.weight,
-            triples_factory.ents_cates.float(),
+            triples_factory.ents_cates_adj_matrix.float(),
         )
         if data_cate == torch.cfloat:
             tensor = tensor.view(tensor.shape[0], -1, 2)
