@@ -105,10 +105,10 @@ class WLCenterInitializer(PretrainedInitializer):
         print("category number is ", num_colors)
         # note: this could be a representation?
         color_representation = color_initializer(
-            colors.new_empty(num_colors, *shape, dcate=torch.get_default_dcate())
+            colors.new_empty(num_colors, *shape, dtype=torch.get_default_dtype())
         )
         random_representation = color_initializer(
-            colors.new_empty(colors.shape[0], *shape, dcate=torch.get_default_dcate())
+            colors.new_empty(colors.shape[0], *shape, dtype=torch.get_default_dtype())
         )
 
         entity_emb_tensor = (
@@ -128,10 +128,10 @@ class CateCenterInitializer(PretrainedInitializer):
         self,
         triples_factory,
         data_type,
-        cate_dim=None,
-        cate_init="xavier_uniform_",
+        category_dim=None,
+        category_init="xavier_uniform_",
         pretrain=None,
-        cate_emb=None,
+        category_emb=None,
         shape: Sequence[str] = ("d",),
     ) -> None:
         """
@@ -139,55 +139,53 @@ class CateCenterInitializer(PretrainedInitializer):
         param self:
         param triples_factory:
         param data_type:
-        param cate_dim:
-        param cate_init:
+        param category_dim:
+        param category_init:
         param pretrain:
-        param cate_emb:为了确保和relation使用的是相同的类型嵌入，数据类型是Sequence[Representation]
+        param category_emb:为了确保和relation使用的是相同的类型嵌入，数据类型是Sequence[Representation]
         param shape:
         return {*}
         """
         # todo: 像wl那样直接生成tensor而不是pykeen中的表示。
 
         # 在读取预训练表示时，设置为float避免pykeen生成表示时随机生成一些参数。设置为float才能确保完全利用预训练的表示。
-        cate_representations_kwargs = dict(
-            dcate=torch.float, shape=cate_dim, initializer=None
+        category_representations_kwargs = dict(
+            dtype=torch.float, shape=category_dim, initializer=None
         )
-        self.init = cate_init
+        self.category_init = category_init
 
-        if cate_emb:
-            self.cate_representations = cate_emb
+        if category_emb:
+            self.category_representations = category_emb
         else:
             if pretrain:
                 print(
-                    f"using pretrained model '{pretrain}' to initialize cate embedding"
+                    f"using pretrained model '{pretrain}' to initialize category embeddings"
                 )
-                cate_labels = list(triples_factory.cates_to_id.keys())
+                category_labels = list(triples_factory.categories_to_ids.keys())
                 encoder_kwargs = dict(
                     pretrained_model_name_or_path=pretrain,
                     max_length=512,
                 )
-                cate_init = LabelBasedInitializer(
-                    labels=cate_labels,
+                category_init = LabelBasedInitializer(
+                    labels=category_labels,
                     encoder="transformer",
                     encoder_kwargs=encoder_kwargs,
                 )
-                cate_representations_kwargs["initializer"] = cate_init
-                cate_dim = cate_init.as_embedding().shape[0]
-                cate_representations_kwargs["shape"] = cate_dim
-                # if data_type == torch.cfloat:
-                #     cate_representations_kwargs["dcate"] = torch.cfloat
+                category_representations_kwargs["initializer"] = category_init
+                category_dim = category_init.as_embedding().shape[0]
+                category_representations_kwargs["shape"] = category_dim
             else:
-                cate_representations_kwargs["initializer"] = cate_init
+                category_representations_kwargs["initializer"] = category_init
 
-            self.cate_representations = self._build_cate_representations(
+            self.category_representations = self._build_category_representations(
                 triples_factory=triples_factory,
                 shape=shape,
                 representations=None,
-                representations_kwargs=cate_representations_kwargs,
+                representations_kwargs=category_representations_kwargs,
                 skip_checks=False,
             )
         tensor = self._generate_entity_tensor(
-            self.cate_representations[0]._embeddings.weight,
+            self.category_representations[0]._embeddings.weight,
             triples_factory.ents_cates_adj_matrix.float(),
         )
         if data_type == torch.cfloat:
@@ -195,7 +193,7 @@ class CateCenterInitializer(PretrainedInitializer):
 
         super().__init__(tensor)
 
-    def _build_cate_representations(
+    def _build_category_representations(
         self,
         triples_factory: KGInfo,
         shape: Sequence[str],
@@ -206,20 +204,20 @@ class CateCenterInitializer(PretrainedInitializer):
         return _prepare_representation_module_list(
             representations=representations,
             representations_kwargs=representations_kwargs,
-            max_id=triples_factory.num_cates,
+            max_id=triples_factory.num_category,
             shapes=shape,
-            label="cate",
+            label="category",
             **kwargs,
         )
 
     def _generate_entity_tensor(
-        self, cate_embedding, entity_cate_constraints
+        self, category_embedding, entity_category_constraints
     ) -> torch.Tensor:
-        if torch.any(torch.sum(entity_cate_constraints, dim=1) > 1):
-            entity_cate_constraints = L1_normalize_each_rows_of_matrix(
-                entity_cate_constraints
+        if torch.any(torch.sum(entity_category_constraints, dim=1) > 1):
+            entity_category_constraints = L1_normalize_each_rows_of_matrix(
+                entity_category_constraints
             )
-        return torch.matmul(entity_cate_constraints, cate_embedding)
+        return torch.matmul(entity_category_constraints, category_embedding)
 
 
 class CateCenterRandomInitializer(CateCenterInitializer):
@@ -229,7 +227,7 @@ class CateCenterRandomInitializer(CateCenterInitializer):
         data_type,
         alpha=1.0,
         if_plus_random: int = 1,
-        cate_dim=None,
+        category_dim=None,
         pretrain=None,
         shape: Sequence[str] = ("d",),
         preprocess="lp_normalize",
@@ -242,28 +240,28 @@ class CateCenterRandomInitializer(CateCenterInitializer):
         super().__init__(
             triples_factory,
             data_type=data_type,
-            cate_dim=cate_dim,
+            category_dim=category_dim,
             pretrain=pretrain,
             shape=shape,
             **kwargs,
         )
 
     def _generate_entity_tensor(
-        self, cate_embedding, entity_cate_constraints
+        self, category_embedding, entity_category_constraints
     ) -> torch.Tensor:
         entity_emb_tensor = torch.empty(
-            entity_cate_constraints.shape[0], cate_embedding.shape[1]
+            entity_category_constraints.shape[0], category_embedding.shape[1]
         )
-        for entity_index, entity_cate in enumerate(entity_cate_constraints):
-            cate_indices = torch.argwhere(entity_cate).squeeze(dim=1)
-            cate_emb = cate_embedding[cate_indices]
+        for entity_index, entity_category in enumerate(entity_category_constraints):
+            category_indices = torch.argwhere(entity_category).squeeze(dim=1)
+            category_emb = category_embedding[category_indices]
 
-            initializer = initializer_resolver.make(self.init)
-            random_bias_emb = initializer(torch.empty(*cate_emb.shape))
+            initializer = initializer_resolver.make(self.category_init)
+            random_bias_emb = initializer(torch.empty(*category_emb.shape))
 
             # 存在多个类型时，求加和后的嵌入的平均作为实体嵌入
             ent_emb = torch.mean(
-                (cate_emb / self.gain + self.plus_random * random_bias_emb), dim=0
+                (category_emb / self.gain + self.plus_random * random_bias_emb), dim=0
             )
             entity_emb_tensor[entity_index] = ent_emb
 

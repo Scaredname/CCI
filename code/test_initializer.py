@@ -45,21 +45,21 @@ def init_parser():
     parser.add_argument(
         "-ag",
         "--add_gains",
-        help="the list of gains for cate centric add random initializer",
+        help="the list of gains for category centric add random initializer",
         nargs="+",
         default=[],
     )
     parser.add_argument(
         "-agn",
         "--add_gains_no",
-        help="the list of gains for cate centric add random initializer for no process",
+        help="the list of gains for category centric add random initializer for no process",
         nargs="+",
         default=[],
     )
     parser.add_argument(
         "-pg",
         "--product_gains",
-        help="the list of gains for cate centric product random initializer",
+        help="the list of gains for category centric product random initializer",
         nargs="+",
         default=[],
     )
@@ -120,11 +120,11 @@ def init_parser():
 if __name__ == "__main__":
     parser = init_parser()
     args = parser.parse_args()
-    dataset_cated_dict = dict(
+    dataset_dict = dict(
         a="yago_new",
         b="NELL-995_new",
     )
-    dataset_name = dataset_cated_dict[args.dataset]
+    dataset_name = dataset_dict[args.dataset]
     training_data, validation, testing = read_data(
         data_name=dataset_name,
     )
@@ -334,9 +334,9 @@ if __name__ == "__main__":
                 random_initializer = CateCenterRandomInitializer(
                     training_data,
                     data_type,
-                    cate_dim=init_embedding_dim,
+                    category_dim=init_embedding_dim,
                     alpha=gain_num,
-                    cate_init=initializer,
+                    category_init=initializer,
                     if_plus_random=if_plus_random,
                 )
 
@@ -359,9 +359,9 @@ if __name__ == "__main__":
                 random_initializer = CateCenterRandomInitializer(
                     training_data,
                     data_type,
-                    cate_dim=init_embedding_dim,
+                    category_dim=init_embedding_dim,
                     alpha=gain_num,
-                    cate_init=initializer,
+                    category_init=initializer,
                     preprocess="no",
                     if_plus_random=if_plus_random,
                 )

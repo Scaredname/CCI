@@ -74,11 +74,11 @@ class TripleswithCategory(TriplesFactory):
         self,
         *,
         ents_cates_adj_matrix: np.ndarray,
-        cates_to_id: Mapping[str, int],
+        categories_to_ids: Mapping[str, int],
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        self.cates_to_id = cates_to_id
+        self.categories_to_ids = categories_to_ids
         self.ents_cates_adj_matrix = torch.from_numpy(ents_cates_adj_matrix)
 
     @classmethod
@@ -113,7 +113,7 @@ class TripleswithCategory(TriplesFactory):
             mapped_triples=base.mapped_triples,
             create_inverse_triples=base.create_inverse_triples,
             ents_cates_adj_matrix=ents_cates_adj_matrix,
-            cates_to_id=categories_to_ids,
+            categories_to_ids=categories_to_ids,
         )
 
     @property
@@ -122,6 +122,6 @@ class TripleswithCategory(TriplesFactory):
         return self.ents_cates_adj_matrix.shape[1:]
 
     @property
-    def num_cates(self) -> int:
+    def num_category(self) -> int:
         """Return the number of cates."""
         return self.ents_cates_adj_matrix.shape[1]
