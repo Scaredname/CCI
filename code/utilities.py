@@ -81,7 +81,7 @@ def read_data(
     return training_data, validation, testing
 
 
-def init_train_model(
+def train_model(
     entity_initializer,
     name,
     dataset,

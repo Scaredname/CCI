@@ -123,7 +123,7 @@ class WLCenterInitializer(PretrainedInitializer):
         super().__init__(tensor=tensor)
 
 
-class CateCenterInitializer(PretrainedInitializer):
+class CategoryCenterInitializer(PretrainedInitializer):
     def __init__(
         self,
         triples_factory,
@@ -188,6 +188,7 @@ class CateCenterInitializer(PretrainedInitializer):
             self.category_representations[0]._embeddings.weight,
             triples_factory.ents_cates_adj_matrix.float(),
         )
+
         if data_type == torch.cfloat:
             tensor = tensor.view(tensor.shape[0], -1, 2)
 
@@ -220,7 +221,7 @@ class CateCenterInitializer(PretrainedInitializer):
         return torch.matmul(entity_category_constraints, category_embedding)
 
 
-class CateCenterRandomInitializer(CateCenterInitializer):
+class CategoryCenterRandomInitializer(CategoryCenterInitializer):
     def __init__(
         self,
         triples_factory,

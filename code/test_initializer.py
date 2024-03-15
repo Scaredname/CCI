@@ -1,10 +1,11 @@
 # Get a training dataset
 import argparse
+import json
 
 import pykeen.datasets.utils as pdu
 import torch
 from pykeen.datasets import get_dataset
-from utilities import init_train_model, read_data
+from utilities import read_data, train_model
 
 
 def init_parser():
@@ -117,6 +118,69 @@ def init_parser():
     return parser
 
 
+def load_config(model: str):
+    with open("base_config.json", "r") as f:
+        base_config = json.load(f)
+
+    if model in ["TransE", "RotatE"]:
+        loss = "NSSALoss"
+        loss_kwargs = dict(
+            reduction="mean",
+            adversarial_temperature=1,
+            margin=9,
+        )
+        regularizer = None
+        regularizer_kwargs = None
+    else:
+        loss = "crossentropy"
+        loss_kwargs = None
+        if model == "complex":
+            regularizer = "lp"
+            regularizer_kwargs = dict(
+                weight=0.1,
+                p=3.0,
+            )
+        elif model == "distmult":
+            regularizer = "lp"
+            regularizer_kwargs = dict(weight=0.01)
+
+    fix_config = dict(
+        model=model,
+        optimizer="adam",
+        optimizer_kwargs=dict(
+            lr=0.001,
+        ),
+        training_loop=base_config["train"],
+        training_kwargs=base_config["train_setting"],
+        # negative_sampler=args.negative_sampler,
+        negative_sampler_kwargs=dict(
+            num_negs_per_pos=base_config["num_negs_per_pos"],
+        ),
+        evaluator="RankBasedEvaluator",
+        evaluator_kwargs=dict(
+            filtered=True,
+            batch_size=base_config["test_batch_size"],
+        ),
+        # lr_scheduler="StepLR",
+        # lr_scheduler_kwargs=dict(step_size=10, gamma=0.316),
+        # 用early stop来筛选模型
+        stopper="early",
+        stopper_kwargs=dict(
+            # frequency=args.early_frequency,
+            patience=6,  # e 为1000 的情况
+            relative_delta=0.0001,
+            metric="mean_reciprocal_rank",
+            evaluation_batch_size=base_config["test_batch_size"],
+        ),
+        loss=loss,
+        loss_kwargs=loss_kwargs,
+        regularizer=regularizer,
+        regularizer_kwargs=regularizer_kwargs,
+    )
+
+    return fix_config
+
+
 if __name__ == "__main__":
     parser = init_parser()
     args = parser.parse_args()
@@ -133,7 +197,6 @@ if __name__ == "__main__":
     )
     model = args.model
 
-    test_batch_size = 4
     print("****************************************")
     print(dataset_name)
     print(model)
@@ -149,85 +212,13 @@ if __name__ == "__main__":
         model_embedding_dim = init_embedding_dim // 2
         no_constrainer = True
         data_type = torch.cfloat
-    lr = 0.001
-    batch_size = 512
-    num_negs_per_pos = 64
-    epoch = 200
-    adversarial_temperature = 1.0
-    train = "slcwa"
-    train_setting = dict(
-        num_epochs=epoch,
-        batch_size=batch_size,
-        checkpoint_on_failure=True,
-    )
 
-    if model in ["TransE", "RotatE"]:
-        loss = "NSSALoss"
-
-        loss_kwargs = dict(
-            reduction="mean",
-            adversarial_temperature=1,
-            margin=9,
-        )
-        regularizer = None
-        regularizer_kwargs = None
-    else:
-        loss = "crossentropy"
-        loss_kwargs = dict()
-        if model == "complex":
-            regularizer = "lp"
-            regularizer_kwargs = dict(
-                weight=0.1,
-                p=3.0,
-            )
-        elif model == "distmult":
-            regularizer = "lp"
-            regularizer_kwargs = dict(weight=0.01)
-
-    fix_config = dict(
-        model=model,
-        optimizer="adam",
-        optimizer_kwargs=dict(
-            lr=lr,
-        ),
-        training_loop=train,
-        training_kwargs=train_setting,
-        # negative_sampler=args.negative_sampler,
-        negative_sampler_kwargs=dict(
-            num_negs_per_pos=num_negs_per_pos,
-        ),
-        evaluator="RankBasedEvaluator",
-        evaluator_kwargs=dict(
-            filtered=True,
-            batch_size=test_batch_size,
-        ),
-        # lr_scheduler="StepLR",
-        # lr_scheduler_kwargs=dict(step_size=10, gamma=0.316),
-        # 用early stop来筛选模型
-        stopper="early",
-        stopper_kwargs=dict(
-            frequency=args.early_frequency,
-            # frequency=frequency,
-            # patience=args.early_stop_patience,
-            patience=6,  # e 为1000 的情况
-            relative_delta=0.0001,
-            metric="mean_reciprocal_rank",
-            evaluation_batch_size=test_batch_size,
-        ),
-        loss=loss,
-        loss_kwargs=loss_kwargs,
-        regularizer=regularizer,
-        regularizer_kwargs=regularizer_kwargs,
-    )
+    config = load_config(model)
+    config["stopper_kwargs"]["frequency"] = args.early_frequency
 
     import torch
-    from Customize.base_init import (
-        LabelBasedInitializer,
-        RandomWalkPositionalEncodingInitializer,
-        WeisfeilerLehmanInitializer,
-    )
     from Customize.custom_initialization import (
-        CateCenterRandomInitializer,
+        CategoryCenterRandomInitializer,
         WLCenterInitializer,
     )
 
@@ -242,7 +233,6 @@ if __name__ == "__main__":
         "xavier_normal_norm_",
         "orthogonal_",
     ]
-    # lr_list = [0.01, 0.001, 0.0001]
     lr_list = [float(lr) for lr in args.learning_rate_list]
 
     if not args.all_initializer:
@@ -256,12 +246,12 @@ if __name__ == "__main__":
 
     for initializer in initializer_list:
         if args.base:
-            init_train_model(
+            train_model(
                 initializer,
                 args.description + initializer,
                 dataset,
                 dataset_name,
-                fix_config,
+                config,
                 model_embedding_dim,
                 lr_list,
                 no_constrainer=no_constrainer,
@@ -283,14 +273,14 @@ if __name__ == "__main__":
                     if_plus_random=if_plus_random,
                 )
 
-                init_train_model(
+                train_model(
                     wl_center_initializer,
                     args.description
                     + f"wl{maxiter}_center_{gain}_initializer_"
                     + initializer,
                     dataset,
                     dataset_name,
-                    fix_config,
+                    config,
                     model_embedding_dim,
                     lr_list,
                     no_constrainer=no_constrainer,
@@ -313,14 +303,14 @@ if __name__ == "__main__":
                     if_plus_random=if_plus_random,
                 )
 
-                init_train_model(
+                train_model(
                     wl_center_initializer,
                     args.description
                     + f"no_wl{maxiter}_center_{gain}_initializer_"
                     + initializer,
                     dataset,
                     dataset_name,
-                    fix_config,
+                    config,
                     model_embedding_dim,
                     lr_list,
                     no_constrainer=no_constrainer,
@@ -331,7 +321,7 @@ if __name__ == "__main__":
                 gain_num = float(gain)
                 if gain_num < 1:
                     gain = "_".join(gain.split("."))
-                random_initializer = CateCenterRandomInitializer(
+                random_initializer = CategoryCenterRandomInitializer(
                     training_data,
                     data_type,
                     category_dim=init_embedding_dim,
@@ -340,12 +330,12 @@ if __name__ == "__main__":
                     if_plus_random=if_plus_random,
                 )
 
-                init_train_model(
+                train_model(
                     random_initializer,
                     args.description + f"random_initializer_{gain}_" + initializer,
                     dataset,
                     dataset_name,
-                    fix_config,
+                    config,
                     model_embedding_dim,
                     lr_list,
                     no_constrainer=no_constrainer,
@@ -356,7 +346,7 @@ if __name__ == "__main__":
                 gain_num = float(gain)
                 if gain_num < 1:
                     gain = "_".join(gain.split("."))
-                random_initializer = CateCenterRandomInitializer(
+                random_initializer = CategoryCenterRandomInitializer(
                     training_data,
                     data_type,
                     category_dim=init_embedding_dim,
@@ -366,12 +356,12 @@ if __name__ == "__main__":
                     if_plus_random=if_plus_random,
                 )
 
-                init_train_model(
+                train_model(
                     random_initializer,
                     args.description + f"no_random_initializer_{gain}_" + initializer,
                     dataset,
                     dataset_name,
-                    fix_config,
+                    config,
                     model_embedding_dim,
                     lr_list,
                     no_constrainer=no_constrainer,

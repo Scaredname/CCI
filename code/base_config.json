@@ -1,0 +1,11 @@
+{
+  "test_batch_size": 4,
+  "init_embedding_dim": 768,
+  "num_negs_per_pos": 64,
+  "train": "slcwa",
+  "train_setting": {
+    "num_epochs": 200,
+    "batch_size": 512,
+    "checkpoint_on_failure": true
+  }
+}
