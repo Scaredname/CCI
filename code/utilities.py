@@ -24,14 +24,14 @@ def get_key(dict, va):
 
 def split_type_data(data: TriplesFactory):
     relations = list(data.relation_to_id.keys())
-    relations.remove("type")
+    relations.remove("category")
 
     return (
         data.label_triples(
             data.new_with_restriction(relations=relations).mapped_triples
         ),
         data.label_triples(
-            data.new_with_restriction(relations=["type"]).mapped_triples
+            data.new_with_restriction(relations=["category"]).mapped_triples
         ),
     )
 

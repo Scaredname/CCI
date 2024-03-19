@@ -1,4 +1,4 @@
-[Dataset](https://drive.google.com/file/d/1oIMuH1rc87GxBR86FQocNHSmZW1i8DXH/view?usp=sharing)
+[Dataset](https://drive.google.com/file/d/1wxQECVHObcwcaUwnt8E6ZfSs7fmEU_Xx/view?usp=drive_link)
 
 The script for getting dataset
 
@@ -8,7 +8,8 @@ mkdir models
 mkdir result
 cd data
 filename='data.zip'
-fileid='1oIMuH1rc87GxBR86FQocNHSmZW1i8DXH'
+
+fileid='1wxQECVHObcwcaUwnt8E6ZfSs7fmEU_Xx'
 wget --no-check-certificate "https://drive.google.com/uc?export=download&id=${fileid}" -O ${filename}
 
 
