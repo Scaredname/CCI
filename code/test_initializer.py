@@ -2,10 +2,21 @@
 import argparse
 import json
 
-import pykeen.datasets.utils as pdu
 import torch
 from pykeen.datasets import get_dataset
 from utilities import read_data, train_model
+
+INITIALIZERs = [
+    "uniform_norm_",
+    "normal_norm_",
+    "uniform_",
+    "normal_",
+    "xavier_uniform_",
+    "xavier_normal_",
+    "xavier_uniform_norm_",
+    "xavier_normal_norm_",
+    "orthogonal_",
+]
 
 
 def init_parser():
@@ -37,30 +48,9 @@ def init_parser():
         default=[],
     )
     parser.add_argument(
-        "-wcgn",
-        "--wl_centric_gains_no",
-        help="the list of gains for wl centric add random initializer with no process",
-        nargs="+",
-        default=[],
-    )
-    parser.add_argument(
-        "-ag",
-        "--add_gains",
+        "-cg",
+        "--CCI_gains",
         help="the list of gains for category centric add random initializer",
-        nargs="+",
-        default=[],
-    )
-    parser.add_argument(
-        "-agn",
-        "--add_gains_no",
-        help="the list of gains for category centric add random initializer for no process",
-        nargs="+",
-        default=[],
-    )
-    parser.add_argument(
-        "-pg",
-        "--product_gains",
-        help="the list of gains for category centric product random initializer",
         nargs="+",
         default=[],
     )
@@ -71,7 +61,6 @@ def init_parser():
         help="input one or multiple learning rate",
         required=True,
     )
-
     parser.add_argument(
         "-init",
         "--initializer_list",
@@ -107,6 +96,12 @@ def init_parser():
         "-ba", "--base", help="test base initializer", action="store_true"
     )
 
+    parser.add_argument(
+        "-np",
+        "--no_process",
+        help="don't use any process function",
+        action="store_true",
+    )
     parser.add_argument(
         "-nr", "--no_random", help="don't plus random emb", action="store_true"
     )
@@ -222,27 +217,23 @@ if __name__ == "__main__":
         WLCenterInitializer,
     )
 
-    initializer_list = [
-        "uniform_norm_",
-        "normal_norm_",
-        "uniform_",
-        "normal_",
-        "xavier_uniform_",
-        "xavier_normal_",
-        "xavier_uniform_norm_",
-        "xavier_normal_norm_",
-        "orthogonal_",
-    ]
     lr_list = [float(lr) for lr in args.learning_rate_list]
 
     if not args.all_initializer:
         initializer_list = args.initializer_list
+    else:
+        initializer_list = INITIALIZERs
 
     if args.no_random:
         if_plus_random = 0
         args.description += "without_random_"
     else:
         if_plus_random = 1
+
+    if args.no_process:
+        process_function = "no"
+    else:
+        process_function = "lp_normalize"
 
     for initializer in initializer_list:
         if args.base:
@@ -258,7 +249,8 @@ if __name__ == "__main__":
             )
 
         if len(args.wl_centric_gains):
-            maxiter = 5  # fix
+            maxiter = 5  # fix for yago dataset
+
             for gain in args.wl_centric_gains:
                 gain_num = float(gain)
                 if gain_num < 1:
@@ -270,6 +262,7 @@ if __name__ == "__main__":
                     data_type=data_type,
                     alpha=gain_num,
                     max_iter=maxiter,
+                    process_function=process_function,
                     if_plus_random=if_plus_random,
                 )
 
@@ -286,38 +279,8 @@ if __name__ == "__main__":
                     no_constrainer=no_constrainer,
                 )
 
-        if len(args.wl_centric_gains_no):
-            maxiter = 5  # fix
-            for gain in args.wl_centric_gains_no:
-                gain_num = float(gain)
-                if gain_num < 1:
-                    gain = "_".join(gain.split("."))
-                wl_center_initializer = WLCenterInitializer(
-                    color_initializer=initializer,
-                    shape=init_embedding_dim,
-                    triples_factory=training_data,
-                    data_type=data_type,
-                    alpha=gain_num,
-                    max_iter=maxiter,
-                    preprocess="no",
-                    if_plus_random=if_plus_random,
-                )
-
-                train_model(
-                    wl_center_initializer,
-                    args.description
-                    + f"no_wl{maxiter}_center_{gain}_initializer_"
-                    + initializer,
-                    dataset,
-                    dataset_name,
-                    config,
-                    model_embedding_dim,
-                    lr_list,
-                    no_constrainer=no_constrainer,
-                )
-
-        if len(args.add_gains):
-            for gain in args.add_gains:
+        if len(args.CCI_gains):
+            for gain in args.CCI_gains:
                 gain_num = float(gain)
                 if gain_num < 1:
                     gain = "_".join(gain.split("."))
@@ -327,38 +290,13 @@ if __name__ == "__main__":
                     category_dim=init_embedding_dim,
                     alpha=gain_num,
                     category_init=initializer,
+                    process_function=process_function,
                     if_plus_random=if_plus_random,
                 )
 
                 train_model(
                     random_initializer,
                     args.description + f"random_initializer_{gain}_" + initializer,
-                    dataset,
-                    dataset_name,
-                    config,
-                    model_embedding_dim,
-                    lr_list,
-                    no_constrainer=no_constrainer,
-                )
-
-        if len(args.add_gains_no):
-            for gain in args.add_gains_no:
-                gain_num = float(gain)
-                if gain_num < 1:
-                    gain = "_".join(gain.split("."))
-                random_initializer = CategoryCenterRandomInitializer(
-                    training_data,
-                    data_type,
-                    category_dim=init_embedding_dim,
-                    alpha=gain_num,
-                    category_init=initializer,
-                    preprocess="no",
-                    if_plus_random=if_plus_random,
-                )
-
-                train_model(
-                    random_initializer,
-                    args.description + f"no_random_initializer_{gain}_" + initializer,
                     dataset,
                     dataset_name,
                     config,

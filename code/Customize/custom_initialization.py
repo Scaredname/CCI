@@ -51,7 +51,7 @@ class WLCenterInitializer(PretrainedInitializer):
         data_type=torch.float,
         alpha=1.0,
         if_plus_random: int = 1,
-        preprocess="lp_normalize",
+        process_function="lp_normalize",
         max_iter=2,
         # additional parameters for iter_weisfeiler_lehman
         **kwargs,
@@ -115,7 +115,7 @@ class WLCenterInitializer(PretrainedInitializer):
             color_representation[colors] / alpha
             + if_plus_random * random_representation
         )
-        tensor = process_tensor(entity_emb_tensor, preprocess)
+        tensor = process_tensor(entity_emb_tensor, process_function)
 
         if data_type == torch.cfloat:
             tensor = tensor.view(tensor.shape[0], -1, 2)
@@ -231,13 +231,13 @@ class CategoryCenterRandomInitializer(CategoryCenterInitializer):
         category_dim=None,
         pretrain=None,
         shape: Sequence[str] = ("d",),
-        preprocess="lp_normalize",
+        process_function="lp_normalize",
         **kwargs,
     ) -> None:
         assert if_plus_random in [0, 1]
         self.gain = alpha
         self.plus_random = if_plus_random
-        self.preprocess = preprocess
+        self.process_function = process_function
         super().__init__(
             triples_factory,
             data_type=data_type,
@@ -266,4 +266,4 @@ class CategoryCenterRandomInitializer(CategoryCenterInitializer):
             )
             entity_emb_tensor[entity_index] = ent_emb
 
-        return process_tensor(entity_emb_tensor, self.preprocess)
+        return process_tensor(entity_emb_tensor, self.process_function)
