@@ -158,10 +158,8 @@ def load_config(model: str):
         ),
         # lr_scheduler="StepLR",
         # lr_scheduler_kwargs=dict(step_size=10, gamma=0.316),
-        # 用early stop来筛选模型
         stopper="early",
         stopper_kwargs=dict(
-            # frequency=args.early_frequency,
             patience=6,  # e 为1000 的情况
             relative_delta=0.0001,
             metric="mean_reciprocal_rank",
