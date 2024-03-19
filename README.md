@@ -15,7 +15,6 @@ wget --no-check-certificate "https://drive.google.com/uc?export=download&id=${fi
 # Unzip
 unzip -q ${filename}
 rm ${filename}
-cd
 ```
 
 You can run the experiments by the following bash script.
