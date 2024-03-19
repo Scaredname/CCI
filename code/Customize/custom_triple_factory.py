@@ -9,11 +9,12 @@ Copyright (c) 2024 by Ni Runyu, All Rights Reserved.
 """
 
 import logging
-from typing import ClassVar, Dict, Mapping, Tuple
+import pathlib
+from typing import Any, ClassVar, Dict, Mapping, MutableMapping, TextIO, Tuple, Union
 
 import numpy as np
+import pandas as pd
 import torch
-from numpy import linalg as LA
 from pykeen.triples.triples_factory import TriplesFactory
 from pykeen.typing import EntityMapping, LabeledTriples
 
@@ -67,8 +68,11 @@ def create_adjacency_matrix_of_entities_categories(
 
 
 class TripleswithCategory(TriplesFactory):
-    file_name_cate_to_id: ClassVar[str] = "cate_to_id"
-    file_name_cates: ClassVar[str] = "categories"
+    file_name_category_to_id: ClassVar[str] = "cates_to_id"
+    file_name_ents_cates: ClassVar[str] = "ents_cates"
+    cate_triples_file_name: ClassVar[str] = "cate_triples"
+    file_name_entity_to_id: ClassVar[str] = "entity_to_id"
+    file_name_relation_to_id: ClassVar[str] = "relation_to_id"
 
     def __init__(
         self,
@@ -117,7 +121,7 @@ class TripleswithCategory(TriplesFactory):
         )
 
     @property
-    def cate_shape(self) -> Tuple[int, ...]:
+    def category_shape(self) -> Tuple[int, ...]:
         """Return the shape of the cates."""
         return self.ents_cates_adj_matrix.shape[1:]
 
@@ -125,3 +129,49 @@ class TripleswithCategory(TriplesFactory):
     def num_category(self) -> int:
         """Return the number of cates."""
         return self.ents_cates_adj_matrix.shape[1]
+
+    def to_path_binary(
+        self, path: Union[str, pathlib.Path, TextIO]
+    ) -> pathlib.Path:  # noqa: D102
+        path = super().to_path_binary(path=path)
+        # store entity/relation to ID
+        for name, data in (
+            (
+                self.file_name_cate_to_id,
+                self.cates_to_id,
+            ),
+        ):
+            pd.DataFrame(
+                data=data.items(),
+                columns=["label", "id"],
+            ).sort_values(
+                by="id"
+            ).set_index("id").to_csv(
+                path.joinpath(f"{name}.tsv.gz"),
+                sep="\t",
+            )
+
+        np.savez_compressed(
+            path.joinpath(f"{self.file_name_ents_cates}.npz"), self.ents_cates
+        )
+
+        return path
+
+    @classmethod
+    def _from_path_binary(cls, path: pathlib.Path) -> MutableMapping[str, Any]:
+        data = super()._from_path_binary(path)
+        # load entity/relation to ID
+        for name in [
+            cls.file_name_cate_to_id,
+        ]:
+            df = pd.read_csv(
+                path.joinpath(f"{name}.tsv.gz"),
+                sep="\t",
+            )
+            data[name] = dict(zip(df["label"], df["id"]))
+
+        data[cls.file_name_ents_cates] = np.load(
+            path.joinpath(f"{cls.file_name_ents_cates}.npz")
+        )["arr_0"]
+
+        return data
