@@ -137,8 +137,8 @@ class TripleswithCategory(TriplesFactory):
         # store entity/relation to ID
         for name, data in (
             (
-                self.file_name_cate_to_id,
-                self.cates_to_id,
+                self.file_name_category_to_id,
+                self.categories_to_ids,
             ),
         ):
             pd.DataFrame(
@@ -162,7 +162,7 @@ class TripleswithCategory(TriplesFactory):
         data = super()._from_path_binary(path)
         # load entity/relation to ID
         for name in [
-            cls.file_name_cate_to_id,
+            cls.file_name_category_to_id,
         ]:
             df = pd.read_csv(
                 path.joinpath(f"{name}.tsv.gz"),
@@ -173,5 +173,7 @@ class TripleswithCategory(TriplesFactory):
         data[cls.file_name_ents_cates] = np.load(
             path.joinpath(f"{cls.file_name_ents_cates}.npz")
         )["arr_0"]
+
+        print(data)
 
         return data
