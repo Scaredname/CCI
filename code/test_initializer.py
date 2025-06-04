@@ -28,10 +28,11 @@ def init_parser():
         choices=[
             "a",
             "b",
+            "c",
         ],
         default="a",
         type=str,
-        help='a="yago6k_103", b="NELL995"',
+        help='a="yago6k_103", b="NELL995", c="FB15k237"',
     )
     parser.add_argument(
         "-m",
@@ -180,6 +181,7 @@ if __name__ == "__main__":
     dataset_dict = dict(
         a="yago_new",
         b="NELL-995_new",
+        c="FB_new",
     )
     dataset_name = dataset_dict[args.dataset]
     training_data, validation, testing = read_data(
