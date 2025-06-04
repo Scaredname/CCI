@@ -3,9 +3,9 @@ Author: Ni Runyu & MonkeyDC
 Date: 2024-03-12 15:59:39
 LastEditors: Ni Runyu & MonkeyDC
 LastEditTime: 2024-03-12 16:02:53
-Description: 
+Description:
 
-Copyright (c) 2024 by Ni Runyu, All Rights Reserved. 
+Copyright (c) 2024 by Ni Runyu, All Rights Reserved.
 """
 
 import logging
@@ -69,7 +69,7 @@ def create_adjacency_matrix_of_entities_categories(
 
 class TripleswithCategory(TriplesFactory):
     file_name_category_to_id: ClassVar[str] = "cates_to_id"
-    file_name_ents_cates: ClassVar[str] = "ents_cates"
+    file_name_ents_cates: ClassVar[str] = "ents_cates_adj_matrix"
     cate_triples_file_name: ClassVar[str] = "cate_triples"
     file_name_entity_to_id: ClassVar[str] = "entity_to_id"
     file_name_relation_to_id: ClassVar[str] = "relation_to_id"
@@ -152,7 +152,8 @@ class TripleswithCategory(TriplesFactory):
             )
 
         np.savez_compressed(
-            path.joinpath(f"{self.file_name_ents_cates}.npz"), self.ents_cates
+            path.joinpath(f"{self.file_name_ents_cates}.npz"),
+            self.ents_cates_adj_matrix,
         )
 
         return path

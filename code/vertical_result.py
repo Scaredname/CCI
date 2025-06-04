@@ -15,16 +15,18 @@ parser.add_argument(
     choices=[
         "a",
         "b",
+        "c",
     ],
     default="a",
     type=str,
-    help='a="yago6k_103", b="NELL995"',
+    help='a="yago6k_103", b="NELL995", c="FB15k237"',
 )
 args = parser.parse_args()
 
 dataset_dict = dict(
     a="yago_new_init",
     b="NELL-995_new_init",
+    c="FB_new_init",
 )
 dataset = dataset_dict[args.dataset]
 # dataset = "CAKE-NELL-995_new_init"
