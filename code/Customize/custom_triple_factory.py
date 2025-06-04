@@ -161,16 +161,16 @@ class TripleswithCategory(TriplesFactory):
     def _from_path_binary(cls, path: pathlib.Path) -> MutableMapping[str, Any]:
         data = super()._from_path_binary(path)
         # load entity/relation to ID
-        for name in [
-            cls.file_name_category_to_id,
-        ]:
-            df = pd.read_csv(
-                path.joinpath(f"{name}.tsv.gz"),
-                sep="\t",
-            )
-            data[name] = dict(zip(df["label"], df["id"]))
+        # for name in [
+        #     cls.file_name_category_to_id,
+        # ]:
+        df = pd.read_csv(
+            path.joinpath(f"{cls.file_name_category_to_id}.tsv.gz"),
+            sep="\t",
+        )
+        data["categories_to_ids"] = dict(zip(df["label"], df["id"]))
 
-        data[cls.file_name_ents_cates] = np.load(
+        data["ents_cates_adj_matrix"] = np.load(
             path.joinpath(f"{cls.file_name_ents_cates}.npz")
         )["arr_0"]
 
