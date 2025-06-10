@@ -198,6 +198,9 @@ for file_name in os.listdir(result_path):
                         results_dict["loss"].append(config["loss"])
                     else:
                         results_dict["loss"].append("-")
+
+                    if "description" in config:
+                        results_dict["description"].append(config["description"])
 r = pd.DataFrame(results_dict)
 
 r.to_csv(save_path, index=False)

@@ -37,6 +37,8 @@ save_path = "../result/%s.csv" % ("horizontal_" + dataset)
 
 results_dict = defaultdict(list)
 
+print("Note!!! Please determine the threshold value for each model in each dataset.")
+
 
 def determine_convergence_epoch(stopper_data, threshold_value):
     """
@@ -145,6 +147,9 @@ for file_name in os.listdir(result_path):
                             results_dict["lr"].append(config["optimizer_kwargs"]["lr"])
                         else:
                             results_dict["lr"].append("-")
+
+                    if "description" in config:
+                        results_dict["description"].append(config["description"])
 r = pd.DataFrame(results_dict)
 
 r.to_csv(save_path, index=False)

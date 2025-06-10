@@ -240,7 +240,8 @@ if __name__ == "__main__":
         if args.base:
             train_model(
                 initializer,
-                args.description + initializer,
+                initializer,
+                args.description,
                 dataset,
                 dataset_name,
                 config,
@@ -269,9 +270,8 @@ if __name__ == "__main__":
 
                 train_model(
                     wl_center_initializer,
-                    args.description
-                    + f"wl{maxiter}_center_{gain}_initializer_"
-                    + initializer,
+                    f"wl{maxiter}_center_{gain}_initializer_" + initializer,
+                    args.description,
                     dataset,
                     dataset_name,
                     config,
@@ -297,7 +297,8 @@ if __name__ == "__main__":
 
                 train_model(
                     random_initializer,
-                    args.description + f"random_initializer_{gain}_" + initializer,
+                    f"CCI_{gain}_" + initializer,
+                    args.description,
                     dataset,
                     dataset_name,
                     config,

@@ -4,9 +4,9 @@ Date: 2022-12-22 12:02:34
 LastEditors: Ni Runyu ni-runyu@ed.tmu.ac.jp
 LastEditTime: 2023-08-20 15:28:45
 FilePath: /ESETC/code/utilities.py
-Description: 
+Description:
 
-Copyright (c) 2023 by Ni Runyu ni-runyu@ed.tmu.ac.jp, All Rights Reserved. 
+Copyright (c) 2023 by Ni Runyu ni-runyu@ed.tmu.ac.jp, All Rights Reserved.
 """
 
 import datetime
@@ -16,6 +16,7 @@ import torch
 from Customize.custom_triple_factory import TripleswithCategory
 from pykeen.pipeline import pipeline
 from pykeen.triples import TriplesFactory
+from copy import deepcopy
 
 
 def get_key(dict, va):
@@ -84,6 +85,7 @@ def read_data(
 def train_model(
     entity_initializer,
     name,
+    description,
     dataset,
     dataset_name,
     fix_config,
@@ -93,9 +95,10 @@ def train_model(
     relation_initializer=None,
 ):
     """
-    description: test initialization
+    test initialization
     param entity_initializer:
     param name: the name of initializer
+    param description: the description of the experiment
     param dataset:
     param dataset_name:
     param fix_config:
@@ -125,7 +128,7 @@ def train_model(
             fix_config["optimizer_kwargs"]["lr"] = learning_rate
             date_time = "/%s/%s/%s/%s" % (
                 f"{dataset_name}_init",
-                f"{name}_gain",
+                f"{name}",
                 fix_config["model"],
                 datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),
             )
@@ -142,8 +145,10 @@ def train_model(
             )
 
             model_path = "../models/" + date_time
-            pipeline_result.metadata = fix_config
+            pipeline_result.metadata = deepcopy(fix_config)
+            pipeline_result.metadata["description"] = description
             pipeline_result.save_to_directory(model_path)
+
     except Exception as e:
         print(f"experiment: {str(entity_initializer)} failed")
         print(e)
