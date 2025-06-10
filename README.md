@@ -25,3 +25,5 @@ while [ $COUNT -gt 0 ]; do
     ((COUNT--))
 done
 ```
+
+You can run `python vertical_result.py` and `python horizontal_result.py` to generate structured experimental results.
