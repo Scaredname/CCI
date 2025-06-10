@@ -3,19 +3,12 @@
 The script for getting dataset
 
 ```bash
-mkdir data
 mkdir models
 mkdir result
-cd data
 filename='data.zip'
-
-fileid='1wxQECVHObcwcaUwnt8E6ZfSs7fmEU_Xx'
-wget --no-check-certificate "https://drive.google.com/uc?export=download&id=${fileid}" -O ${filename}
-
 
 # Unzip
 unzip -q ${filename}
-rm ${filename}
 ```
 
 You can run the experiments by the following bash script.
