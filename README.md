@@ -1,6 +1,4 @@
-[Dataset](https://drive.google.com/file/d/1wxQECVHObcwcaUwnt8E6ZfSs7fmEU_Xx/view?usp=drive_link)
-
-The script for getting dataset
+The script before starting experiments
 
 ```bash
 mkdir models
