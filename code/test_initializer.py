@@ -90,7 +90,8 @@ def init_parser():
         "-ai",
         "--all_initializer",
         help="using all initializer, will seal initializer_list argument",
-        default="",
+        action="store_true",
+        default=False,
     )
 
     parser.add_argument(
