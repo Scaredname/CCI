@@ -203,6 +203,6 @@ for file_name in os.listdir(result_path):
                         results_dict["description"].append(config["description"])
 r = pd.DataFrame(results_dict)
 
-r = r.sort_values(by=["date"])
+r = r.sort_values(by=["date"], ascending=False)
 
 r.to_csv(save_path, index=False)
