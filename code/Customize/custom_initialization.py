@@ -184,7 +184,7 @@ class CategoryCenterInitializer(PretrainedInitializer):
                 representations_kwargs=category_representations_kwargs,
                 skip_checks=False,
             )
-        tensor = self._generate_entity_tensor(
+        tensor = self._generate_entity_tensor_gpu(
             self.category_representations[0]._embeddings.weight,
             triples_factory.ents_cates_adj_matrix.float(),
         )
@@ -219,6 +219,9 @@ class CategoryCenterInitializer(PretrainedInitializer):
                 entity_category_constraints
             )
         return torch.matmul(entity_category_constraints, category_embedding)
+
+    def _generate_entity_tensor_gpu():
+        pass  # pragma: no cover
 
 
 class CategoryCenterRandomInitializer(CategoryCenterInitializer):
@@ -265,5 +268,21 @@ class CategoryCenterRandomInitializer(CategoryCenterInitializer):
                 (category_emb / self.gain + self.plus_random * random_bias_emb), dim=0
             )
             entity_emb_tensor[entity_index] = ent_emb
+
+        return process_tensor(entity_emb_tensor, self.process_function)
+
+    def _generate_entity_tensor_gpu(
+        self, category_embedding, entity_category_constraints
+    ) -> torch.Tensor:
+        entity_emb_tensor = torch.empty(
+            entity_category_constraints.shape[0], category_embedding.shape[1]
+        ).to('cuda')
+        initializer = initializer_resolver.make(self.category_init)
+        category_embedding = category_embedding.to('cuda')
+        entity_category_constraints = entity_category_constraints.to('cuda')
+        entity_emb_tensor = initializer(entity_emb_tensor)
+
+        entity_average_category_embedding = torch.matmul(entity_category_constraints, category_embedding)
+        entity_emb_tensor = entity_average_category_embedding / self.gain + self.plus_random * entity_emb_tensor
 
         return process_tensor(entity_emb_tensor, self.process_function)
