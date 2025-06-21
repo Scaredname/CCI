@@ -184,7 +184,7 @@ class CategoryCenterInitializer(PretrainedInitializer):
                 representations_kwargs=category_representations_kwargs,
                 skip_checks=False,
             )
-        tensor = self._generate_entity_tensor_gpu(
+        tensor = self._generate_entity_tensor(
             self.category_representations[0]._embeddings.weight,
             triples_factory.ents_cates_adj_matrix.float(),
         )
@@ -258,7 +258,12 @@ class CategoryCenterRandomInitializer(CategoryCenterInitializer):
         )
         for entity_index, entity_category in enumerate(entity_category_constraints):
             category_indices = torch.argwhere(entity_category).squeeze(dim=1)
-            category_emb = category_embedding[category_indices]
+            if category_indices.numel() == 0:
+                category_emb = torch.empty(
+                    1, category_embedding.shape[1], dtype=category_embedding.dtype
+                )
+            else:
+                category_emb = category_embedding[category_indices]
 
             initializer = initializer_resolver.make(self.category_init)
             random_bias_emb = initializer(torch.empty(*category_emb.shape))
