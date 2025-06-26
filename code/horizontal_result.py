@@ -83,13 +83,13 @@ def determine_convergence_epoch(stopper_data, threshold_value):
     return convergence_epoch, convergence_valid, retain
 
 
-# 取每个模型的最优的验证集上的结果的0.9, mean+std的结果。
+# 取每个模型的最优的验证集结果, mean+std的结果。
 threshold_dict = {
     "yago_new_init": dict(distmult=0.259, complex=0.298, RotatE=0.291, TransE=0.206),
     "NELL-995_new_init": dict(
         distmult=0.385, complex=0.391, RotatE=0.380, TransE=0.307
     ),
-    "FB_new_init": dict(distmult=0.360, complex=0.360, RotatE=0.360, TransE=0.300),
+    "FB_new_init": dict(distmult=0.287, complex=0.301, RotatE=0.305, TransE=0.292),
 }
 
 threshold_dict = threshold_dict[dataset]
@@ -116,7 +116,7 @@ for file_name in os.listdir(result_path):
                             config = json.load(fff)
 
                     try:
-                        threshold_value = threshold_dict[config["model"]] * 0.9
+                        threshold_value = threshold_dict[config["model"]] * 0.9 # 90% of the best validation result
                     except:
                         threshold_value = 0
                     if "stopper" in results:
