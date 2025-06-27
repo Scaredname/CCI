@@ -234,8 +234,10 @@ if __name__ == "__main__":
     if args.no_process:
         process_function = "no"
         args.description += "no_process_"
+        print("no process function")
     else:
         process_function = "lp_normalize"
+        print("use lp_normalize process function")
 
     for initializer in initializer_list:
         if args.base:
