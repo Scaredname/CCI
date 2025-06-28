@@ -253,19 +253,20 @@ class CategoryCenterRandomInitializer(CategoryCenterInitializer):
     def _generate_entity_tensor(
         self, category_embedding, entity_category_constraints
     ) -> torch.Tensor:
-        entity_emb_tensor = torch.empty(
+        entity_emb_tensor = torch.zeros(
             entity_category_constraints.shape[0], category_embedding.shape[1]
         )
+
+        initializer = initializer_resolver.make(self.category_init)
         for entity_index, entity_category in enumerate(entity_category_constraints):
             category_indices = torch.argwhere(entity_category).squeeze(dim=1)
             if category_indices.numel() == 0:
-                category_emb = torch.empty(
+                category_emb = torch.zeros(
                     1, category_embedding.shape[1], dtype=category_embedding.dtype
                 )
             else:
                 category_emb = category_embedding[category_indices]
 
-            initializer = initializer_resolver.make(self.category_init)
             random_bias_emb = initializer(torch.empty(*category_emb.shape))
 
             # 存在多个类型时，求加和后的嵌入的平均作为实体嵌入
@@ -281,13 +282,18 @@ class CategoryCenterRandomInitializer(CategoryCenterInitializer):
     ) -> torch.Tensor:
         entity_emb_tensor = torch.empty(
             entity_category_constraints.shape[0], category_embedding.shape[1]
-        ).to('cuda')
+        ).to("cuda")
         initializer = initializer_resolver.make(self.category_init)
-        category_embedding = category_embedding.to('cuda')
-        entity_category_constraints = entity_category_constraints.to('cuda')
+        category_embedding = category_embedding.to("cuda")
+        entity_category_constraints = entity_category_constraints.to("cuda")
         entity_emb_tensor = initializer(entity_emb_tensor)
 
-        entity_average_category_embedding = torch.matmul(entity_category_constraints, category_embedding)
-        entity_emb_tensor = entity_average_category_embedding / self.gain + self.plus_random * entity_emb_tensor
+        entity_average_category_embedding = torch.matmul(
+            entity_category_constraints, category_embedding
+        )
+        entity_emb_tensor = (
+            entity_average_category_embedding / self.gain
+            + self.plus_random * entity_emb_tensor
+        )
 
         return process_tensor(entity_emb_tensor, self.process_function)
