@@ -29,10 +29,11 @@ def init_parser():
             "a",
             "b",
             "c",
+            "d",  # d is for FB_filter
         ],
         default="a",
         type=str,
-        help='a="yago6k_103", b="NELL995", c="FB15k237"',
+        help='a="yago6k_103", b="NELL995", c="FB15k237", d="FB_filter"',
     )
     parser.add_argument(
         "-m",
@@ -183,6 +184,7 @@ if __name__ == "__main__":
         a="yago_new",
         b="NELL-995_new",
         c="FB_new",
+        d='FB_filter',
     )
     dataset_name = dataset_dict[args.dataset]
     training_data, validation, testing = read_data(
