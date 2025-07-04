@@ -174,7 +174,7 @@ def load_config(model: str):
         regularizer_kwargs=regularizer_kwargs,
     )
 
-    return fix_config
+    return fix_config, base_config["init_embedding_dim"]
 
 
 if __name__ == "__main__":
@@ -200,19 +200,21 @@ if __name__ == "__main__":
     print(model)
     print("****************************************")
 
+    
+
+    config, init_embedding_dim = load_config(model)
+    config["stopper_kwargs"]["frequency"] = args.early_frequency
+
     if model not in ["RotatE", "complex"]:
-        init_embedding_dim = 768
+        init_embedding_dim = init_embedding_dim
         model_embedding_dim = init_embedding_dim
         no_constrainer = False
         data_type = torch.float
     else:
-        init_embedding_dim = 768
+        init_embedding_dim = init_embedding_dim
         model_embedding_dim = init_embedding_dim // 2
         no_constrainer = True
         data_type = torch.cfloat
-
-    config = load_config(model)
-    config["stopper_kwargs"]["frequency"] = args.early_frequency
 
     import torch
     from Customize.custom_initialization import (
