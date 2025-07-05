@@ -30,10 +30,12 @@ def init_parser():
             "b",
             "c",
             "d",  # d is for FB_filter
+            "e",  # e is for FB_new_kmeans_10
+            "f",  # f is for FB_new_kmeans_50
         ],
         default="a",
         type=str,
-        help='a="yago6k_103", b="NELL995", c="FB15k237", d="FB_filter"',
+        help='a="yago6k_103", b="NELL995", c="FB15k237", d="FB_filter", e="FB_new_kmeans_10", f="FB_new_kmeans_50"',
     )
     parser.add_argument(
         "-m",
@@ -184,7 +186,9 @@ if __name__ == "__main__":
         a="yago_new",
         b="NELL-995_new",
         c="FB_new",
-        d='FB_filter',
+        d="FB_filter",
+        e="FB_new_kmeans_10",
+        f="FB_new_kmeans_50",
     )
     dataset_name = dataset_dict[args.dataset]
     training_data, validation, testing = read_data(
