@@ -159,11 +159,11 @@ class CategoryCenterInitializer(PretrainedInitializer):
         else:
             if pretrain:
                 print(
-                    f"using pretrained model '{pretrain}' to initialize category embeddings"
+                    f"using pretrained model 'bert-base-uncased' to initialize category embeddings"
                 )
                 category_labels = list(triples_factory.categories_to_ids.keys())
                 encoder_kwargs = dict(
-                    pretrained_model_name_or_path=pretrain,
+                    pretrained_model_name_or_path="bert-base-uncased",
                     max_length=512,
                 )
                 category_init = LabelBasedInitializer(
@@ -184,6 +184,16 @@ class CategoryCenterInitializer(PretrainedInitializer):
                 representations_kwargs=category_representations_kwargs,
                 skip_checks=False,
             )
+
+        self.category_representations[0].reset_parameters()
+
+        # import numpy as np
+
+        # np.save(
+        #     "../result/visualization/cate_emb.npy",
+        #     self.category_representations[0]._embeddings.weight.detach().cpu().numpy(),
+        # )
+
         tensor = self._generate_entity_tensor(
             self.category_representations[0]._embeddings.weight,
             triples_factory.ents_cates_adj_matrix.float(),
@@ -191,6 +201,9 @@ class CategoryCenterInitializer(PretrainedInitializer):
 
         if data_type == torch.cfloat:
             tensor = tensor.view(tensor.shape[0], -1, 2)
+
+        del self.category_representations
+        torch.cuda.empty_cache()
 
         super().__init__(tensor)
 

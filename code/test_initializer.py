@@ -113,6 +113,14 @@ def init_parser():
         "-de", "--description", help="additional description", default=""
     )
 
+    parser.add_argument(
+        "-pre",
+        "--PreTrain",
+        default=False,
+        action="store_true",
+        help="Whether use pre-trained type embeddings, bert-base-uncased, ",
+    )
+
     return parser
 
 
@@ -184,7 +192,7 @@ if __name__ == "__main__":
         a="yago_new",
         b="NELL-995_new",
         c="FB_new",
-        d='FB_filter',
+        d="FB_filter",
     )
     dataset_name = dataset_dict[args.dataset]
     training_data, validation, testing = read_data(
@@ -199,8 +207,6 @@ if __name__ == "__main__":
     print(dataset_name)
     print(model)
     print("****************************************")
-
-    
 
     config, init_embedding_dim = load_config(model)
     config["stopper_kwargs"]["frequency"] = args.early_frequency
@@ -292,6 +298,7 @@ if __name__ == "__main__":
                 gain_num = float(gain)
                 if gain_num < 1:
                     gain = "_".join(gain.split("."))
+
                 random_initializer = CategoryCenterRandomInitializer(
                     training_data,
                     data_type,
@@ -300,7 +307,11 @@ if __name__ == "__main__":
                     category_init=initializer,
                     process_function=process_function,
                     if_plus_random=if_plus_random,
+                    pretrain=args.PreTrain,
                 )
+
+                if args.PreTrain:
+                    initializer = "bert-base-uncased"
 
                 train_model(
                     random_initializer,

@@ -1,6 +1,6 @@
 {
   "test_batch_size": 4,
-  "init_embedding_dim": 2,
+  "init_embedding_dim": 768,
   "num_negs_per_pos": 64,
   "train": "slcwa",
   "train_setting": {
