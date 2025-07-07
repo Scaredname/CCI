@@ -17,10 +17,12 @@ parser.add_argument(
         "b",
         "c",
         "d",
+        "e",  # e is for FB_new_kmeans_10
+        "f",  # f is for FB_new_kmeans_50
     ],
     default="a",
     type=str,
-    help='a="yago6k_103", b="NELL995", c="FB15k237", d="FB15K237_filter',
+    help='a="yago6k_103", b="NELL995", c="FB15k237", d="FB15K237_filter", e="FB_new_kmeans_10", f="FB_new_kmeans_50"',
 )
 args = parser.parse_args()
 
@@ -29,6 +31,8 @@ dataset_dict = dict(
     b="NELL-995_new_init",
     c="FB_new_init",
     d="FB_filter_init",
+    e="FB_new_kmeans_10_init",
+    f="FB_new_kmeans_50_init",
 )
 dataset = dataset_dict[args.dataset]
 # dataset = "CAKE-NELL-995_new_init"
