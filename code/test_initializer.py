@@ -315,7 +315,7 @@ if __name__ == "__main__":
 
                 train_model(
                     random_initializer,
-                    f"CCI_{gain}_" + initializer,
+                    f"nCCI_{gain}_" + initializer,
                     args.description,
                     dataset,
                     dataset_name,
