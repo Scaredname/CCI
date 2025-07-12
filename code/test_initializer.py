@@ -88,6 +88,13 @@ def init_parser():
     )
 
     parser.add_argument(
+        "-cinit",
+        "--category_initializer",
+        default="normal_",
+        choices=["normal_", "uniform_"],
+    )
+
+    parser.add_argument(
         "-ai",
         "--all_initializer",
         help="using all initializer, will seal initializer_list argument",
@@ -304,7 +311,8 @@ if __name__ == "__main__":
                     data_type,
                     category_dim=init_embedding_dim,
                     alpha=gain_num,
-                    category_init=initializer,
+                    category_init=args.category_initializer,
+                    noise_init=initializer,
                     process_function=process_function,
                     if_plus_random=if_plus_random,
                     pretrain=args.PreTrain,
@@ -315,7 +323,7 @@ if __name__ == "__main__":
 
                 train_model(
                     random_initializer,
-                    f"nCCI_{gain}_" + initializer,
+                    f"{args.category_initializer}nCCI_{gain}_" + initializer,
                     args.description,
                     dataset,
                     dataset_name,

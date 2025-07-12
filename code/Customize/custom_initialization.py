@@ -130,6 +130,7 @@ class CategoryCenterInitializer(PretrainedInitializer):
         data_type,
         category_dim=None,
         category_init="xavier_uniform_",
+        noise_init="xavier_uniform_",
         pretrain=None,
         category_emb=None,
         shape: Sequence[str] = ("d",),
@@ -152,7 +153,7 @@ class CategoryCenterInitializer(PretrainedInitializer):
         category_representations_kwargs = dict(
             dtype=torch.float, shape=category_dim, initializer=None
         )
-        self.category_init = category_init
+        self.noise_init = noise_init
 
         if category_emb:
             self.category_representations = category_emb
@@ -189,8 +190,9 @@ class CategoryCenterInitializer(PretrainedInitializer):
 
         # import numpy as np
 
+        # run_name = "bert_10_np"
         # np.save(
-        #     "../result/visualization/cate_emb.npy",
+        #     f"../result/visualization/{run_name}/cate_emb.npy",
         #     self.category_representations[0]._embeddings.weight.detach().cpu().numpy(),
         # )
 
@@ -270,7 +272,7 @@ class CategoryCenterRandomInitializer(CategoryCenterInitializer):
             entity_category_constraints.shape[0], category_embedding.shape[1]
         )
 
-        initializer = initializer_resolver.make(self.category_init)
+        initializer = initializer_resolver.make(self.noise_init)
         for entity_index, entity_category in enumerate(entity_category_constraints):
             category_indices = torch.argwhere(entity_category).squeeze(dim=1)
             if category_indices.numel() == 0:
@@ -296,7 +298,7 @@ class CategoryCenterRandomInitializer(CategoryCenterInitializer):
         entity_emb_tensor = torch.empty(
             entity_category_constraints.shape[0], category_embedding.shape[1]
         ).to("cuda")
-        initializer = initializer_resolver.make(self.category_init)
+        initializer = initializer_resolver.make(self.noise_init)
         category_embedding = category_embedding.to("cuda")
         entity_category_constraints = entity_category_constraints.to("cuda")
         entity_emb_tensor = initializer(entity_emb_tensor)
