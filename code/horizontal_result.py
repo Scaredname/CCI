@@ -85,9 +85,9 @@ def determine_convergence_epoch(stopper_data, threshold_value):
 
 # 取每个模型的最优的验证集结果, mean+std的结果。
 threshold_dict = {
-    "yago_new_init": dict(distmult=0.259, complex=0.298, RotatE=0.291, TransE=0.206),
+    "yago_new_init": dict(distmult=0.262, complex=0.299, RotatE=0.3, TransE=0.208),
     "NELL-995_new_init": dict(
-        distmult=0.385, complex=0.391, RotatE=0.380, TransE=0.307
+        distmult=0.386, complex=0.396, RotatE=0.382, TransE=0.308
     ),
     "FB_new_init": dict(distmult=0.287, complex=0.301, RotatE=0.305, TransE=0.292),
 }
