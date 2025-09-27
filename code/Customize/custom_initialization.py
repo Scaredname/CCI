@@ -1,4 +1,5 @@
 from typing import Any, Optional, Sequence
+import os
 
 import torch
 from class_resolver.utils import OneOrManyHintOrType, OneOrManyOptionalKwargs
@@ -188,13 +189,14 @@ class CategoryCenterInitializer(PretrainedInitializer):
 
         self.category_representations[0].reset_parameters()
 
-        # import numpy as np
+        import numpy as np
 
-        # run_name = "bert_10_np"
-        # np.save(
-        #     f"../result/visualization/{run_name}/cate_emb.npy",
-        #     self.category_representations[0]._embeddings.weight.detach().cpu().numpy(),
-        # )
+        run_name = "768_normal+xavier_normal_10_l2"
+        os.makedirs(f"../result/visualization/{run_name}/", exist_ok=True)
+        np.save(
+            f"../result/visualization/{run_name}/cate_emb.npy",
+            self.category_representations[0]._embeddings.weight.detach().cpu().numpy(),
+        )
 
         tensor = self._generate_entity_tensor(
             self.category_representations[0]._embeddings.weight,
