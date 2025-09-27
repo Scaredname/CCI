@@ -12,6 +12,7 @@ tryVisualization.py
 data/*
 result/*
 models/*
+models_old/*
 runs/
 code/result/*
 
