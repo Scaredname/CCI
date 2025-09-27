@@ -201,6 +201,8 @@ for file_name in os.listdir(result_path):
 
                     if "description" in config:
                         results_dict["description"].append(config["description"])
+                        if 'no_process' in config["description"] and '_np' not in file_name:
+                            results_dict['initializer_name'][-1] = file_name+ 'np'
 r = pd.DataFrame(results_dict)
 
 r = r.sort_values(by=["date"], ascending=False)
