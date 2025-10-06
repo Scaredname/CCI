@@ -256,11 +256,15 @@ if __name__ == "__main__":
         process_function = "lp_normalize"
         print("use lp_normalize process function")
 
+    test_flag = ""
+    if "test" in args.description:
+        test_flag = "_test"
+
     for initializer in initializer_list:
         if args.base:
             train_model(
                 initializer,
-                initializer,
+                initializer + test_flag,
                 args.description,
                 dataset,
                 dataset_name,
@@ -290,7 +294,7 @@ if __name__ == "__main__":
 
                 train_model(
                     wl_center_initializer,
-                    f"wl{maxiter}_center_{gain}_initializer_" + initializer,
+                    f"wl{maxiter}_center_{gain}_initializer_" + initializer + test_flag,
                     args.description,
                     dataset,
                     dataset_name,
@@ -323,7 +327,9 @@ if __name__ == "__main__":
 
                 train_model(
                     random_initializer,
-                    f"{args.category_initializer}nCCI_{gain}_" + initializer,
+                    f"{args.category_initializer}nCCI_{gain}_"
+                    + initializer
+                    + test_flag,
                     args.description,
                     dataset,
                     dataset_name,
