@@ -264,7 +264,7 @@ if __name__ == "__main__":
         if args.base:
             train_model(
                 initializer,
-                initializer + test_flag,
+                initializer + test_flag + f'es{args.early_frequency}',
                 args.description,
                 dataset,
                 dataset_name,
@@ -294,7 +294,7 @@ if __name__ == "__main__":
 
                 train_model(
                     wl_center_initializer,
-                    f"wl{maxiter}_center_{gain}_initializer_" + initializer + test_flag,
+                    f"wl{maxiter}_center_{gain}_initializer_" + initializer + test_flag + f'es{args.early_frequency}',
                     args.description,
                     dataset,
                     dataset_name,
@@ -329,7 +329,7 @@ if __name__ == "__main__":
                     random_initializer,
                     f"{args.category_initializer}nCCI_{gain}_"
                     + initializer
-                    + test_flag,
+                    + test_flag + f'es{args.early_frequency}',
                     args.description,
                     dataset,
                     dataset_name,
