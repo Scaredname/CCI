@@ -323,7 +323,7 @@ if __name__ == "__main__":
                 )
 
                 if args.PreTrain:
-                    initializer = "bert-base-uncased"
+                    args.category_initializer = "bert-un_" # bert-base-uncased
 
                 train_model(
                     random_initializer,
