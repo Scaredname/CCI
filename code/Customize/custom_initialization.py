@@ -155,8 +155,10 @@ class CategoryCenterInitializer(PretrainedInitializer):
         )
         self.noise_init = noise_init
 
-        if category_emb:
-            self.category_representations = category_emb
+        if category_emb is not None:
+            category_init = PretrainedInitializer(category_emb)
+            category_representations_kwargs["initializer"] = category_init
+            category_representations_kwargs["shape"] = category_emb.shape[1]
         else:
             if pretrain:
                 print(
@@ -178,13 +180,13 @@ class CategoryCenterInitializer(PretrainedInitializer):
             else:
                 category_representations_kwargs["initializer"] = category_init
 
-            self.category_representations = self._build_category_representations(
-                triples_factory=triples_factory,
-                shape=shape,
-                representations=None,
-                representations_kwargs=category_representations_kwargs,
-                skip_checks=False,
-            )
+        self.category_representations = self._build_category_representations(
+            triples_factory=triples_factory,
+            shape=shape,
+            representations=None,
+            representations_kwargs=category_representations_kwargs,
+            skip_checks=False,
+        )
 
         self.category_representations[0].reset_parameters()
 

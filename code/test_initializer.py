@@ -4,6 +4,7 @@ import json
 
 import torch
 from pykeen.datasets import get_dataset
+from pykeen.nn.representation import Embedding
 from utilities import read_data, train_model
 
 INITIALIZERs = [
@@ -247,6 +248,7 @@ if __name__ == "__main__":
         CategoryCenterRandomInitializer,
         WLCenterInitializer,
     )
+    from Customize.cate_rel_data_pretrain import pretrain_cate_data
 
     lr_list = [float(lr) for lr in args.learning_rate_list]
 
@@ -326,6 +328,14 @@ if __name__ == "__main__":
                 if gain_num < 1:
                     gain = "_".join(gain.split("."))
 
+                category_emb = None
+                transe_pretrain = True
+                if transe_pretrain:
+                    category_emb = pretrain_cate_data(
+                        training_data.categories_to_ids, init_embedding_dim
+                    )
+                    args.category_initializer = "transe-pretrain_"  # using transe to pretrain category relation data.
+
                 random_initializer = CategoryCenterRandomInitializer(
                     training_data,
                     data_type,
@@ -336,6 +346,7 @@ if __name__ == "__main__":
                     process_function=process_function,
                     if_plus_random=if_plus_random,
                     pretrain=args.PreTrain,
+                    category_emb=category_emb,
                 )
 
                 if args.PreTrain:
