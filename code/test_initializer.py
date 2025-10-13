@@ -91,7 +91,20 @@ def init_parser():
         "-cinit",
         "--category_initializer",
         default="normal_",
-        choices=["normal_", "uniform_"],
+        choices=[
+            "uniform_norm_",
+            "normal_norm_",
+            "uniform_",
+            "normal_",
+            "xavier_uniform_",
+            "xavier_normal_",
+            "xavier_uniform_norm_",
+            "xavier_normal_norm_",
+            "ones_",
+            "zeros_",
+            "eye_",
+            "orthogonal_",
+        ],
     )
 
     parser.add_argument(
@@ -264,7 +277,7 @@ if __name__ == "__main__":
         if args.base:
             train_model(
                 initializer,
-                initializer + test_flag + f'es{args.early_frequency}',
+                initializer + test_flag + f"es{args.early_frequency}",
                 args.description,
                 dataset,
                 dataset_name,
@@ -294,7 +307,10 @@ if __name__ == "__main__":
 
                 train_model(
                     wl_center_initializer,
-                    f"wl{maxiter}_center_{gain}_initializer_" + initializer + test_flag + f'es{args.early_frequency}',
+                    f"wl{maxiter}_center_{gain}_initializer_"
+                    + initializer
+                    + test_flag
+                    + f"es{args.early_frequency}",
                     args.description,
                     dataset,
                     dataset_name,
@@ -323,13 +339,14 @@ if __name__ == "__main__":
                 )
 
                 if args.PreTrain:
-                    args.category_initializer = "bert-un_" # bert-base-uncased
+                    args.category_initializer = "bert-un_"  # bert-base-uncased
 
                 train_model(
                     random_initializer,
                     f"{args.category_initializer}nCCI_{gain}_"
                     + initializer
-                    + test_flag + f'es{args.early_frequency}',
+                    + test_flag
+                    + f"es{args.early_frequency}",
                     args.description,
                     dataset,
                     dataset_name,
