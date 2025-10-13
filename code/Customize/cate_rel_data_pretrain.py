@@ -8,6 +8,8 @@ def pretrain_cate_data(cate2ids, emb_dim):
     triples = np.loadtxt(
         "/home/ni/code/CCI/data/FB_filter/cate_rel_triples.txt", dtype="str"
     )
+    cat_rel_tf = TriplesFactory.from_labeled_triples(triples)
+    assert len(cat_rel_tf.entity_to_id) == len(cate2ids)
     cat_rel_tf = TriplesFactory.from_labeled_triples(triples, entity_to_id=cate2ids)
 
     pretrain = pipeline(
