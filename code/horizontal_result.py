@@ -17,10 +17,11 @@ parser.add_argument(
         "a",
         "b",
         "c",
+        "d",
     ],
     default="a",
     type=str,
-    help='a="yago6k_103", b="NELL995", c="FB15k237"',
+    help='a="yago6k_103", b="NELL995", c="FB15k237", d="FB15k237-filter"',
 )
 args = parser.parse_args()
 
@@ -28,6 +29,7 @@ dataset_dict = dict(
     a="yago_new_init",
     b="NELL-995_new_init",
     c="FB_new_init",
+    d="FB_filter_init",
 )
 dataset = dataset_dict[args.dataset]
 # dataset = "CAKE-NELL-995_new_init"
@@ -90,6 +92,7 @@ threshold_dict = {
         distmult=0.386, complex=0.396, RotatE=0.382, TransE=0.308
     ),
     "FB_new_init": dict(distmult=0.287, complex=0.301, RotatE=0.305, TransE=0.292),
+    "FB_filter_init": dict(distmult=0.287, complex=0.301, RotatE=0.305, TransE=0.292),
 }
 
 threshold_dict = threshold_dict[dataset]
