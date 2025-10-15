@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 try.py
 tryVisualization.py
+relation-specific_test.ipynb
 
 # C extensions
 *.so
