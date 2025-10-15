@@ -332,7 +332,7 @@ if __name__ == "__main__":
                 transe_pretrain = True
                 if transe_pretrain:
                     category_emb = pretrain_cate_data(
-                        training_data.categories_to_ids, init_embedding_dim
+                        training_data.categories_to_ids, init_embedding_dim, dataset_name
                     )
                     args.category_initializer = "transe-pretrain_"  # using transe to pretrain category relation data.
 

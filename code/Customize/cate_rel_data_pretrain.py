@@ -4,9 +4,9 @@ import numpy as np
 from pykeen.pipeline import pipeline
 
 
-def pretrain_cate_data(cate2ids, emb_dim):
+def pretrain_cate_data(cate2ids, emb_dim, dataset):
     triples = np.loadtxt(
-        "/home/ni/code/CCI/data/FB_filter/cate_rel_triples.txt", dtype="str"
+        f"/home/ni/code/CCI/data/{dataset}/cate_rel_triples.txt", dtype="str"
     )
     cat_rel_tf = TriplesFactory.from_labeled_triples(triples)
     assert len(cat_rel_tf.entity_to_id) == len(cate2ids)
