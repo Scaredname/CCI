@@ -17,6 +17,7 @@ import pandas as pd
 import torch
 from pykeen.triples.triples_factory import TriplesFactory
 from pykeen.typing import EntityMapping, LabeledTriples
+from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +83,17 @@ def create_ent_average_matrix(ents_cates_adj_matrx: np.ndarray):
         ent_average_matrix[i, offsets[i]:offsets[i]+nnz] = values
     return ent_average_matrix
 
+def generate_ent_rel_fre(entity_to_id:dict[str, int], ent_pair_set:dict[str, set], relation_frequency:dict):
+    # ent_rel_frequency = defaultdict(int)
+    ent_bal_wei = torch.zeros(len(entity_to_id), dtype=float)
+    for ent, id in entity_to_id.items():
+        for p in ent_pair_set[ent]:
+            _,r = p
+            ent_bal_wei[id] += relation_frequency[r]
+            
+    return ent_bal_wei
+    
+
 
 class TripleswithCategory(TriplesFactory):
     file_name_category_to_id: ClassVar[str] = "cates_to_id"
@@ -96,12 +108,14 @@ class TripleswithCategory(TriplesFactory):
         ents_cates_adj_matrix: np.ndarray,
         categories_to_ids: Mapping[str, int],
         ent_average_matrix: np.ndarray,
+        ent_rel_fre: torch.FloatTensor,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self.categories_to_ids = categories_to_ids
         self.ents_cates_adj_matrix = torch.from_numpy(ents_cates_adj_matrix)
         self.ent_average_matrix = torch.from_numpy(ent_average_matrix)
+        self.ent_rel_fre = ent_rel_fre
 
     @classmethod
     def from_labeled_triples(
@@ -110,6 +124,7 @@ class TripleswithCategory(TriplesFactory):
         create_inverse_triples=False,
         *,
         cate_triples: LabeledTriples = None,
+        ent_pair_set=None,
         **kwargs,
     ) -> "TriplescatesFactory":
         if cate_triples is None:
@@ -131,6 +146,12 @@ class TripleswithCategory(TriplesFactory):
         
         
         ent_average_matrix = create_ent_average_matrix(ents_cates_adj_matrix)
+        
+        relations = np.array(triples)[:, 1]
+        labels, counts = np.unique(relations, return_counts=True)
+        relations_frequency = dict(zip(labels, counts))
+        
+        ent_rel_fre = generate_ent_rel_fre(base.entity_to_id, ent_pair_set=ent_pair_set, relation_frequency=relations_frequency)
 
         return cls(
             entity_to_id=base.entity_to_id,
@@ -140,6 +161,7 @@ class TripleswithCategory(TriplesFactory):
             ents_cates_adj_matrix=ents_cates_adj_matrix,
             categories_to_ids=categories_to_ids,
             ent_average_matrix = ent_average_matrix,
+            ent_rel_fre = ent_rel_fre,
         )
 
     @property

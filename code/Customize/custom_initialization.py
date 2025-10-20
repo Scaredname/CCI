@@ -204,6 +204,7 @@ class CategoryCenterInitializer(PretrainedInitializer):
         tensor = self._generate_entity_tensor(
             self.category_representations[0]._embeddings.weight,
             triples_factory.ents_cates_adj_matrix.float(),
+            triples_factory.ent_rel_fre,
         )
 
         if data_type == torch.cfloat:
@@ -271,15 +272,21 @@ class CategoryCenterRandomInitializer(CategoryCenterInitializer):
         )
 
     def _generate_entity_tensor(
-        self, category_embedding, entity_category_constraints
+        self, category_embedding, entity_category_constraints, ent_rel_fre
     ) -> torch.Tensor:
         entity_emb_tensor = torch.zeros(
             entity_category_constraints.shape[0], category_embedding.shape[1]
         )
+        
+        discard_threshold = torch.tensor(20000)
+        ent_rel_fre[ ent_rel_fre >= discard_threshold] = discard_threshold
+        ent_weights = ent_rel_fre / ent_rel_fre.max()
 
         initializer = initializer_resolver.make(self.noise_init)
         for entity_index, entity_category in enumerate(entity_category_constraints):
             category_indices = torch.argwhere(entity_category).squeeze(dim=1)
+            weight = ent_weights[entity_index]
+            
             if category_indices.numel() == 0:
                 category_emb = torch.zeros(
                     1, category_embedding.shape[1], dtype=category_embedding.dtype
@@ -291,7 +298,7 @@ class CategoryCenterRandomInitializer(CategoryCenterInitializer):
 
             # 存在多个类型时，求加和后的嵌入的平均作为实体嵌入
             ent_emb = torch.mean(
-                (category_emb / self.gain + self.plus_random * random_bias_emb), dim=0
+                (category_emb * (1-weight) + weight * random_bias_emb), dim=0
             )
             entity_emb_tensor[entity_index] = ent_emb
 

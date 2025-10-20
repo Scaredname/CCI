@@ -11,6 +11,7 @@ Copyright (c) 2023 by Ni Runyu ni-runyu@ed.tmu.ac.jp, All Rights Reserved.
 
 import datetime
 import os
+import pickle
 
 import torch
 from Customize.custom_triple_factory import TripleswithCategory
@@ -46,11 +47,20 @@ def read_data(
     @Params: data_name, data_pro_func, create_inverse_triples, type_position
     @Return: Train, Test, Valid
     """
-    data_path = os.path.join(os.getcwd(), "../data/")
-
-    train_path = os.path.join(data_path, "%s/" % (data_name), "train_cate.txt")
-    valid_path = os.path.join(data_path, "%s/" % (data_name), "valid.txt")
-    test_path = os.path.join(data_path, "%s/" % (data_name), "test.txt")
+    data_path = os.path.join(os.getcwd(), "../data/", "%s/" % (data_name))
+    train_path = os.path.join(data_path, "train_cate.txt")
+    valid_path = os.path.join(data_path, "valid.txt")
+    test_path = os.path.join(data_path, "test.txt")
+    
+    ent_pair_set_path = os.path.join(data_path, "ent_cat-rel-pair_set.pkl")
+    
+    if os.path.exists(ent_pair_set_path):
+        with open(ent_pair_set_path, 'rb') as f:
+            ent_pair_set = pickle.load(f)
+        print('loaded ent_cat-rel-pair_set data')
+    else:
+        ent_pair_set = None
+        print('no ent_cat-rel-pair_set data, will use fixed gain')
 
     training = TriplesFactory.from_path(
         train_path,
@@ -64,6 +74,7 @@ def read_data(
     training_data = TripleswithCategory.from_labeled_triples(
         triples=training_triples,
         cate_triples=category_triples,
+        ent_pair_set = ent_pair_set
     )
 
     validation = TriplesFactory.from_path(
