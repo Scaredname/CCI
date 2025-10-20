@@ -196,6 +196,11 @@ class CategoryCenterInitializer(PretrainedInitializer):
         #     self.category_representations[0]._embeddings.weight.detach().cpu().numpy(),
         # )
 
+        # tensor = self._generate_entity_tensor(
+        #     self.category_representations[0]._embeddings.weight,
+        #     triples_factory.ents_cates_adj_matrix.float(),
+        # )
+
         tensor = self._generate_entity_tensor(
             self.category_representations[0]._embeddings.weight,
             triples_factory.ents_cates_adj_matrix.float(),
@@ -291,24 +296,31 @@ class CategoryCenterRandomInitializer(CategoryCenterInitializer):
             entity_emb_tensor[entity_index] = ent_emb
 
         return process_tensor(entity_emb_tensor, self.process_function)
-
+    
+    # 暂时没用
     def _generate_entity_tensor_gpu(
-        self, category_embedding, entity_category_constraints
+        self, category_embedding, entity_category_constraints, ent_average_matrix
     ) -> torch.Tensor:
-        entity_emb_tensor = torch.empty(
-            entity_category_constraints.shape[0], category_embedding.shape[1]
+        random_emb_tensor = torch.empty(
+            ent_average_matrix.shape[1], category_embedding.shape[1]
         ).to("cuda")
         initializer = initializer_resolver.make(self.noise_init)
         category_embedding = category_embedding.to("cuda")
+        ent_average_matrix = ent_average_matrix.to("cuda")
+        
         entity_category_constraints = entity_category_constraints.to("cuda")
-        entity_emb_tensor = initializer(entity_emb_tensor)
+        random_emb_tensor = initializer(random_emb_tensor)
+        
 
         entity_average_category_embedding = torch.matmul(
             entity_category_constraints, category_embedding
         )
+        entity_average_random_embedding = torch.matmul(
+            ent_average_matrix, random_emb_tensor
+        )
         entity_emb_tensor = (
             entity_average_category_embedding / self.gain
-            + self.plus_random * entity_emb_tensor
+            + self.plus_random * entity_average_random_embedding
         )
 
         return process_tensor(entity_emb_tensor, self.process_function)

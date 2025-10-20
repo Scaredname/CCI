@@ -66,6 +66,22 @@ def create_adjacency_matrix_of_entities_categories(
 
     return ents_cates_adj_matrix
 
+def create_ent_average_matrix(ents_cates_adj_matrx: np.ndarray):
+    
+    A = ents_cates_adj_matrx
+    e_n = A.shape[0]
+    degree = (A != 0).sum(axis=1)
+    offsets = np.concatenate(([0], np.cumsum(degree)))[:-1]
+    ent_average_matrix = np.zeros((e_n, degree.sum()), dtype=A.dtype)
+    
+    for i in range(e_n):
+        nnz = degree[i]
+        if nnz == 0:
+            continue
+        values = A[i, A[i] != 0]
+        ent_average_matrix[i, offsets[i]:offsets[i]+nnz] = values
+    return ent_average_matrix
+
 
 class TripleswithCategory(TriplesFactory):
     file_name_category_to_id: ClassVar[str] = "cates_to_id"
@@ -79,11 +95,13 @@ class TripleswithCategory(TriplesFactory):
         *,
         ents_cates_adj_matrix: np.ndarray,
         categories_to_ids: Mapping[str, int],
+        ent_average_matrix: np.ndarray,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self.categories_to_ids = categories_to_ids
         self.ents_cates_adj_matrix = torch.from_numpy(ents_cates_adj_matrix)
+        self.ent_average_matrix = torch.from_numpy(ent_average_matrix)
 
     @classmethod
     def from_labeled_triples(
@@ -110,6 +128,9 @@ class TripleswithCategory(TriplesFactory):
 
         # Calculate the proportion of each cate.
         ents_cates_adj_matrix = L1_normalize_each_rows_of_matrix(ents_cates_adj_matrix)
+        
+        
+        ent_average_matrix = create_ent_average_matrix(ents_cates_adj_matrix)
 
         return cls(
             entity_to_id=base.entity_to_id,
@@ -118,6 +139,7 @@ class TripleswithCategory(TriplesFactory):
             create_inverse_triples=base.create_inverse_triples,
             ents_cates_adj_matrix=ents_cates_adj_matrix,
             categories_to_ids=categories_to_ids,
+            ent_average_matrix = ent_average_matrix,
         )
 
     @property
