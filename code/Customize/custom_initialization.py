@@ -201,7 +201,7 @@ class CategoryCenterInitializer(PretrainedInitializer):
         #     triples_factory.ents_cates_adj_matrix.float(),
         # )
 
-        tensor = self._generate_entity_tensor(
+        tensor = self._generate_entity_tensor_matrix(
             self.category_representations[0]._embeddings.weight,
             triples_factory.ents_cates_adj_matrix.float(),
             triples_factory.ent_rel_fre,
@@ -277,16 +277,16 @@ class CategoryCenterRandomInitializer(CategoryCenterInitializer):
         entity_emb_tensor = torch.zeros(
             entity_category_constraints.shape[0], category_embedding.shape[1]
         )
-        
+
         discard_threshold = torch.tensor(20000)
-        ent_rel_fre[ ent_rel_fre >= discard_threshold] = discard_threshold
+        ent_rel_fre[ent_rel_fre >= discard_threshold] = discard_threshold
         ent_weights = ent_rel_fre / ent_rel_fre.max()
 
         initializer = initializer_resolver.make(self.noise_init)
         for entity_index, entity_category in enumerate(entity_category_constraints):
             category_indices = torch.argwhere(entity_category).squeeze(dim=1)
             weight = ent_weights[entity_index]
-            
+
             if category_indices.numel() == 0:
                 category_emb = torch.zeros(
                     1, category_embedding.shape[1], dtype=category_embedding.dtype
@@ -298,36 +298,34 @@ class CategoryCenterRandomInitializer(CategoryCenterInitializer):
 
             # 存在多个类型时，求加和后的嵌入的平均作为实体嵌入
             ent_emb = torch.mean(
-                (category_emb * (1-weight) + weight * random_bias_emb), dim=0
+                (category_emb * (1 - weight) + weight * random_bias_emb), dim=0
             )
             entity_emb_tensor[entity_index] = ent_emb
 
         return process_tensor(entity_emb_tensor, self.process_function)
-    
+
     # 暂时没用
-    def _generate_entity_tensor_gpu(
-        self, category_embedding, entity_category_constraints, ent_average_matrix
+    def _generate_entity_tensor_matrix(
+        self, category_embedding, entity_category_constraints, ent_rel_fre
     ) -> torch.Tensor:
         random_emb_tensor = torch.empty(
-            ent_average_matrix.shape[1], category_embedding.shape[1]
+            entity_category_constraints.shape[0], category_embedding.shape[1]
         ).to("cuda")
         initializer = initializer_resolver.make(self.noise_init)
         category_embedding = category_embedding.to("cuda")
-        ent_average_matrix = ent_average_matrix.to("cuda")
-        
+
         entity_category_constraints = entity_category_constraints.to("cuda")
         random_emb_tensor = initializer(random_emb_tensor)
-        
+
+        ent_weights = (ent_rel_fre / ent_rel_fre.max()).to("cuda")
 
         entity_average_category_embedding = torch.matmul(
             entity_category_constraints, category_embedding
         )
-        entity_average_random_embedding = torch.matmul(
-            ent_average_matrix, random_emb_tensor
-        )
+
         entity_emb_tensor = (
-            entity_average_category_embedding / self.gain
-            + self.plus_random * entity_average_random_embedding
+            ent_weights[:, None] * entity_average_category_embedding
+            + (1 - ent_weights)[:, None] * random_emb_tensor
         )
 
         return process_tensor(entity_emb_tensor, self.process_function)
