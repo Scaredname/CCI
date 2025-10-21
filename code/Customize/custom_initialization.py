@@ -201,7 +201,7 @@ class CategoryCenterInitializer(PretrainedInitializer):
         #     triples_factory.ents_cates_adj_matrix.float(),
         # )
 
-        tensor = self._generate_entity_tensor_matrix(
+        tensor = self._generate_entity_tensor(
             self.category_representations[0]._embeddings.weight,
             triples_factory.ents_cates_adj_matrix.float(),
             triples_factory.ent_rel_fre,
