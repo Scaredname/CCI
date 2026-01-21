@@ -16,6 +16,7 @@ models/*
 models_old/*
 runs/
 code/result/*
+code/logs/*
 
 # bash
 *.sh
@@ -26,3 +27,4 @@ code/tryVisualization.py
 code/test.py
 
 code/home/ni/Desktop/profile_log/pykeen/*
+code/try.ipynb

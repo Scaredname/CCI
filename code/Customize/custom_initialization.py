@@ -1,4 +1,5 @@
-from typing import Any, Optional, Sequence
+from __future__ import annotations
+from typing import Any, Optional, Sequence, Optional, Sequence, Tuple, Union, List
 
 import torch
 from class_resolver.utils import OneOrManyHintOrType, OneOrManyOptionalKwargs
@@ -12,6 +13,7 @@ from pykeen.nn.init import (
 )
 from pykeen.triples import KGInfo
 from pykeen.utils import get_edge_index, iter_weisfeiler_lehman, upgrade_to_sequence
+from dataclasses import dataclass
 
 from .custom_triple_factory import L1_normalize_each_rows_of_matrix
 
@@ -312,3 +314,99 @@ class CategoryCenterRandomInitializer(CategoryCenterInitializer):
         )
 
         return process_tensor(entity_emb_tensor, self.process_function)
+
+
+@dataclass
+class FastNode2VecParams:
+    dim: int = 768  # align with dim in base config
+    p: float = 1.0
+    q: float = 1.0
+    walk_length: int = 100  # default
+    window: int = 10
+    epochs: int = 5
+    workers: int = 1
+    directed: bool = True  # for KG
+    weighted: bool = False
+    seed: Optional[int] = 0
+
+
+class FastNode2VecInitializer(PretrainedInitializer):
+    """基于 fastnode2vec 的结构初始化（Node2Vec）.
+
+    需要的输入（任选其一）：
+    - triples_factory（推荐）：用于推断 num_entities 并构造 edge_index
+    - mapped_triples: shape (m, 3)
+    - edge_index: shape (2, m)
+
+    关键超参数通过 n2v_params 传入（dim/p/q/walk_length/context/epochs/workers...）。
+    """
+
+    def __init__(
+        self,
+        triples_factory,
+        *,
+        n2v_params: Optional[FastNode2VecParams] = None,
+        shape: Union[int, Sequence[int]] = 768,
+        process_function: str = "no",
+        data_type=torch.float,
+        **kwargs,
+    ) -> None:
+        if n2v_params is None:
+            n2v_params = FastNode2VecParams()
+
+        assert shape == n2v_params.dim
+        shape = upgrade_to_sequence(shape)
+
+        edge_index = get_edge_index(
+            triples_factory=triples_factory,
+        )
+
+        # edge_index: (2, m) => edges list
+        src = edge_index[0].detach().cpu().tolist()
+        dst = edge_index[1].detach().cpu().tolist()
+
+        edges: List[Tuple[int, int]] = list(zip(src, dst))
+
+        from fastnode2vec import Graph, Node2Vec  # noqa
+
+        graph = Graph(
+            edges,
+            directed=n2v_params.directed,
+            weighted=n2v_params.weighted,
+        )
+
+        n2v = Node2Vec(
+            graph,
+            dim=n2v_params.dim,
+            walk_length=n2v_params.walk_length,
+            window=n2v_params.window,
+            p=n2v_params.p,
+            q=n2v_params.q,
+            workers=n2v_params.workers,
+        )
+
+        n2v.train(epochs=n2v_params.epochs)
+
+        num_entities = triples_factory.num_entities
+
+        base = torch.empty(num_entities, *shape, dtype=torch.float)
+
+        covered = 0
+        for i in range(num_entities):
+            vec = None
+            # note: if the id wasn't start from 0, wv[0] will be the first index in wv.index_to_key
+            vec_np = n2v.wv.get_vector(i)
+            vec = torch.as_tensor(vec_np, dtype=torch.float)
+
+            if vec is not None and vec.numel() == n2v_params.dim:
+                base[i] = vec
+                covered += 1
+
+        print(f"[FastNode2VecInitializer] covered entities: {covered}/{num_entities}")
+
+        tensor = process_tensor(base, process_function).view(num_entities, *shape)
+
+        if data_type == torch.cfloat:
+            tensor = tensor.view(tensor.shape[0], -1, 2)
+
+        super().__init__(tensor=tensor)
